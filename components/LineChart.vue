@@ -4,7 +4,6 @@
     />
 </template>
 <script>
-/* eslint-disable */
     import createG2 from 'g2-vue'
 
     const LineChart = createG2(chart => {

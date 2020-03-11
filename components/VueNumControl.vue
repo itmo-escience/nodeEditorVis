@@ -10,7 +10,6 @@
 <script>
     export default { 
         props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
-        //template: '<input type="number" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/>',
         data() {
           return {
             value: 0,
