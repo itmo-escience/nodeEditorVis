@@ -20,7 +20,8 @@
         </div>
         <div class="d-flex">
             <div class="cel">Filter</div>
-            <button class="func" @click="openEditor('filter')"></button>
+            <button class="func" @click="openEditor('filter')">Edit</button>
+            <button class="func" @click="proces('filter')">Process</button>
         </div>
     </div>
 </template>
@@ -38,10 +39,28 @@ export default {
         }
     },
     methods:{
+        async proces(name){
+            const state = this.$store.state;
+            let code = state.functions[name];
+
+            let filter = [];
+            for(var i=0; i<this.data.length; i++){
+            
+                code.nodes[1].data.chart = this.chart;
+                code.nodes[1].data.value = this.data[i];
+
+                await state.engine.process(code);
+                let result = Object.values(code.nodes).find(node=>node.name === 'Output').data.result;
+                filter.push(result);
+            }
+            let filtered = this.data.filter((d,i)=> filter[i] );
+            this.chart.source(filtered);
+            this.chart.render();
+        },
         openEditor(name){
             const state = this.$store.state;
             if(state.functions[name]){
-                state.editor.fromJSON(this.$store.state.functions[name]);
+                state.editor.fromJSON(state.functions[name]);
             }else{
                 state.editor.fromJSON({
                     "id": "demo@0.1.0",
@@ -64,9 +83,8 @@ export default {
                     }
                 });
             }
-            state.editor.on('process', async () => {
-                const out = editor.toJSON().find(d=>d.name === "Output");
-                console.log(out)
+            state.editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
+                state.functions[name] = state.editor.toJSON();
             })
 
         }

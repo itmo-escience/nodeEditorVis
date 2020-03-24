@@ -7,6 +7,7 @@ import VueRenderPlugin from 'rete-vue-render-plugin'
 import ContextMenuPlugin from 'rete-context-menu-plugin';
 
 import VueNumControl from '~/components/VueNumControl'
+import VueStrControl from '~/components/VueStrControl'
 
 Vue.use(Vuex)
 
@@ -30,14 +31,27 @@ const store = () => new Vuex.Store({
         class NumControl extends Rete.Control {
 
             constructor(emitter, key, readonly) {
-            super(key);
-            this.render = 'vue';
-            this.component = VueNumControl;
-            this.props = { emitter, ikey: key, readonly };
+                super(key);
+                this.render = 'vue';
+                this.component = VueNumControl;
+                this.props = { emitter, ikey: key, readonly };
             }
 
             setValue(val) {
-            this.vueContext.value = val;
+                this.vueContext.value = val;
+            }
+        }
+        class StrControl extends Rete.Control {
+
+            constructor(emitter, key, readonly) {
+                super(key);
+                this.render = 'vue';
+                this.component = VueStrControl;
+                this.props = { emitter, ikey: key, readonly };
+            }
+
+            setValue(val) {
+                this.vueContext.value = val;
             }
         }
 
@@ -56,6 +70,7 @@ const store = () => new Vuex.Store({
                 outputs['num'] = node.data.num;
             }
         }
+        
 
         class InputComponent extends Rete.Component {
 
@@ -65,13 +80,51 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
-                .addOutput(new Rete.Output('chart', "Chart", objSocket))
-                .addOutput(new Rete.Output('value', "Value", anySocket));
+                    .addOutput(new Rete.Output('chart', "Chart", objSocket))
+                    .addOutput(new Rete.Output('value', "Value", objSocket));
             }
 
             worker(node, inputs, outputs) {
                 outputs['value'] = node.data.value;
                 outputs['chart'] = node.data.chart;
+            }
+        }
+
+
+        class GetComponent extends Rete.Component {
+            constructor(){
+                super("Get");
+            }
+
+            builder(node) {
+                let key = new Rete.Input('key', "Key", objSocket);
+                key.addControl(new StrControl(this.editor, 'key'));
+
+                node
+                    .addInput(key)
+                    .addInput(new Rete.Input('obj', "Object", objSocket))
+                    .addOutput(new Rete.Output('val', "Value", anySocket));
+            }
+
+            worker(node, inputs, outputs) {
+                let key = inputs['key'].length ? inputs['key'][0] : node.data.key;
+                outputs.val = inputs.obj[0][key];
+            }
+        }
+
+        class AnyToNumComponent extends Rete.Component {
+            constructor(){
+                super("Any to Num");
+            }
+
+            builder(node) {
+                node
+                    .addInput(new Rete.Input('any', "Any", anySocket))
+                    .addOutput(new Rete.Output('num', "Num", numSocket));
+            }
+
+            worker(node, inputs, outputs) {
+                outputs.num = +inputs.any[0];
             }
         }
 
@@ -88,40 +141,74 @@ const store = () => new Vuex.Store({
 
             worker(node, inputs, outputs) {
                 if(inputs['value']){
-                    node.data.result = inputs['value'];
+                    node.data.result = inputs['value'][0];
+                }
+            }
+        }
+
+        class PrintAnyComponent extends Rete.Component {
+            constructor( ) {
+                super('Print Any')
+            }
+
+            builder(node) {
+                node.addInput(new Rete.Input('any', 'Any', anySocket));
+            }
+
+            worker(node, inputs, outputs) {
+                console.log(inputs['any'][0])
+            }
+        }
+
+        class MoreComponent extends Rete.Component {
+
+            constructor(){
+                super("More");
+            }
+
+            builder(node) {
+                node
+                    .addInput(new Rete.Input('value1', "Value1", numSocket))
+                    .addInput(new Rete.Input('value2', "Value2", numSocket))
+                    .addOutput(new Rete.Output('result', "Result", boolSocket));
+            }
+
+            worker(node, inputs, outputs) {
+                if(inputs['value1'].length && inputs['value2'].length){
+                    outputs.result = inputs['value1'][0] > inputs['value2'][0];
                 }
             }
         }
 
         class PrinterComponent extends Rete.Component {
             constructor( ) {
-            super('Printer')
+                super('Printer')
             }
 
             builder(node) {
-            let inp = new Rete.Input('num', 'Number', numSocket);
-            node.addInput(inp);
+                let inp = new Rete.Input('num', 'Number', numSocket);
+                node.addInput(inp);
             }
 
             worker(node, inputs, outputs) {
-            console.log(inputs['num'][0])
+                console.log(inputs['num'][0])
             }
         }
 
         class AddComponent extends Rete.Component {
             constructor( ) {
-            super('Add')
+                super('Add')
             }
 
             builder(node) {
-            node.addInput(new Rete.Input('num1', 'Number', numSocket));
-            node.addInput(new Rete.Input('num2', 'Number', numSocket));
-            
-            node.addOutput(new Rete.Output('result', 'Number', numSocket));
+                node.addInput(new Rete.Input('num1', 'Number', numSocket));
+                node.addInput(new Rete.Input('num2', 'Number', numSocket));
+                
+                node.addOutput(new Rete.Output('result', 'Number', numSocket));
             }
 
             worker(node, inputs, outputs) {
-            outputs['result'] = inputs['num1'] + inputs['num2'];
+                outputs['result'] = inputs['num1'] + inputs['num2'];
             }
         }
 
@@ -148,10 +235,14 @@ const store = () => new Vuex.Store({
         var engine = new Rete.Engine('demo@0.1.0')
 
         const components = [
-            new PrinterComponent, 
+            new PrinterComponent,
+            new PrintAnyComponent,
             new NumComponent,
             new AddComponent,
+            new MoreComponent,
+            new GetComponent,
             new InputComponent,
+            new AnyToNumComponent,
             new OutputComponent
         ];
 
@@ -163,11 +254,11 @@ const store = () => new Vuex.Store({
         this.state.engine = engine;
         this.state.editor = editor;
 
-        editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
-            await engine.abort();
-            await engine.process(editor.toJSON());
-            console.log(editor.toJSON())
-        })
+        // editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
+        //     await engine.abort();
+        //     await engine.process(editor.toJSON());
+        //     console.log(editor.toJSON())
+        // })
       }
   }
 })
