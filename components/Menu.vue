@@ -42,22 +42,23 @@ export default {
         async proces(name){
             const state = this.$store.state;
             let code = state.functions[name];
+            let input = Object.values(code.nodes).find(node=>node.name === 'Input');
             if(!code) return;
 
             let filter = [];
             for(var i=0; i<this.data.length; i++){
-            
-                let input = Object.values(code.nodes).find(node=>node.name === 'Input');
                 input.data.chart = this.chart;
                 input.data.value = this.data[i];
 
                 await state.engine.process(code);
                 let result = Object.values(code.nodes).find(node=>node.name === 'Output').data.result;
-                filter.push(result);
+                if(typeof result !== 'undefined') filter.push(result);
             }
-            let filtered = this.data.filter((d,i)=> filter[i] );
-            this.chart.source(filtered);
-            this.chart.render();
+            if(filter.length){
+                let filtered = this.data.filter((d,i)=> filter[i] );
+                this.chart.source(filtered);
+                this.chart.render();
+            }
         },
         openEditor(name){
             this.$emit('editor', true);
@@ -93,11 +94,11 @@ export default {
             }
             state.editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
                 state.functions[name] = state.editor.toJSON();
+                this.proces(name);
             })
 
         },
         update(){
-
             if(this.chart){
                 this.chart.destroy()
                 this.chart = null;
