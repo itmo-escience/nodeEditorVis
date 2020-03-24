@@ -1,15 +1,15 @@
 <template>
     <div class="menu">
         <div class="d-flex">
-            <div class="cel">Width</div>
-            <div class="cel input"><textarea class="textatea" v-model="width"></textarea></div>
+            <div class="cel head">Width</div>
+            <div class="cel input"><input type="number" class="textatea" v-model="width"/></div>
         </div>
         <div class="d-flex">
-            <div class="cel">Height</div>
-            <div class="cel input"><textarea class="textatea" v-model="height"></textarea></div>
+            <div class="cel head">Height</div>
+            <div class="cel input"><input type="number" class="textatea" v-model="height"/></div>
         </div>
         <div class="d-flex">
-            <div class="cel">Type</div>
+            <div class="cel head">Type</div>
             <div class="cel input">
                 <select class="select" v-model="type">
                     <option value="point" selected>Point</option>
@@ -19,7 +19,7 @@
             </div>
         </div>
         <div class="d-flex">
-            <div class="cel">Filter</div>
+            <div class="cel head">Filter</div>
             <button class="func" @click="openEditor('filter')">Edit</button>
             <button class="func" @click="proces('filter')">Process</button>
         </div>
@@ -34,7 +34,7 @@ export default {
         return{
             width: null,
             height: null,
-            type: null,
+            type: 'point',
             chart: null
         }
     },
@@ -42,12 +42,14 @@ export default {
         async proces(name){
             const state = this.$store.state;
             let code = state.functions[name];
+            if(!code) return;
 
             let filter = [];
             for(var i=0; i<this.data.length; i++){
             
-                code.nodes[1].data.chart = this.chart;
-                code.nodes[1].data.value = this.data[i];
+                let input = Object.values(code.nodes).find(node=>node.name === 'Input');
+                input.data.chart = this.chart;
+                input.data.value = this.data[i];
 
                 await state.engine.process(code);
                 let result = Object.values(code.nodes).find(node=>node.name === 'Output').data.result;
@@ -126,12 +128,17 @@ export default {
         left: 0px;
         width: 500px;
         height: 100vh;
+        background: #1E1E1E;
     }
     .d-flex{
         display: flex;
     }
     .cel{
         padding: 5px;
+        color: #fff;
+    }
+    .head{
+        width: 100px; 
     }
     .input{
         flex-grow: 1;
@@ -145,8 +152,7 @@ export default {
         border-radius: 4px;
     }
     .select{
-        height: 10px;
-        padding: 5px;
+        height: 30px;
         cursor: pointer;
     }
 </style>

@@ -1,12 +1,12 @@
 <template>
   <div>
     <Menu :data="Data" @editor="toggleEditor($event)"/>
+    <div class="chart">
+        <div id="container"></div>
+    </div>
     <div :class="{hidden: !editor}" class="editor">
       <div class="exit" @click="toggleEditor(false)"></div>
       <div id='editor'></div>
-    </div>
-    <div class="chart">
-        <div id="container"></div>
     </div>
   </div>
 </template>
@@ -43,6 +43,7 @@
     width: 100%;
     height: 100%;
     padding: 50px;
+    z-index: 2;
 
     background: rgba(196, 196, 196, .8);
   }
