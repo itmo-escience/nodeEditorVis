@@ -58,6 +58,8 @@ export default {
             this.chart.render();
         },
         openEditor(name){
+            this.$emit('editor', true);
+
             const state = this.$store.state;
             if(state.functions[name]){
                 state.editor.fromJSON(state.functions[name]);
