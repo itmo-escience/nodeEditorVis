@@ -21,8 +21,6 @@ const store = () => new Vuex.Store({
   },
   mutations: {
     initRete(){
-        const store = this;
-
         const numSocket = new Rete.Socket('Number');
         const objSocket = new Rete.Socket('Object');
         const boolSocket = new Rete.Socket('Bool');
@@ -30,7 +28,6 @@ const store = () => new Vuex.Store({
         const strSocket = new Rete.Socket('String');
 
         class NumControl extends Rete.Control {
-
             constructor(emitter, key, readonly) {
                 super(key);
                 this.render = 'vue';
@@ -43,7 +40,6 @@ const store = () => new Vuex.Store({
             }
         }
         class StrControl extends Rete.Control {
-
             constructor(emitter, key, readonly) {
                 super(key);
                 this.render = 'vue';
@@ -57,9 +53,9 @@ const store = () => new Vuex.Store({
         }
 
         class NumComponent extends Rete.Component {
-
             constructor(){
                 super("Number");
+                this.path = ['Const']
             }
 
             builder(node) {
@@ -71,12 +67,29 @@ const store = () => new Vuex.Store({
                 outputs['num'] = node.data.num;
             }
         }
+
+        class StrComponent extends Rete.Component {
+            constructor(){
+                super("String");
+                this.path = ['Const']
+            }
+
+            builder(node) {
+                node
+                    .addControl(new StrControl(this.editor, 'str'))
+                    .addOutput(new Rete.Output('str', "String", strSocket));
+            }
+
+            worker(node, inputs, outputs) {
+                outputs['str'] = node.data.str;
+            }
+        }
         
 
         class InputComponent extends Rete.Component {
-
             constructor(){
                 super("Input");
+                this.path = null
             }
 
             builder(node) {
@@ -95,6 +108,7 @@ const store = () => new Vuex.Store({
         class GetComponent extends Rete.Component {
             constructor(){
                 super("Get");
+                this.path = ['Object']
             }
 
             builder(node) {
@@ -116,6 +130,7 @@ const store = () => new Vuex.Store({
         class AnyToNumComponent extends Rete.Component {
             constructor(){
                 super("Any to Num");
+                this.path = ['Convert']
             }
 
             builder(node) {
@@ -133,6 +148,7 @@ const store = () => new Vuex.Store({
 
             constructor(){
                 super("Output");
+                this.path = null
             }
 
             builder(node) {
@@ -150,6 +166,7 @@ const store = () => new Vuex.Store({
         class PrintAnyComponent extends Rete.Component {
             constructor( ) {
                 super('Print Any')
+                this.path = ['Print']
             }
 
             builder(node) {
@@ -165,6 +182,7 @@ const store = () => new Vuex.Store({
 
             constructor(){
                 super("More");
+                this.path = ['Logic']
             }
 
             builder(node) {
@@ -181,9 +199,10 @@ const store = () => new Vuex.Store({
             }
         }
 
-        class PrinterComponent extends Rete.Component {
-            constructor( ) {
-                super('Printer')
+        class PrintNumComponent extends Rete.Component {
+            constructor() {
+                super('Print Num')
+                this.path = ['Print']
             }
 
             builder(node) {
@@ -199,6 +218,7 @@ const store = () => new Vuex.Store({
         class AddComponent extends Rete.Component {
             constructor( ) {
                 super('Add')
+                this.path = ['Math']
             }
 
             builder(node) {
@@ -222,23 +242,21 @@ const store = () => new Vuex.Store({
             searchBar: true,
             delay: 100,
             allocate(component) {
-                //return ['Submenu'];
-                return [];
+                return component.path;
             },
             rename(component) {
                 return component.name;
             },
-            items: {
-                //'Click me'(){ console.log('Works!') }
-            }
+            // items: {'Click me'(){ console.log('Works!') }}
         });
 
         var engine = new Rete.Engine('demo@0.1.0')
 
         const components = [
-            new PrinterComponent,
+            new PrintNumComponent,
             new PrintAnyComponent,
             new NumComponent,
+            new StrComponent,
             new AddComponent,
             new MoreComponent,
             new GetComponent,
