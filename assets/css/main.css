@@ -3,3 +3,9 @@
 .socket-output-object > path { stroke: #0000FF !important; }
 .socket-output-bool > path{ stroke: #800000 !important; }
 .socket-output-any > path{ stroke: #6699ff !important; }
+
+.socket.output.number { background: #9acd32; }
+.socket.output.string { background: #FF00FF; }
+.socket.output.object { background: #0000FF; }
+.socket.output.bool { background: #800000; }
+.socket.output.any { background: #6699ff; }
