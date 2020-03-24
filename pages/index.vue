@@ -45,8 +45,6 @@
     padding: 50px;
 
     background: rgba(196, 196, 196, .8);
-    //filter: blur(8px);
-    //-webkit-filter: blur(8px);
   }
   #editor{
     height: 100%;
