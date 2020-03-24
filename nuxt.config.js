@@ -16,6 +16,9 @@ module.exports = {
   css: [
     '~/assets/css/main.css'
   ],
+  router: {
+    base: '/nodeEditorVis/dist/'
+  },
   /*
   ** Customize the progress bar color
   */
