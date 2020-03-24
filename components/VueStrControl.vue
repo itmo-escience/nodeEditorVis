@@ -31,3 +31,8 @@
         }
     }
 </script>
+<style>
+  input[type="string"] {
+    margin-right: 20px;
+  }
+</style>
