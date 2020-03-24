@@ -1,0 +1,5 @@
+.socket-output-number > path{ stroke: #9acd32 !important; }
+.socket-output-string > path{ stroke: #FF00FF !important; }
+.socket-output-object > path { stroke: #0000FF !important; }
+.socket-output-bool > path{ stroke: #800000 !important; }
+.socket-output-any > path{ stroke: #6699ff !important; }
