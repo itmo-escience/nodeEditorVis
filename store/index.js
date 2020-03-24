@@ -27,6 +27,7 @@ const store = () => new Vuex.Store({
         const objSocket = new Rete.Socket('Object');
         const boolSocket = new Rete.Socket('Bool');
         const anySocket = new Rete.Socket('Any');
+        const strSocket = new Rete.Socket('String');
 
         class NumControl extends Rete.Control {
 
@@ -97,7 +98,7 @@ const store = () => new Vuex.Store({
             }
 
             builder(node) {
-                let key = new Rete.Input('key', "Key", objSocket);
+                let key = new Rete.Input('key', "Key", strSocket);
                 key.addControl(new StrControl(this.editor, 'key'));
 
                 node
