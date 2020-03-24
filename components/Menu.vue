@@ -32,8 +32,8 @@ export default {
     props: ['data'],
     data(){
         return{
-            width: null,
-            height: null,
+            width: 1300,
+            height: 800,
             type: 'point',
             chart: null
         }
@@ -95,34 +95,37 @@ export default {
                 state.functions[name] = state.editor.toJSON();
             })
 
+        },
+        update(){
+
+            if(this.chart){
+                this.chart.destroy()
+                this.chart = null;
+            };
+
+            this.chart = new G2.Chart({
+                container: document.querySelector('#container'),
+                width: +this.width,
+                height: +this.height
+            });
+            this.chart.source(this.data);
+
+            switch(this.type){
+                case 'area':
+                    this.chart.area().position('time*pm25');
+                    break
+                case 'line':
+                    this.chart.line().position('time*pm25');
+                    break
+                default:
+                    this.chart.point().position('time*pm25');
+                    break
+            }
+            this.chart.render();
         }
     },
-    updated(){
-        if(this.chart){
-            this.chart.destroy()
-            this.chart = null;
-        };
-
-        this.chart = new G2.Chart({
-            container: document.querySelector('#container'),
-            width: +this.width | 600,
-            height: +this.height | 300
-        });
-        this.chart.source(this.data);
-
-        switch(this.type){
-            case 'area':
-                this.chart.area().position('time*pm25');
-                break
-            case 'line':
-                this.chart.line().position('time*pm25');
-                break
-            default:
-                this.chart.point().position('time*pm25');
-                break
-        }
-        this.chart.render();
-    }
+    updated(){ this.update(); },
+    mounted(){ this.update(); }
 }
 </script>
 <style>
