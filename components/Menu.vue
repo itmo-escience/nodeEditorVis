@@ -70,19 +70,23 @@ export default {
                     "id": "demo@0.1.0",
                     "nodes": {
                         "1": {
-                        "id": 1,
-                        "data": {
-                            "chart": this.chart,
-                            "value": ''
+                            "id": 1,
+                            "data": {
+                                "chart": this.chart,
+                                "value": ''
+                            },
+                            "inputs": {},
+                            "outputs": {},
+                            "position": [80, 200],
+                            "name": "Input"
                         },
-                        "inputs": {},
-                        "outputs": {
-                            "num": {
-                                "connections": []
-                            }
-                        },
-                        "position": [80, 200],
-                        "name": "Input"
+                        "2": {
+                            "id": 2,
+                            "data": {},
+                            "inputs": {},
+                            "outputs": {},
+                            "position": [1500, 200],
+                            "name": "Output"
                         }
                     }
                 });
