@@ -9,6 +9,8 @@ import ContextMenuPlugin from 'rete-context-menu-plugin';
 import VueNumControl from '~/components/VueNumControl'
 import VueStrControl from '~/components/VueStrControl'
 
+//import {PrintAnyComponent, PrintNumComponent} from '~/static/components/Print.js';
+
 Vue.use(Vuex)
 
 const store = () => new Vuex.Store({
@@ -93,9 +95,26 @@ const store = () => new Vuex.Store({
             }
 
             builder(node) {
-                node
-                    .addOutput(new Rete.Output('chart', "Chart", objSocket))
-                    .addOutput(new Rete.Output('value', "Value", objSocket));
+                for(let key in node.data){
+                    let socket;
+                    switch(typeof node.data[key]){
+                        case 'boolean':
+                            socket = boolSocket;
+                            break
+                        case 'number':
+                            socket = numSocket;
+                            break
+                        case 'object':
+                            socket = objSocket;
+                            break
+                        case 'string':
+                            socket = strSocket;
+                            break
+                        default:
+                            socket = anySocket;
+                    }
+                    node.addOutput(new Rete.Output(key, key, socket));
+                }
             }
 
             worker(node, inputs, outputs) {
@@ -104,6 +123,38 @@ const store = () => new Vuex.Store({
             }
         }
 
+        class PrintAnyComponent extends Rete.Component {
+            constructor( ) {
+                super('Print Any')
+                this.path = ['Print']
+            }
+        
+            builder(node) {
+                node.addInput(new Rete.Input('any', 'Any', anySocket));
+            }
+        
+            worker(node, inputs, outputs) {
+                console.log(inputs['any'][0])
+            }
+        }
+        
+        
+        
+        class PrintNumComponent extends Rete.Component {
+            constructor() {
+                super('Print Num')
+                this.path = ['Print']
+            }
+        
+            builder(node) {
+                let inp = new Rete.Input('num', 'Number', numSocket);
+                node.addInput(inp);
+            }
+        
+            worker(node, inputs, outputs) {
+                console.log(inputs['num'][0])
+            }
+        }
 
         class GetComponent extends Rete.Component {
             constructor(){
@@ -143,6 +194,22 @@ const store = () => new Vuex.Store({
                 outputs.num = +inputs.any[0];
             }
         }
+        class StrToNumComponent extends Rete.Component {
+            constructor(){
+                super("String to Num");
+                this.path = ['Convert']
+            }
+
+            builder(node) {
+                node
+                    .addInput(new Rete.Input('str', "String", strSocket))
+                    .addOutput(new Rete.Output('num', "Num", numSocket));
+            }
+
+            worker(node, inputs, outputs) {
+                outputs.num = +inputs.str[0];
+            }
+        }
 
         class OutputComponent extends Rete.Component {
 
@@ -160,21 +227,6 @@ const store = () => new Vuex.Store({
                 if(inputs['value']){
                     node.data.result = inputs['value'][0];
                 }
-            }
-        }
-
-        class PrintAnyComponent extends Rete.Component {
-            constructor( ) {
-                super('Print Any')
-                this.path = ['Print']
-            }
-
-            builder(node) {
-                node.addInput(new Rete.Input('any', 'Any', anySocket));
-            }
-
-            worker(node, inputs, outputs) {
-                console.log(inputs['any'][0])
             }
         }
 
@@ -199,21 +251,7 @@ const store = () => new Vuex.Store({
             }
         }
 
-        class PrintNumComponent extends Rete.Component {
-            constructor() {
-                super('Print Num')
-                this.path = ['Print']
-            }
-
-            builder(node) {
-                let inp = new Rete.Input('num', 'Number', numSocket);
-                node.addInput(inp);
-            }
-
-            worker(node, inputs, outputs) {
-                console.log(inputs['num'][0])
-            }
-        }
+        
 
         class AddComponent extends Rete.Component {
             constructor( ) {
@@ -262,6 +300,7 @@ const store = () => new Vuex.Store({
             new GetComponent,
             new InputComponent,
             new AnyToNumComponent,
+            new StrToNumComponent,
             new OutputComponent
         ];
 
