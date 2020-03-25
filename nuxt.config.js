@@ -1,3 +1,8 @@
+const routerBase = process.env.DEPLOY_ENV === 'GH_PAGES' ? {
+  router: {
+    base: '/nodeEditorVis/dist/'
+  }
+} : {}
 module.exports = {
   /*
   ** Headers of the page
@@ -16,9 +21,12 @@ module.exports = {
   css: [
     '~/assets/css/main.css'
   ],
+  /*
   router: {
     base: '/nodeEditorVis/dist/'
   },
+  */
+  ...routerBase,
   /*
   ** Customize the progress bar color
   */
