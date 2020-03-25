@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Menu :data="Data" @editor="toggleEditor($event)"/>
+    <Menu @editor="toggleEditor($event)"/>
     <div class="chart">
         <div id="container"></div>
     </div>
@@ -11,19 +11,13 @@
   </div>
 </template>
 <script>
-  import Menu from '~/components/Menu'
+  import Menu from '~/components/Menu';
 
   export default {
     components: { Menu },
     data () {
       return {
-        editor: false,
-        Data: [
-          {'time': '3-21', 'pm25': 10}, {'time': '3-21', 'pm25': 20},
-          {'time': '3-22', 'pm25': 15}, {'time': '3-22', 'pm25': 20},
-          {'time': '3-23', 'pm25': 10}, {'time': '3-23', 'pm25': 20},
-          {'time': '3-24', 'pm25': 20}, {'time': '3-24', 'pm25': 30}
-        ]
+        editor: false
       }
     },
     methods: {
