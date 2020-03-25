@@ -40,24 +40,24 @@
             <div class="d-flex">
                 <div class="cel head">Filter</div>
                 <button class="func" @click="openEditor('filter')">Edit</button>
-                <button class="func" @click="proces('filter')">Process</button>
             </div>
         </div>
-        <DataSet @data="newData($event)" @editor="openEditor($event)" />
+        <DataSelect @data="newData($event)" @editor="openEditor($event)" />
     </div>
 </template>
 <script>
 import G2 from '@antv/g2';
-import DataSet from '~/components/DataSet.vue';
+import DataSet from '@antv/data-set';
+import DataSelect from '~/components/DataSet.vue';
 
 export default {
-    components: { DataSet },
+    components: { DataSelect },
     data(){
         return{
             x: null,
             y: null,
             width: 1300,
-            height: 800,
+            height: 500,
             type: 'point',
             chart: null,
             data: null
@@ -67,7 +67,39 @@ export default {
         newData(data){
             this.data = data;
         },
-        async proces(name){
+        proces(name){
+            // const state = this.$store.state;
+            // let code = state.functions[name];
+            // if(!code) return;
+
+            // let input = Object.values(code.nodes).find(node=>node.name === 'Input');
+
+            // const dv = new DataSet();
+            // dv.createView().source(this.data)
+            //     .transform({
+            //         type: 'filter',
+            //         async callback(row){
+            //             input.data = row;
+            //             await state.engine.abort();
+            //             await state.engine.process(code);
+            //             let result = Object.values(code.nodes).find(node=>node.name === 'Output').data.result;
+            //             return result;
+            //         }
+            //     });
+            // console.log(dv)
+
+            switch(name){
+                case 'filter':
+                    this.filter(name);
+                    break
+                default:
+                    this.calculate(name);
+            }
+        },
+        async calculate(name){
+
+        },
+        async filter(name){
             const state = this.$store.state;
             let code = state.functions[name];
             let input = Object.values(code.nodes).find(node=>node.name === 'Input');
@@ -75,8 +107,7 @@ export default {
 
             let filter = [];
             for(var i=0; i<this.data.length; i++){
-                input.data.chart = this.chart;
-                input.data.value = this.data[i];
+                input.data = this.data[i];
 
                 await state.engine.process(code);
                 let result = Object.values(code.nodes).find(node=>node.name === 'Output').data.result;
@@ -100,10 +131,7 @@ export default {
                     "nodes": {
                         "1": {
                             "id": 1,
-                            "data": {
-                                "chart": this.chart,
-                                "value": ''
-                            },
+                            "data": this.data[0],
                             "inputs": {},
                             "outputs": {},
                             "position": [80, 200],
@@ -122,7 +150,7 @@ export default {
             }
             state.editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
                 state.functions[name] = state.editor.toJSON();
-                this.proces(name);
+                this.proces('filter');
             })
 
         },
