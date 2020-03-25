@@ -33,21 +33,20 @@
 <style>
   .editor{
     position: fixed;
-    left: 0; top: 0;
+    left: 0; bottom: 0;
     width: 100%;
-    height: 100%;
-    padding: 50px;
+    height: 50%;
     z-index: 2;
-
-    background: rgba(196, 196, 196, .8);
+    border: 1px solid #000;
   }
   #editor{
     height: 100%;
+    width: 100%;
     background: #fff;
   }
   .exit{
     position:absolute;
-    top: 70px; right: 70px;
+    top: 20px; right: 20px;
     width: 30px; height: 30px;
     background: url('~assets/exit.png');
   }
