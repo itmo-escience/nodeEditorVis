@@ -1,44 +1,72 @@
 <template>
     <div class="menu">
-        <div class="d-flex">
-            <div class="cel head">Width</div>
-            <div class="cel input"><input type="number" class="textatea" v-model="width"/></div>
-        </div>
-        <div class="d-flex">
-            <div class="cel head">Height</div>
-            <div class="cel input"><input type="number" class="textatea" v-model="height"/></div>
-        </div>
-        <div class="d-flex">
-            <div class="cel head">Type</div>
-            <div class="cel input">
-                <select class="select" v-model="type">
-                    <option value="point" selected>Point</option>
-                    <option value="area">Area</option>
-                    <option value="line">Line</option>
-                </select>
+        <div v-if="data">
+            <div class="d-flex">
+                <div class="cel head">Width</div>
+                <div class="cel input"><input type="number" class="textatea" v-model="width"/></div>
+            </div>
+            <div class="d-flex">
+                <div class="cel head">Height</div>
+                <div class="cel input"><input type="number" class="textatea" v-model="height"/></div>
+            </div>
+            <div class="d-flex">
+                <div class="cel head">Type</div>
+                <div class="cel input">
+                    <select class="select" v-model="type">
+                        <option value="point" selected>Point</option>
+                        <option value="area">Area</option>
+                        <option value="line">Line</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex">
+                <div class="cel head">X</div>
+                <div class="cel input">
+                    <select class="select" v-model="x">
+                        <option v-for="(c,i) in data.columns" :key="c" :value="c" :selected="i===0">{{c}}</option>
+                    </select>
+                </div>
+            </div>
+            <div class="d-flex">
+                <div class="cel head">Y</div>
+                <div class="cel input">
+                    <select class="select" v-model="y">
+                        <option v-for="(c,i) in data.columns" :key="c" :value="c" :selected="i===0">{{c}}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex">
+                <div class="cel head">Filter</div>
+                <button class="func" @click="openEditor('filter')">Edit</button>
+                <button class="func" @click="proces('filter')">Process</button>
             </div>
         </div>
-        <div class="d-flex">
-            <div class="cel head">Filter</div>
-            <button class="func" @click="openEditor('filter')">Edit</button>
-            <button class="func" @click="proces('filter')">Process</button>
-        </div>
+        <DataSet @data="newData($event)" @editor="openEditor($event)" />
     </div>
 </template>
 <script>
 import G2 from '@antv/g2';
+import DataSet from '~/components/DataSet.vue';
 
 export default {
-    props: ['data'],
+    components: { DataSet },
     data(){
         return{
+            x: null,
+            y: null,
             width: 1300,
             height: 800,
             type: 'point',
-            chart: null
+            chart: null,
+            data: null
         }
     },
     methods:{
+        newData(data){
+            this.data = data;
+        },
         async proces(name){
             const state = this.$store.state;
             let code = state.functions[name];
@@ -111,17 +139,20 @@ export default {
             });
             this.chart.source(this.data);
 
+            let chart;
             switch(this.type){
                 case 'area':
-                    this.chart.area().position('time*pm25');
+                    chart = this.chart.area();
                     break
                 case 'line':
-                    this.chart.line().position('time*pm25');
+                    chart = this.chart.line();
                     break
                 default:
-                    this.chart.point().position('time*pm25');
+                    chart = this.chart.point();
                     break
             }
+            chart.position(`${this.x}*${this.y}`);
+
             this.chart.render();
         }
     },
@@ -134,10 +165,28 @@ export default {
         position: fixed;
         top: 0px;
         left: 0px;
-        width: 500px;
+        width: 400px;
         height: 100vh;
         background: #1E1E1E;
     }
+    .data{
+        position: absolute;
+        bottom: 0; left: 0;
+        width: 100%;
+    }
+    .right{
+        text-align: right;
+        margin-right: 15px;
+        cursor: pointer;
+
+    }
+    .plus:after{
+        content: url('/plus.svg');
+    }
+    .minus:after{
+        content: url('/minus.svg');
+    }
+
     .d-flex{
         display: flex;
     }
