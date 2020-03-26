@@ -11,12 +11,29 @@
                     <button class="func" @click="createLayout">Create</button>
                 </div>
             </div>
-            <div v-for="l in layouts" :key="l" class="d-flex">
-                <div class="cel head">{{l}}</div>
-                <div class="cel input">
-                    <button class="func" @click="openEditor(l)">Edit</button>
+            <div v-for="l in layouts" :key="l.name" class="layout">
+                <div class="d-flex">
+                    <div class="cel head">{{l.name}}</div>
+                    <div class="cel input minus right" @click="removeLayout(l.name)"></div>
                 </div>
-                <div class="cel input minus right" @click="removeLayout(l)"></div>
+                <div class="d-flex">
+                    <div class="cel head">Type</div>
+                    <div class="cel input">
+                        <select class="select" v-model="l.type" @change="changeLayoutType(l)">
+                            <option value="filter" selected>Filter</option>
+                            <option value="map">Map</option>
+                            <option value="pick">Pick</option>
+                            <option value="rename">Rename</option>
+                        </select>
+                    </div>
+                </div>
+                <div v-if="l.type==='filter' || l.type==='map'" class="d-flex">
+                    <div class="cel head">Callback</div>
+                    <div class="cel input">
+                        <button class="func" @click="openEditor(l)">Edit</button>
+                    </div>
+                </div>
+
             </div>
         </div>
         <div class="d-flex">
@@ -43,9 +60,15 @@
             }
         },
         methods:{
+            changeLayoutType(layout){
+                this.$store.state.layouts[layout.name] = null;
+            },
             createLayout(){
                 this.addLayout = false;
-                this.layouts.push( this.newLayoutName );
+                this.layouts.push({ 
+                    name: this.newLayoutName,
+                    type: 'filter'
+                });
                 this.newLayoutName = null;
             },
             removeLayout(layout){

@@ -24,7 +24,7 @@
                 <div class="cel head">X</div>
                 <div class="cel input">
                     <select class="select" v-model="x">
-                        <option v-for="(c,i) in data.columns" :key="c" :value="c" :selected="i===0">{{c}}</option>
+                        <option v-for="(c,i) in Object.keys(data[0])" :key="c" :value="c" :selected="i===0">{{c}}</option>
                     </select>
                 </div>
             </div>
@@ -32,14 +32,9 @@
                 <div class="cel head">Y</div>
                 <div class="cel input">
                     <select class="select" v-model="y">
-                        <option v-for="(c,i) in data.columns" :key="c" :value="c" :selected="i===0">{{c}}</option>
+                        <option v-for="(c,i) in Object.keys(data[0])" :key="c" :value="c" :selected="i===0">{{c}}</option>
                     </select>
                 </div>
-            </div>
-
-            <div class="d-flex">
-                <div class="cel head">Filter</div>
-                <button class="func" @click="openEditor('filter')">Edit</button>
             </div>
         </div>
         <DataSelect @data="newData($event)" @editor="openEditor($event)" />
@@ -60,99 +55,133 @@ export default {
             height: 500,
             type: 'point',
             chart: null,
+            DATA: null,
             data: null
         }
     },
     methods:{
         newData(data){
+            this.DATA = data;
             this.data = data;
         },
-        proces(name){
-            // const state = this.$store.state;
-            // let code = state.functions[name];
-            // if(!code) return;
-
-            // let input = Object.values(code.nodes).find(node=>node.name === 'Input');
-
-            // const dv = new DataSet();
-            // dv.createView().source(this.data)
-            //     .transform({
-            //         type: 'filter',
-            //         async callback(row){
-            //             input.data = row;
-            //             await state.engine.abort();
-            //             await state.engine.process(code);
-            //             let result = Object.values(code.nodes).find(node=>node.name === 'Output').data.result;
-            //             return result;
-            //         }
-            //     });
-            // console.log(dv)
-
-            switch(name){
-                case 'filter':
-                    this.filter(name);
-                    break
-                default:
-                    this.calculate(name);
-            }
-        },
-        async calculate(name){
-
-        },
-        async filter(name){
+        async proces(){
+            this.data = this.DATA;
             const state = this.$store.state;
-            let code = state.functions[name];
-            let input = Object.values(code.nodes).find(node=>node.name === 'Input');
+            Object.keys(state.layouts).forEach(async (key)=>{
+                switch(state.layouts[key].type){
+                    case 'filter':
+                        await this.filter(key);
+                        break
+                    case 'map':
+                        await this.map(key);
+                    default:
+                        break
+                } 
+            });
+        },
+        async map(name){
+            const state = this.$store.state;
+            let code = state.layouts[name].func;
             if(!code) return;
 
-            let filter = [];
+            let input = Object.values(code.nodes).find(node=>node.name === 'Input Map');
+            let map = [];
             for(var i=0; i<this.data.length; i++){
                 input.data = this.data[i];
-
+                await state.engine.abort();
                 await state.engine.process(code);
-                let result = Object.values(code.nodes).find(node=>node.name === 'Output').data.result;
-                if(typeof result !== 'undefined') filter.push(result);
+                map.push(state.result);
             }
-            if(filter.length){
-                let filtered = this.data.filter((d,i)=> filter[i] );
-                this.chart.source(filtered);
+            if(map[0]){
+                this.data = map;
+                this.chart.source(this.data);
                 this.chart.render();
             }
         },
-        openEditor(name){
-            this.$emit('editor', true);
-
+        async filter(name){
             const state = this.$store.state;
-            if(state.functions[name]){
-                state.editor.fromJSON(state.functions[name]);
-            }else{
-                state.editor.fromJSON({
-                    "id": "demo@0.1.0",
-                    "nodes": {
-                        "1": {
-                            "id": 1,
-                            "data": this.data[0],
-                            "inputs": {},
-                            "outputs": {},
-                            "position": [80, 200],
-                            "name": "Input"
-                        },
-                        "2": {
-                            "id": 2,
-                            "data": {},
-                            "inputs": {},
-                            "outputs": {},
-                            "position": [1500, 200],
-                            "name": "Output"
-                        }
-                    }
-                });
-            }
-            state.editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
-                state.functions[name] = state.editor.toJSON();
-                this.proces('filter');
-            })
+            let code = state.layouts[name].func;
+            if(!code) return;
 
+            let input = Object.values(code.nodes).find(node=>node.name === 'Input Filter');
+            let filter = [];
+            for(var i=0; i<this.data.length; i++){
+                input.data = this.data[i];
+                await state.engine.abort();
+                await state.engine.process(code);
+                filter.push(state.result)
+            }
+            if(typeof filter[0] !== 'undefined' && typeof filter[0] !== 'object'){
+                let filtered = this.data.filter((d,i)=> filter[i] );
+                this.data = filtered;
+                this.chart.source(this.data);
+                this.chart.render();
+            }
+        },
+        openEditor(layout){
+            this.$emit('editor', true);
+            
+            const state = this.$store.state;
+            const l = state.layouts[layout.name];
+            if(l){
+                state.editor.fromJSON(l.func);
+            }else{
+                let json;
+                switch(layout.type){
+                    case 'filter':
+                        json = {
+                            "id": "demo@0.1.0",
+                            "nodes": {
+                                "1": {
+                                    "id": 1,
+                                    "data": this.data[0],
+                                    "position": [80, 200],
+                                    "name": "Input Filter"
+                                },
+                                "2": {
+                                    "id": 2,
+                                    "data": {},
+                                    "position": [1500, 200],
+                                    "name": "Output Filter"
+                                }
+                            }
+                        }
+                        break
+                    case 'map':
+                        json = {
+                            "id": "demo@0.1.0",
+                            "nodes": {
+                                "1": {
+                                    "id": 1,
+                                    "data": this.data[0],
+                                    "position": [80, 200],
+                                    "name": "Input Map"
+                                },
+                                "2": {
+                                    "id": 2,
+                                    "data": {},
+                                    "position": [1500, 200],
+                                    "name": "Output Map"
+                                }
+                            }
+                        }
+                        break
+                    default:
+                        break
+                }
+                state.editor.fromJSON(json);
+            }
+            state.editor.on('process', async () => {
+                if(state.layouts[layout.name]){
+                   state.layouts[layout.name].func = state.editor.toJSON(); 
+                }else{
+                    state.layouts[layout.name] = {
+                        func: state.editor.toJSON(),
+                        type: layout.type
+                    }
+                }
+                await this.proces();
+            });
         },
         update(){
             if(this.chart){
