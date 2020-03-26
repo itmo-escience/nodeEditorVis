@@ -303,6 +303,40 @@ const store = () => new Vuex.Store({
                 outputs.num = +inputs.any[0];
             }
         }
+        class AnyToStrComponent extends Rete.Component {
+            constructor(){
+                super("Any to String");
+                this.path = ['Convert']
+            }
+
+            builder(node) {
+                node
+                    .addInput(new Rete.Input('any', "Any", anySocket))
+                    .addOutput(new Rete.Output('str', "String", strSocket));
+            }
+
+            worker(node, inputs, outputs) {
+                let val = inputs.any[0];
+                outputs.str = typeof val === 'string' ? val : '';
+            }
+        }
+        class AnyToObjComponent extends Rete.Component {
+            constructor(){
+                super("Any to Object");
+                this.path = ['Convert']
+            }
+
+            builder(node) {
+                node
+                    .addInput(new Rete.Input('any', "Any", anySocket))
+                    .addOutput(new Rete.Output('obj', "Object", objSocket));
+            }
+
+            worker(node, inputs, outputs) {
+                let val = inputs.any[0];
+                outputs.obj = typeof val === 'object' ? val : null;
+            }
+        }
         class StrToNumComponent extends Rete.Component {
             constructor(){
                 super("String to Num");
@@ -495,7 +529,8 @@ const store = () => new Vuex.Store({
             new MoreComponent, new NoComponent,
             new OrComponent, new AndComponent,
             new GetComponent, new SetComponent,
-            new AnyToNumComponent, new StrToNumComponent,
+            new AnyToNumComponent, new AnyToStrComponent,
+            new AnyToObjComponent, new StrToNumComponent,
             new InputFilterComponent, new InputMapComponent,
             new OutputFilterComponent, new OutputMapComponent
         ];
