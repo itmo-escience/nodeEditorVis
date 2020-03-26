@@ -220,6 +220,21 @@ const store = () => new Vuex.Store({
                 console.log(inputs['str'][0])
             }
         }
+        class PrintObjComponent extends Rete.Component {
+            constructor() {
+                super('Print Object')
+                this.path = ['Print']
+            }
+        
+            builder(node) {
+                let inp = new Rete.Input('obj', 'Object', objSocket);
+                node.addInput(inp);
+            }
+        
+            worker(node, inputs, outputs) {
+                console.log(inputs['obj'][0])
+            }
+        }
 
         // OBJECT
         class GetComponent extends Rete.Component {
@@ -363,6 +378,23 @@ const store = () => new Vuex.Store({
                 outputs['result'] = inputs['num1'] + inputs['num2'];
             }
         }
+        class SubtractComponent extends Rete.Component {
+            constructor( ) {
+                super('Subtract')
+                this.path = ['Math']
+            }
+
+            builder(node) {
+                node.addInput(new Rete.Input('num1', 'Number', numSocket));
+                node.addInput(new Rete.Input('num2', 'Number', numSocket));
+                
+                node.addOutput(new Rete.Output('result', 'Number', numSocket));
+            }
+
+            worker(node, inputs, outputs) {
+                outputs['result'] = inputs['num1'] - inputs['num2'];
+            }
+        }
 
         var container = document.querySelector('#editor')
         var editor = new Rete.NodeEditor('demo@0.1.0', container)
@@ -383,22 +415,15 @@ const store = () => new Vuex.Store({
         var engine = new Rete.Engine('demo@0.1.0')
 
         const components = [
-            new PrintNumComponent,
-            new PrintAnyComponent,
-            new PrintStrComponent,
-            new NumComponent,
-            new StrComponent,
-            new AddComponent,
-            new MoreComponent,
-            new AndComponent,
-            new GetComponent,
-            new SetComponent,
-            new AnyToNumComponent,
-            new StrToNumComponent,
-            new InputFilterComponent,
-            new InputMapComponent,
-            new OutputFilterComponent,
-            new OutputMapComponent
+            new PrintNumComponent, new PrintAnyComponent,
+            new PrintStrComponent, new PrintObjComponent,
+            new NumComponent, new StrComponent,
+            new AddComponent, new SubtractComponent,
+            new MoreComponent, new AndComponent,
+            new GetComponent, new SetComponent,
+            new AnyToNumComponent, new StrToNumComponent,
+            new InputFilterComponent, new InputMapComponent,
+            new OutputFilterComponent, new OutputMapComponent
         ];
 
         components.map(c => {
