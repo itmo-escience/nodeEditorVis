@@ -340,6 +340,25 @@ const store = () => new Vuex.Store({
                 }
             }
         }
+        class NoComponent extends Rete.Component {
+            constructor(){
+                super("NO");
+                this.path = ['Logic']
+            }
+
+            builder(node) {
+                node
+                    .addInput(new Rete.Input('val', "Value", bolSocket))
+                    .addOutput(new Rete.Output('result', "Result", boolSocket));
+            }
+
+            worker(node, inputs, outputs) {
+                if(inputs['val']){
+                    outputs.result = !inputs['val'][0];
+                }
+            }
+        }
+
         class AndComponent extends Rete.Component {
             constructor(){
                 super("And");
@@ -356,6 +375,25 @@ const store = () => new Vuex.Store({
             worker(node, inputs, outputs) {
                 if(inputs['value1'].length && inputs['value2'].length){
                     outputs.result = inputs['value1'][0] && inputs['value2'][0];
+                }
+            }
+        }
+        class OrComponent extends Rete.Component {
+            constructor(){
+                super("OR");
+                this.path = ['Logic']
+            }
+
+            builder(node) {
+                node
+                    .addInput(new Rete.Input('value1', "Value1", boolSocket))
+                    .addInput(new Rete.Input('value2', "Value2", boolSocket))
+                    .addOutput(new Rete.Output('result', "Result", boolSocket));
+            }
+
+            worker(node, inputs, outputs) {
+                if(inputs['value1'].length && inputs['value2'].length){
+                    outputs.result = inputs['value1'][0] || inputs['value2'][0];
                 }
             }
         }
@@ -419,7 +457,8 @@ const store = () => new Vuex.Store({
             new PrintStrComponent, new PrintObjComponent,
             new NumComponent, new StrComponent,
             new AddComponent, new SubtractComponent,
-            new MoreComponent, new AndComponent,
+            new MoreComponent, new NoComponent,
+            new OrComponent, new AndComponent,
             new GetComponent, new SetComponent,
             new AnyToNumComponent, new StrToNumComponent,
             new InputFilterComponent, new InputMapComponent,
