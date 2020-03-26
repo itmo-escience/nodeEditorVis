@@ -205,6 +205,21 @@ const store = () => new Vuex.Store({
                 console.log(inputs['num'][0])
             }
         }
+        class PrintStrComponent extends Rete.Component {
+            constructor() {
+                super('Print String')
+                this.path = ['Print']
+            }
+        
+            builder(node) {
+                let inp = new Rete.Input('str', 'String', strSocket);
+                node.addInput(inp);
+            }
+        
+            worker(node, inputs, outputs) {
+                console.log(inputs['str'][0])
+            }
+        }
 
         // OBJECT
         class GetComponent extends Rete.Component {
@@ -330,8 +345,7 @@ const store = () => new Vuex.Store({
             }
         }
 
-        
-
+        // MATH
         class AddComponent extends Rete.Component {
             constructor( ) {
                 super('Add')
@@ -371,6 +385,7 @@ const store = () => new Vuex.Store({
         const components = [
             new PrintNumComponent,
             new PrintAnyComponent,
+            new PrintStrComponent,
             new NumComponent,
             new StrComponent,
             new AddComponent,
