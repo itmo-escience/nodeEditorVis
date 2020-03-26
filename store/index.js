@@ -363,8 +363,7 @@ const store = () => new Vuex.Store({
             },
             rename(component) {
                 return component.name;
-            },
-            // items: {'Click me'(){ console.log('Works!') }}
+            }
         });
 
         var engine = new Rete.Engine('demo@0.1.0')
@@ -392,14 +391,12 @@ const store = () => new Vuex.Store({
             engine.register(c);
         });
 
+        editor.on('showcontextmenu', ({ e, node }) => {
+            return node && !(node.name.includes('Input')  || node.name.includes('Output'));
+        });
+
         this.state.engine = engine;
         this.state.editor = editor;
-
-        // editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
-        //     await engine.abort();
-        //     await engine.process(editor.toJSON());
-        //     console.log(editor.toJSON())
-        // })
       }
   }
 })
