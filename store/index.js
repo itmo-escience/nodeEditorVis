@@ -392,7 +392,6 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-
         class AndComponent extends Rete.Component {
             constructor(){
                 super("And");
@@ -440,10 +439,9 @@ const store = () => new Vuex.Store({
             }
 
             builder(node) {
-                node.addInput(new Rete.Input('num1', 'Number', numSocket));
-                node.addInput(new Rete.Input('num2', 'Number', numSocket));
-                
-                node.addOutput(new Rete.Output('result', 'Number', numSocket));
+                node.addInput(new Rete.Input('num1', 'Number', numSocket))
+                    .addInput(new Rete.Input('num2', 'Number', numSocket))
+                    .addOutput(new Rete.Output('result', 'Number', numSocket));
             }
 
             worker(node, inputs, outputs) {
@@ -457,10 +455,9 @@ const store = () => new Vuex.Store({
             }
 
             builder(node) {
-                node.addInput(new Rete.Input('num1', 'Number', numSocket));
-                node.addInput(new Rete.Input('num2', 'Number', numSocket));
-                
-                node.addOutput(new Rete.Output('result', 'Number', numSocket));
+                node.addInput(new Rete.Input('num1', 'Number', numSocket))
+                    .addInput(new Rete.Input('num2', 'Number', numSocket))
+                    .addOutput(new Rete.Output('result', 'Number', numSocket));
             }
 
             worker(node, inputs, outputs) {
@@ -474,10 +471,9 @@ const store = () => new Vuex.Store({
             }
 
             builder(node) {
-                node.addInput(new Rete.Input('num1', 'Number', numSocket));
-                node.addInput(new Rete.Input('num2', 'Number', numSocket));
-                
-                node.addOutput(new Rete.Output('result', 'Number', numSocket));
+                node.addInput(new Rete.Input('num1', 'Number', numSocket))
+                    .addInput(new Rete.Input('num2', 'Number', numSocket))
+                    .addOutput(new Rete.Output('result', 'Number', numSocket));
             }
 
             worker(node, inputs, outputs) {
@@ -491,10 +487,10 @@ const store = () => new Vuex.Store({
             }
 
             builder(node) {
-                node.addInput(new Rete.Input('num1', 'Number', numSocket));
-                node.addInput(new Rete.Input('num2', 'Number', numSocket));
-                
-                node.addOutput(new Rete.Output('result', 'Number', numSocket));
+                node
+                    .addInput(new Rete.Input('num1', 'Number', numSocket))
+                    .addInput(new Rete.Input('num2', 'Number', numSocket))
+                    .addOutput(new Rete.Output('result', 'Number', numSocket));
             }
 
             worker(node, inputs, outputs) {
