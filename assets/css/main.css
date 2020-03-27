@@ -3,9 +3,11 @@
 .socket-output-object > path { stroke: #0000FF !important; }
 .socket-output-bool > path{ stroke: #800000 !important; }
 .socket-output-any > path{ stroke: #6699ff !important; }
+.socket-output-flow > path{ stroke: #e6e6e6 !important; }
 
 .socket.output.number, .socket.input.number { background: #9acd32; }
 .socket.output.string, .socket.input.string { background: #FF00FF; }
 .socket.output.object, .socket.input.object { background: #0000FF; }
 .socket.output.bool, .socket.input.bool { background: #800000; }
 .socket.output.any, .socket.input.any { background: #6699ff; }
+.socket.output.flow, .socket.input.flow { background: #e6e6e6; }

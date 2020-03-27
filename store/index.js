@@ -26,6 +26,7 @@ const store = () => new Vuex.Store({
         const boolSocket = new Rete.Socket('Bool');
         const anySocket = new Rete.Socket('Any');
         const strSocket = new Rete.Socket('String');
+        const flowSocket = new Rete.Socket('Flow');
 
         class NumControl extends Rete.Control {
             constructor(emitter, key, readonly) {
@@ -51,39 +52,6 @@ const store = () => new Vuex.Store({
                 this.vueContext.value = val;
             }
         }
-
-        class NumComponent extends Rete.Component {
-            constructor(){
-                super("Number");
-                this.path = ['Const']
-            }
-
-            builder(node) {
-                var out1 = new Rete.Output('num', "Number", numSocket);
-                node.addControl(new NumControl(this.editor, 'num')).addOutput(out1);
-            }
-
-            worker(node, inputs, outputs) {
-                outputs['num'] = node.data.num;
-            }
-        }
-
-        class StrComponent extends Rete.Component {
-            constructor(){
-                super("String");
-                this.path = ['Const']
-            }
-
-            builder(node) {
-                node
-                    .addControl(new StrControl(this.editor, 'str'))
-                    .addOutput(new Rete.Output('str', "String", strSocket));
-            }
-
-            worker(node, inputs, outputs) {
-                outputs['str'] = node.data.str;
-            }
-        }
         
         // Input
         class InputFilterComponent extends Rete.Component {
@@ -93,6 +61,7 @@ const store = () => new Vuex.Store({
             }
 
             builder(node) {
+                node.addOutput(new Rete.Output('flow', 'Flow', flowSocket));
                 for(let key in node.data){
                     let socket;
                     switch(typeof node.data[key]){
@@ -127,8 +96,10 @@ const store = () => new Vuex.Store({
                 this.path = null
             }
 
-            builder(node) {  
-                node.addOutput(new Rete.Output('row', 'Row', objSocket));
+            builder(node) {
+                node
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('row', 'Row', objSocket));
             }
 
             worker(node, inputs, outputs) {
@@ -138,7 +109,6 @@ const store = () => new Vuex.Store({
 
         //  OUTPUT
         class OutputFilterComponent extends Rete.Component {
-
             constructor(){
                 super("Output Filter");
                 this.path = null
@@ -146,11 +116,13 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                .addInput(new Rete.Input('flow', 'Flow', flowSocket))
                 .addInput(new Rete.Input('value', "Value", boolSocket));
+
             }
 
             worker(node, inputs, outputs) {
-                if(inputs['value']){
+                if(inputs['flow'].length && inputs['value']){
                     node.data.result = inputs['value'][0];
                     state.result = inputs['value'][0];
                 }
@@ -164,11 +136,12 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                .addInput(new Rete.Input('flow', 'Flow', flowSocket))
                 .addInput(new Rete.Input('row', "Row", objSocket));
             }
 
             worker(node, inputs, outputs) {
-                if(inputs['row'].length){
+                if(inputs['flow'].length && inputs['row'].length){
                     node.data = inputs['row'][0];
                     state.result = inputs['row'][0];
                 }
@@ -183,11 +156,14 @@ const store = () => new Vuex.Store({
             }
         
             builder(node) {
-                node.addInput(new Rete.Input('any', 'Any', anySocket));
+                node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addInput(new Rete.Input('any', 'Any', anySocket));
+
             }
         
             worker(node, inputs, outputs) {
-                console.log(inputs['any'][0])
+                if(inputs['flow'].length) console.log(inputs['any'][0]);
             }
         }
         class PrintNumComponent extends Rete.Component {
@@ -197,12 +173,13 @@ const store = () => new Vuex.Store({
             }
         
             builder(node) {
-                let inp = new Rete.Input('num', 'Number', numSocket);
-                node.addInput(inp);
+                node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addInput(new Rete.Input('num', 'Number', numSocket));
             }
         
             worker(node, inputs, outputs) {
-                console.log(inputs['num'][0])
+                if(inputs['flow'].length) console.log(inputs['num'][0]);
             }
         }
         class PrintStrComponent extends Rete.Component {
@@ -212,12 +189,13 @@ const store = () => new Vuex.Store({
             }
         
             builder(node) {
-                let inp = new Rete.Input('str', 'String', strSocket);
-                node.addInput(inp);
+                node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addInput(new Rete.Input('str', 'String', strSocket));
             }
         
             worker(node, inputs, outputs) {
-                console.log(inputs['str'][0])
+                if(inputs['flow'].length) console.log(inputs['str'][0]);
             }
         }
         class PrintObjComponent extends Rete.Component {
@@ -227,12 +205,13 @@ const store = () => new Vuex.Store({
             }
         
             builder(node) {
-                let inp = new Rete.Input('obj', 'Object', objSocket);
-                node.addInput(inp);
+                node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addInput(new Rete.Input('obj', 'Object', objSocket));
             }
         
             worker(node, inputs, outputs) {
-                console.log(inputs['obj'][0])
+                if(inputs['flow'].length) console.log(inputs['obj'][0]);
             }
         }
 
@@ -248,14 +227,19 @@ const store = () => new Vuex.Store({
                 key.addControl(new StrControl(this.editor, 'key'));
 
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(key)
                     .addInput(new Rete.Input('obj', "Object", objSocket))
                     .addOutput(new Rete.Output('val', "Value", anySocket));
             }
 
             worker(node, inputs, outputs) {
-                let key = inputs['key'].length ? inputs['key'][0] : node.data.key;
-                outputs.val = inputs.obj[0][key];
+                if(inputs['flow'].length){
+                   let key = inputs['key'].length ? inputs['key'][0] : node.data.key;
+                    outputs.val = inputs.obj[0][key]; 
+                }
+                
             }
         }
         class SetComponent extends Rete.Component {
@@ -272,6 +256,8 @@ const store = () => new Vuex.Store({
                 value.addControl(new StrControl(this.editor, 'val'));
 
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(key)
                     .addInput(value)
                     .addInput(new Rete.Input('inObj', "Object", objSocket))
@@ -279,10 +265,13 @@ const store = () => new Vuex.Store({
             }
 
             worker(node, inputs, outputs) {
-                let key = inputs['key'].length ? inputs['key'][0] : node.data.key;
-                let val = inputs['val'].length ? inputs['val'][0] : node.data.val;
-                inputs.inObj[0][key] = val;
-                outputs.outObj = inputs.inObj[0];
+                if(inputs['flow'].length){
+                    let key = inputs['key'].length ? inputs['key'][0] : node.data.key;
+                    let val = inputs['val'].length ? inputs['val'][0] : node.data.val;
+                    inputs.inObj[0][key] = val;
+                    outputs.outObj = inputs.inObj[0];
+                }
+                
             }
         }
 
@@ -295,12 +284,14 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(new Rete.Input('any', "Any", anySocket))
                     .addOutput(new Rete.Output('num', "Num", numSocket));
             }
 
             worker(node, inputs, outputs) {
-                outputs.num = +inputs.any[0];
+                if(inputs['flow'].length) outputs.num = +inputs.any[0];
             }
         }
         class AnyToStrComponent extends Rete.Component {
@@ -311,13 +302,17 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(new Rete.Input('any', "Any", anySocket))
                     .addOutput(new Rete.Output('str', "String", strSocket));
             }
 
             worker(node, inputs, outputs) {
-                let val = inputs.any[0];
-                outputs.str = typeof val === 'string' ? val : '';
+                if(inputs['flow'].length){
+                    let val = inputs.any[0];
+                    outputs.str = typeof val === 'string' ? val : ''; 
+                }
             }
         }
         class AnyToObjComponent extends Rete.Component {
@@ -328,13 +323,17 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(new Rete.Input('any', "Any", anySocket))
                     .addOutput(new Rete.Output('obj', "Object", objSocket));
             }
 
-            worker(node, inputs, outputs) {
-                let val = inputs.any[0];
-                outputs.obj = typeof val === 'object' ? val : null;
+            worker(node, inputs, outputs){
+                if(inputs['flow'].length){
+                    let val = inputs.any[0];
+                    outputs.obj = typeof val === 'object' ? val : null; 
+                }
             }
         }
         class StrToNumComponent extends Rete.Component {
@@ -345,12 +344,14 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(new Rete.Input('str', "String", strSocket))
                     .addOutput(new Rete.Output('num', "Num", numSocket));
             }
 
             worker(node, inputs, outputs) {
-                outputs.num = +inputs.str[0];
+                if(inputs['flow'].length) outputs.num = +inputs.str[0];
             }
         }
 
@@ -363,13 +364,15 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(new Rete.Input('value1', "Value1", numSocket))
                     .addInput(new Rete.Input('value2', "Value2", numSocket))
                     .addOutput(new Rete.Output('result', "Result", boolSocket));
             }
 
             worker(node, inputs, outputs) {
-                if(inputs['value1'].length && inputs['value2'].length){
+                if(inputs['flow'].length && inputs['value1'].length && inputs['value2'].length){
                     outputs.result = inputs['value1'][0] > inputs['value2'][0];
                 }
             }
@@ -382,12 +385,14 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(new Rete.Input('val', "Value", bolSocket))
                     .addOutput(new Rete.Output('result', "Result", boolSocket));
             }
 
             worker(node, inputs, outputs) {
-                if(inputs['val']){
+                if(inputs['flow'].length && inputs['val']){
                     outputs.result = !inputs['val'][0];
                 }
             }
@@ -400,13 +405,15 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(new Rete.Input('value1', "Value1", boolSocket))
                     .addInput(new Rete.Input('value2', "Value2", boolSocket))
                     .addOutput(new Rete.Output('result', "Result", boolSocket));
             }
 
             worker(node, inputs, outputs) {
-                if(inputs['value1'].length && inputs['value2'].length){
+                if(inputs['flow'].length && inputs['value1'].length && inputs['value2'].length){
                     outputs.result = inputs['value1'][0] && inputs['value2'][0];
                 }
             }
@@ -419,13 +426,15 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(new Rete.Input('value1', "Value1", boolSocket))
                     .addInput(new Rete.Input('value2', "Value2", boolSocket))
                     .addOutput(new Rete.Output('result', "Result", boolSocket));
             }
 
             worker(node, inputs, outputs) {
-                if(inputs['value1'].length && inputs['value2'].length){
+                if(inputs['flow'].length && inputs['value1'].length && inputs['value2'].length){
                     outputs.result = inputs['value1'][0] || inputs['value2'][0];
                 }
             }
@@ -439,13 +448,16 @@ const store = () => new Vuex.Store({
             }
 
             builder(node) {
-                node.addInput(new Rete.Input('num1', 'Number', numSocket))
+                node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
+                    .addInput(new Rete.Input('num1', 'Number', numSocket))
                     .addInput(new Rete.Input('num2', 'Number', numSocket))
                     .addOutput(new Rete.Output('result', 'Number', numSocket));
             }
 
             worker(node, inputs, outputs) {
-                outputs['result'] = inputs['num1'] + inputs['num2'];
+                if(inputs['flow'].length) outputs['result'] = inputs['num1'] + inputs['num2'];
             }
         }
         class SubtractComponent extends Rete.Component {
@@ -455,13 +467,16 @@ const store = () => new Vuex.Store({
             }
 
             builder(node) {
-                node.addInput(new Rete.Input('num1', 'Number', numSocket))
+                node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
+                    .addInput(new Rete.Input('num1', 'Number', numSocket))
                     .addInput(new Rete.Input('num2', 'Number', numSocket))
                     .addOutput(new Rete.Output('result', 'Number', numSocket));
             }
 
             worker(node, inputs, outputs) {
-                outputs['result'] = inputs['num1'] - inputs['num2'];
+                if(inputs['flow'].length) outputs['result'] = inputs['num1'] - inputs['num2'];
             }
         }
         class DivideComponent extends Rete.Component {
@@ -471,13 +486,16 @@ const store = () => new Vuex.Store({
             }
 
             builder(node) {
-                node.addInput(new Rete.Input('num1', 'Number', numSocket))
+                node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
+                    .addInput(new Rete.Input('num1', 'Number', numSocket))
                     .addInput(new Rete.Input('num2', 'Number', numSocket))
                     .addOutput(new Rete.Output('result', 'Number', numSocket));
             }
 
             worker(node, inputs, outputs) {
-                outputs['result'] = inputs['num1'] / inputs['num2'];
+                if(inputs['flow'].length) outputs['result'] = inputs['num1'] / inputs['num2'];
             }
         }
         class MultiplyComponent extends Rete.Component {
@@ -488,13 +506,51 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 node
+                    .addInput(new Rete.Input('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
                     .addInput(new Rete.Input('num1', 'Number', numSocket))
                     .addInput(new Rete.Input('num2', 'Number', numSocket))
                     .addOutput(new Rete.Output('result', 'Number', numSocket));
             }
 
             worker(node, inputs, outputs) {
-                outputs['result'] = inputs['num1'] * inputs['num2'];
+                if(inputs['flow'].length) outputs['result'] = inputs['num1'] * inputs['num2'];
+            }
+        }
+
+        // CONST
+        class NumComponent extends Rete.Component {
+            constructor(){
+                super("Number");
+                this.path = ['Const']
+            }
+
+            builder(node) {
+                var out1 = new Rete.Output('num', "Number", numSocket);
+                node.addControl(new NumControl(this.editor, 'num'))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
+                    .addOutput(out1);
+            }
+
+            worker(node, inputs, outputs) {
+                outputs['num'] = node.data.num;
+            }
+        }
+        class StrComponent extends Rete.Component {
+            constructor(){
+                super("String");
+                this.path = ['Const']
+            }
+
+            builder(node) {
+                node
+                    .addControl(new StrControl(this.editor, 'str'))
+                    .addOutput(new Rete.Output('flow', 'Flow', flowSocket))
+                    .addOutput(new Rete.Output('str', "String", strSocket));
+            }
+
+            worker(node, inputs, outputs) {
+                outputs['str'] = node.data.str;
             }
         }
 
