@@ -171,7 +171,7 @@ export default {
                 }
                 state.editor.fromJSON(json);
             }
-            state.editor.on('process', async () => {
+            state.editor.on('process connectioncreated connectionremoved', async () => {
                 if(state.layouts[layout.name]){
                    state.layouts[layout.name].func = state.editor.toJSON(); 
                 }else{
