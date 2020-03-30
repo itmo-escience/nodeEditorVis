@@ -586,6 +586,58 @@ const store = () => new Vuex.Store({
             }
         }
 
+        // BREAK
+        class BreakComponent extends Rete.Component {
+            constructor(){
+                super("Break");
+                this.path = []
+            }
+
+            builder(node) {
+                node.addInput(new Rete.Input('obj', "Object", objSocket));
+            }
+
+            worker(node, inputs, outputs){
+                node.data.obj = inputs['obj'][0];
+            }
+        }
+        class ValuesComponent extends Rete.Component {
+            constructor(){
+                super("Values");
+                this.path = null;
+            }
+
+            builder(node) {
+                node.addInput(new Rete.Input('obj', "Object", objSocket));
+                for(let key in node.data){
+                    let socket;
+                    switch(typeof node.data[key]){
+                        case 'boolean':
+                            socket = boolSocket;
+                            break
+                        case 'number':
+                            socket = numSocket;
+                            break
+                        case 'object':
+                            socket = objSocket;
+                            break
+                        case 'string':
+                            socket = strSocket;
+                            break
+                        default:
+                            socket = anySocket;
+                    }
+                    node.addOutput(new Rete.Output(key, key, socket));
+                }
+            }
+
+            worker(node, inputs, outputs){
+                for(let key in node.data){
+                    outputs[key] = node.data[key];
+                }
+            }
+        }
+
         var container = document.querySelector('#editor')
         var editor = new Rete.NodeEditor('demo@0.1.0', container)
 
@@ -611,6 +663,7 @@ const store = () => new Vuex.Store({
             new AddComponent, new SubtractComponent,
             new DivideComponent, new MultiplyComponent,
             new BranchComponent,
+            new BreakComponent, new ValuesComponent,
             new MoreComponent, new NoComponent,
             new OrComponent, new AndComponent,
             new GetComponent, new SetComponent,
@@ -627,6 +680,22 @@ const store = () => new Vuex.Store({
 
         editor.on('showcontextmenu', ({ e, node }) => {
             return node && !(node.name.includes('Input')  || node.name.includes('Output'));
+        });
+        editor.on('connectioncreated', async (conn)=>{
+            if(conn.input.node.name === 'Break' || conn.output.node.name === 'Break'){
+                const inp = conn.input.node.name === 'Break' ? conn.input : conn.output;
+                const out = conn.input.node.name === 'Break' ? conn.output : conn.input;
+                
+                const component = new ValuesComponent;
+                const val = await component.createNode( out.node.data );
+                
+                val.position = inp.node.position;
+
+                editor.removeNode(inp.node);
+                editor.addNode(val);
+                
+                editor.connect(out.node.outputs.get(out.key), val.inputs.get('obj'));
+            }
         });
 
         this.state.engine = engine;
