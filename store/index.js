@@ -6,8 +6,14 @@ import ConnectionPlugin from 'rete-connection-plugin'
 import VueRenderPlugin from 'rete-vue-render-plugin'
 import ContextMenuPlugin from 'rete-context-menu-plugin';
 
+import G2 from '@antv/g2';
+import DataSet from '@antv/data-set';
+
+import * as d3 from "d3";
+
 import VueNumControl from '~/components/VueNumControl'
 import VueStrControl from '~/components/VueStrControl'
+import VueSelectControl from '~/components/VueSelectControl'
 
 Vue.use(Vuex)
 
@@ -52,6 +58,31 @@ const store = () => new Vuex.Store({
                 this.vueContext.value = val;
             }
         }
+        class SelectControl extends Rete.Control {
+            constructor(emitter, key, options) {
+                super(key);
+                this.render = 'vue';
+                this.component = VueSelectControl;
+                this.props = { emitter, ikey: key, options };
+            }
+
+            setValue(val) {
+                this.vueContext.value = val;
+            }
+        }
+        class Chart extends Rete.Control {
+            constructor(emitter, width, height, x, y, data) {
+                super(width);
+                this.render = 'vue';
+                this.component = VueSelectControl;
+                this.props = { emitter, width: width, height: height, x: x, y: y, data: data };
+            }
+
+            setValue(val) {
+                this.vueContext.value = val;
+            }
+        }
+        
         
         // Input
         class InputFilterComponent extends Rete.Component {
@@ -147,6 +178,37 @@ const store = () => new Vuex.Store({
                     node.data = inputs['row'][0];
                     state.result = inputs['row'][0];
                 }
+            }
+        }
+
+        class DatasetComponent extends Rete.Component {
+            constructor( ) {
+                super('Dataset')
+                this.path = null;
+            }
+            builder(node){
+                node
+                    .addControl(new SelectControl( this.editor, 'data', node.data ))
+                    .addOutput(new Rete.Output('data', 'Data', objSocket));
+            }
+            async worker(node, inputs, outputs){
+                outputs['data'] = await d3.csv( node.data.data ) 
+            }
+        }
+        class ChartComponent extends Rete.Component {
+            constructor() {
+                super('Chart')
+                this.path = null;
+            }
+            builder(node){
+                node
+                    .addControl(new SelectControl( this.editor, 'type', ['Area', 'Point', 'Line'] ))
+                    .addInput(new Rete.Input('width', 'Width', numSocket))
+                    .addInput(new Rete.Input('height', 'Height', numSocket));
+                //node.addControl(new Chart( this.editor ))
+            }
+            worker(node, inputs, outputs){
+                console.log(node.controls) 
             }
         }
 
@@ -669,8 +731,9 @@ const store = () => new Vuex.Store({
             new GetComponent, new SetComponent,
             new AnyToNumComponent, new AnyToStrComponent,
             new AnyToObjComponent, new StrToNumComponent,
-            new InputFilterComponent, new InputMapComponent,
-            new OutputFilterComponent, new OutputMapComponent
+            // new InputFilterComponent, new InputMapComponent,
+            // new OutputFilterComponent, new OutputMapComponent,
+            new DatasetComponent, new ChartComponent
         ];
 
         components.map(c => {
