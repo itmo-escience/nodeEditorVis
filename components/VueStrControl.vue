@@ -1,6 +1,7 @@
 <template>
     <input type="string" 
-        :readonly="readonly" 
+        :readonly="readonly"
+        :placeholder="placeholder"
         :value="value" 
         @input="change($event)" 
         @dblclick.stop="" 
@@ -9,7 +10,7 @@
 </template>
 <script>
     export default { 
-        props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
+        props: ['placeholder', 'readonly', 'emitter', 'ikey', 'getData', 'putData'],
         data() {
           return {
             value: '',

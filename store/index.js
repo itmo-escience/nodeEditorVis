@@ -41,11 +41,11 @@ const store = () => new Vuex.Store({
             }
         }
         class StrControl extends Rete.Control {
-            constructor(emitter, key, readonly) {
+            constructor(emitter, key, placeholder) {
                 super(key);
                 this.render = 'vue';
                 this.component = VueStrControl;
-                this.props = { emitter, ikey: key, readonly };
+                this.props = { emitter, ikey: key, placeholder };
             }
 
             setValue(val) {
@@ -225,7 +225,7 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 let key = new Rete.Input('key', "Key", strSocket);
-                key.addControl(new StrControl(this.editor, 'key'));
+                key.addControl(new StrControl(this.editor, 'key', 'key'));
 
                 node
                     .addInput(new Rete.Input('flow', 'Flow', flowSocket))
@@ -251,10 +251,10 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 let key = new Rete.Input('key', "Key", strSocket);
-                key.addControl(new StrControl(this.editor, 'key'));
+                key.addControl(new StrControl(this.editor, 'key', 'key'));
 
                 let value = new Rete.Input('val', "Value", strSocket);
-                value.addControl(new StrControl(this.editor, 'val'));
+                value.addControl(new StrControl(this.editor, 'val', 'value'));
 
                 node
                     .addInput(new Rete.Input('flow', 'Flow', flowSocket))
