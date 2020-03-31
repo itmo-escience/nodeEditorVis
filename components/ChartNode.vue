@@ -2,13 +2,15 @@
     <div class="node" :class="[selected(), node.name] | kebab">
         <div class="title">{{node.name}}</div>
         <!-- Inputs-->
-        <div class="node-body">
+        <div class="node-body d-flex">
             <div class="inputs">
                 <div class="control" v-for="(control, id) in controls()" v-control="control" :key="id"></div>
                 <div class="input" v-for="input in inputs()" :key="input.key">
-                    <Socket v-socket:input="input" type="input" :socket="input.socket"></Socket>
-                    <div class="input-title" v-show="!input.showControl()">{{input.name}}</div>
-                    <div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
+                    <div class="d-flex">
+                        <Socket v-socket:input="input" type="input" :socket="input.socket"></Socket>
+                        <div class="input-title" v-show="!input.showControl()">{{input.name}}</div>
+                        <div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
+                    </div>
                 </div>
             </div>
             <div id="container"></div>
@@ -70,19 +72,25 @@ export default{
     .node{
         background: rgba(110,136,255,0.8);
         border: 2px solid #4e58bf;
-        border-radius: 10%;
+        border-radius: 10px;
         min-width: 180px;
         height: auto;
         text-align: center;
+    }
+    .input-title{
+        position: relative;
+        top: 7px;
     }
     .title{
         font-size: 20px;
         color: #fff;
         margin: 20px;
     }
+    .d-flex{
+        display: flex;
+    }
     .node-body{
         text-align: left;
-        display: flex;
     }
     #container{
         background: #fff;

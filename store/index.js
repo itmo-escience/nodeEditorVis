@@ -16,6 +16,7 @@ import VueStrControl from '~/components/VueStrControl'
 import VueSelectControl from '~/components/VueSelectControl'
 
 import ChartNode from '~/components/ChartNode'
+import FieldsNode from '~/components/FieldsNode'
 
 Vue.use(Vuex)
 
@@ -170,45 +171,7 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-
-        class DatasetComponent extends Rete.Component {
-            constructor() {
-                super('Dataset')
-                this.path = null;
-            }
-            builder(node){
-                node
-                    .addControl(new SelectControl( this.editor, 'dataset', node.data.options ))
-                    .addOutput(new Rete.Output( 'data', 'Data', objSocket ));
-            }
-            worker(node, inputs, outputs){
-                outputs['data'] = state.data[ node.data.dataset ]; 
-            }
-        }
-        class ChartComponent extends Rete.Component {
-            constructor() {
-                super('Chart')
-                this.data.component = ChartNode;
-                this.path = null;
-            }
-            builder(node){
-                node
-                    .addControl(new SelectControl( this.editor, 'type', ['area', 'point', 'line'] ))
-                    .addInput(new Rete.Input('width', 'Width', numSocket))
-                    .addInput(new Rete.Input('height', 'Height', numSocket))
-                    .addInput(new Rete.Input('x', 'X', strSocket))
-                    .addInput(new Rete.Input('y', 'Y', strSocket))
-                    .addInput(new Rete.Input('data', 'Data', objSocket));
-            }
-            worker(node, inputs, outputs){
-                // console.log('woker')
-                node.data.width = inputs.width[0];
-                node.data.height = inputs.height[0];
-                node.data.x = inputs.x[0] || 'width';
-                node.data.y = inputs.y[0] || 'height'
-                node.data.DATA = inputs.data[0];
-            }
-        }
+        
 
         // PRINT
         class PrintAnyComponent extends Rete.Component {
@@ -697,6 +660,64 @@ const store = () => new Vuex.Store({
                 }
             }
         }
+        class FieldsComponent extends Rete.Component {
+            constructor(){
+                super('Fields')
+                this.data.component = FieldsNode;
+                this.path = null;
+            }
+            builder(node){
+                node.addInput(new Rete.Input('data', 'Data', objSocket));
+                for(let key in node.data[0]){
+                    node.addOutput(new Rete.Output(key, key, strSocket));
+                }
+            }
+            worker(node, inputs, outputs){
+                for(let key in node.data[0]){
+                    outputs[key] = key;
+                }
+            }
+        }
+        class DatasetComponent extends Rete.Component {
+            constructor() {
+                super('Dataset')
+                this.path = null;
+            }
+            builder(node){
+                node
+                    .addControl(new SelectControl( this.editor, 'dataset', node.data.options ))
+                    .addOutput(new Rete.Output( 'data', 'Data', objSocket ));
+            }
+            worker(node, inputs, outputs){
+                outputs['data'] = state.data[ node.data.dataset ]; 
+            }
+        }
+        class ChartComponent extends Rete.Component {
+            constructor() {
+                super('Chart')
+                this.data.component = ChartNode;
+                this.path = null;
+            }
+            builder(node){
+                node
+                    .addControl(new SelectControl( this.editor, 'type', ['area', 'point', 'line'] ))
+                    .addInput(new Rete.Input('width', 'Width', numSocket))
+                    .addInput(new Rete.Input('height', 'Height', numSocket))
+                    .addInput(new Rete.Input('x', 'X', strSocket))
+                    .addInput(new Rete.Input('y', 'Y', strSocket))
+                    .addInput(new Rete.Input('data', 'Data', objSocket));
+            }
+            worker(node, inputs, outputs){
+                node.data.width = inputs.width[0];
+                node.data.height = inputs.height[0];
+                node.data.x = inputs.x[0] || 'width';
+                node.data.y = inputs.y[0] || 'height';
+                node.data.DATA = inputs.data[0];
+                
+                // console.log(this.data.component)
+                // console.log(node)
+            }
+        }
 
         var container = document.querySelector('#editor')
         var editor = new Rete.NodeEditor('demo@0.1.0', container)
@@ -711,27 +732,46 @@ const store = () => new Vuex.Store({
             },
             rename(component) {
                 return component.name;
+            },
+            // nodeItems: {
+            //     'Click me'(){ console.log('Works for node!') },
+            //     'Delete': false, // don't show Delete item
+            //     'Clone': false // or Clone item
+            // },
+            nodeItems: node => {
+                if (node.name === 'Dataset') {
+                    return {
+                        async 'Fields'(){ 
+                            const component = new FieldsComponent;
+                            const fields = await component.createNode( state.data[ node.data.dataset ] );
+                            fields.position = [node.position[0]+250, node.position[1] ];
+                            editor.addNode(fields);
+                            editor.connect(node.outputs.get('data'), fields.inputs.get('data'));
+                        },
+                    }
+                }
             }
         });
 
         var engine = new Rete.Engine('demo@0.1.0')
 
         const components = [
-            new PrintNumComponent, new PrintAnyComponent,
-            new PrintStrComponent, new PrintObjComponent,
-            new NumComponent, new StrComponent,
-            new AddComponent, new SubtractComponent,
-            new DivideComponent, new MultiplyComponent,
-            new BranchComponent,
-            new BreakComponent, new ValuesComponent,
-            new MoreComponent, new NoComponent,
-            new OrComponent, new AndComponent,
-            new GetComponent, new SetComponent,
-            new AnyToNumComponent, new AnyToStrComponent,
-            new AnyToObjComponent, new StrToNumComponent,
+            // new PrintNumComponent, new PrintAnyComponent,
+            // new PrintStrComponent, new PrintObjComponent,
+            // new NumComponent, new StrComponent,
+            // new AddComponent, new SubtractComponent,
+            // new DivideComponent, new MultiplyComponent,
+            // new BranchComponent,
+            // new BreakComponent, new ValuesComponent,
+            // new MoreComponent, new NoComponent,
+            // new OrComponent, new AndComponent,
+            // new GetComponent, new SetComponent,
+            // new AnyToNumComponent, new AnyToStrComponent,
+            // new AnyToObjComponent, new StrToNumComponent,
             // new InputFilterComponent, new InputMapComponent,
             // new OutputFilterComponent, new OutputMapComponent,
-            new DatasetComponent, new ChartComponent
+            new DatasetComponent, new ChartComponent,
+            new FieldsComponent
         ];
 
         components.map(c => {
@@ -739,31 +779,29 @@ const store = () => new Vuex.Store({
             engine.register(c);
         });
 
-        editor.on('showcontextmenu', ({ e, node }) => {
-            return node && !(node.name.includes('Input')  || node.name.includes('Output'));
-        });
+        // editor.on('showcontextmenu', ({ e, node }) => {
+        //     return node && !(node.name.includes('Input')  || node.name.includes('Output'));
+        // });
         editor.on('process connectioncreated', async()=>{
-            // console.log(JSON.stringify(editor.toJSON()))
-            // console.log(editor.toJSON())
             await engine.abort();
             await engine.process( editor.toJSON() )
         });
-        editor.on('connectioncreated', async (conn)=>{
-            if(conn.input.node.name === 'Break' || conn.output.node.name === 'Break'){
-                const inp = conn.input.node.name === 'Break' ? conn.input : conn.output;
-                const out = conn.input.node.name === 'Break' ? conn.output : conn.input;
+        // editor.on('connectioncreated', async (conn)=>{
+        //     if(conn.input.node.name === 'Break' || conn.output.node.name === 'Break'){
+        //         const inp = conn.input.node.name === 'Break' ? conn.input : conn.output;
+        //         const out = conn.input.node.name === 'Break' ? conn.output : conn.input;
                 
-                const component = new ValuesComponent;
-                const val = await component.createNode( out.node.data );
+        //         const component = new ValuesComponent;
+        //         const val = await component.createNode( out.node.data );
                 
-                val.position = inp.node.position;
+        //         val.position = inp.node.position;
 
-                editor.removeNode(inp.node);
-                editor.addNode(val);
+        //         editor.removeNode(inp.node);
+        //         editor.addNode(val);
                 
-                editor.connect(out.node.outputs.get(out.key), val.inputs.get('obj'));
-            }
-        });
+        //         editor.connect(out.node.outputs.get(out.key), val.inputs.get('obj'));
+        //     }
+        // });
 
         this.state.engine = engine;
         this.state.editor = editor;
