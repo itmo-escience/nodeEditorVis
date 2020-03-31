@@ -4,22 +4,34 @@
   </div>
 </template>
 <script>
+  import * as d3 from "d3";
+
   export default {
-    mounted(){
+    async mounted(){
       this.$store.commit('initRete');
       const state = this.$store.state;
-        
+      state.data['cars.csv'] = await d3.csv('/data/cars.csv');
+      
       state.editor.fromJSON({
           "id": "demo@0.1.0",
           "nodes": {
               "1": {
                   "id": 1,
-                  "data": ['/data/cars.csv'],
+                  "data": { 
+                    'options': ['cars.csv'],
+                    'dataset': 'cars.csv'
+                  },
                   "position": [80, 200],
                   "name": "Dataset"
               },
               "2": {
                   "id": 2,
+                  "data": {
+                    'width': 500, 'height': 500,
+                    'type': 'point',
+                    'DATA': [],
+                    'x': 'width', 'y': 'height'
+                  },
                   "position": [500, 200],
                   "name": "Chart"
               }
@@ -36,10 +48,5 @@
     height: 100%;
     z-index: 2;
     background: #fff;
-  }
-  .chart{
-    position: fixed;
-    top: 0px;
-    left: 500px;
   }
 </style>

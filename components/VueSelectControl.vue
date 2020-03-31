@@ -17,7 +17,7 @@
             this.update();
           },
           update() {
-            if (this.ikey)
+            if (this.ikey)  
               this.putData(this.ikey, this.value)
             this.emitter.trigger('process');
           }

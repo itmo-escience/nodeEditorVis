@@ -15,6 +15,8 @@ import VueNumControl from '~/components/VueNumControl'
 import VueStrControl from '~/components/VueStrControl'
 import VueSelectControl from '~/components/VueSelectControl'
 
+import ChartNode from '~/components/ChartNode'
+
 Vue.use(Vuex)
 
 const store = () => new Vuex.Store({
@@ -23,7 +25,8 @@ const store = () => new Vuex.Store({
     editor: null,
     engine: null,
     result: null,
-    layouts: {}
+    layouts: {},
+    data: {}
   },
   mutations: {
     initRete(state){
@@ -70,19 +73,6 @@ const store = () => new Vuex.Store({
                 this.vueContext.value = val;
             }
         }
-        class Chart extends Rete.Control {
-            constructor(emitter, width, height, x, y, data) {
-                super(width);
-                this.render = 'vue';
-                this.component = VueSelectControl;
-                this.props = { emitter, width: width, height: height, x: x, y: y, data: data };
-            }
-
-            setValue(val) {
-                this.vueContext.value = val;
-            }
-        }
-        
         
         // Input
         class InputFilterComponent extends Rete.Component {
@@ -182,33 +172,41 @@ const store = () => new Vuex.Store({
         }
 
         class DatasetComponent extends Rete.Component {
-            constructor( ) {
+            constructor() {
                 super('Dataset')
                 this.path = null;
             }
             builder(node){
                 node
-                    .addControl(new SelectControl( this.editor, 'data', node.data ))
-                    .addOutput(new Rete.Output('data', 'Data', objSocket));
+                    .addControl(new SelectControl( this.editor, 'dataset', node.data.options ))
+                    .addOutput(new Rete.Output( 'data', 'Data', objSocket ));
             }
-            async worker(node, inputs, outputs){
-                outputs['data'] = await d3.csv( node.data.data ) 
+            worker(node, inputs, outputs){
+                outputs['data'] = state.data[ node.data.dataset ]; 
             }
         }
         class ChartComponent extends Rete.Component {
             constructor() {
                 super('Chart')
+                this.data.component = ChartNode;
                 this.path = null;
             }
             builder(node){
                 node
-                    .addControl(new SelectControl( this.editor, 'type', ['Area', 'Point', 'Line'] ))
+                    .addControl(new SelectControl( this.editor, 'type', ['area', 'point', 'line'] ))
                     .addInput(new Rete.Input('width', 'Width', numSocket))
-                    .addInput(new Rete.Input('height', 'Height', numSocket));
-                //node.addControl(new Chart( this.editor ))
+                    .addInput(new Rete.Input('height', 'Height', numSocket))
+                    .addInput(new Rete.Input('x', 'X', strSocket))
+                    .addInput(new Rete.Input('y', 'Y', strSocket))
+                    .addInput(new Rete.Input('data', 'Data', objSocket));
             }
             worker(node, inputs, outputs){
-                console.log(node.controls) 
+                // console.log('woker')
+                node.data.width = inputs.width[0];
+                node.data.height = inputs.height[0];
+                node.data.x = inputs.x[0] || 'width';
+                node.data.y = inputs.y[0] || 'height'
+                node.data.DATA = inputs.data[0];
             }
         }
 
@@ -743,6 +741,12 @@ const store = () => new Vuex.Store({
 
         editor.on('showcontextmenu', ({ e, node }) => {
             return node && !(node.name.includes('Input')  || node.name.includes('Output'));
+        });
+        editor.on('process connectioncreated', async()=>{
+            // console.log(JSON.stringify(editor.toJSON()))
+            // console.log(editor.toJSON())
+            await engine.abort();
+            await engine.process( editor.toJSON() )
         });
         editor.on('connectioncreated', async (conn)=>{
             if(conn.input.node.name === 'Break' || conn.output.node.name === 'Break'){
