@@ -733,11 +733,6 @@ const store = () => new Vuex.Store({
             rename(component) {
                 return component.name;
             },
-            // nodeItems: {
-            //     'Click me'(){ console.log('Works for node!') },
-            //     'Delete': false, // don't show Delete item
-            //     'Clone': false // or Clone item
-            // },
             nodeItems: node => {
                 if (node.name === 'Dataset') {
                     return {
