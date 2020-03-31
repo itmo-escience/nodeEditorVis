@@ -30,7 +30,8 @@
                     'width': 500, 'height': 500,
                     'type': 'point',
                     'DATA': [],
-                    'x': 'width', 'y': 'height'
+                    'x': 'width', 'y': 'height',
+                    'color':''
                   },
                   "position": [500, 200],
                   "name": "Chart"

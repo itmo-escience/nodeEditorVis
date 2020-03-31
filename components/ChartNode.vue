@@ -56,7 +56,10 @@ export default{
                     chart = this.chart.point();
                     break
             }
-            chart.position(`${data.x}*${data.y}`);
+            chart
+                .position(`${data.x}*${data.y}`)
+                .color(data.color);
+
             this.chart.render();
         }
     },

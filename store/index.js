@@ -705,13 +705,15 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('height', 'Height', numSocket))
                     .addInput(new Rete.Input('x', 'X', strSocket))
                     .addInput(new Rete.Input('y', 'Y', strSocket))
+                    .addInput(new Rete.Input('color', 'Color', strSocket))
                     .addInput(new Rete.Input('data', 'Data', objSocket));
             }
             worker(node, inputs, outputs){
                 node.data.width = inputs.width[0];
                 node.data.height = inputs.height[0];
-                node.data.x = inputs.x[0] || 'width';
-                node.data.y = inputs.y[0] || 'height';
+                node.data.x = inputs.x.length ? inputs.x[0] : node.data.x;
+                node.data.y = inputs.y.length ? inputs.y[0] : node.data.y;
+                node.data.color = inputs.color.length ? inputs.color[0] : node.data.color;
                 node.data.DATA = inputs.data[0];
                 
                 // console.log(this.data.component)
