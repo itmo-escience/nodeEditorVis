@@ -1,6 +1,11 @@
 const routerBase = process.env.DEPLOY_ENV === 'GH_PAGES' ? {
   router: {
-    base: '/nodeEditorVis/dist/'
+    base: '/nodeEditorVis/'
+  }
+} : {}
+const prefix = process.env.DEPLOY_ENV === 'GH_PAGES' ? {
+  axios: {
+    prefix: '/nodeEditorVis/'
   }
 } : {}
 module.exports = {
@@ -21,11 +26,15 @@ module.exports = {
   css: [
     '~/assets/css/main.css'
   ],
+  modules: [
+    '@nuxtjs/axios'
+  ],
   /*
   router: {
     base: '/nodeEditorVis/dist/'
   },
   */
+  ...prefix,
   ...routerBase,
   /*
   ** Customize the progress bar color
