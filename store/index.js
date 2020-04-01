@@ -29,7 +29,8 @@ const store = () => new Vuex.Store({
     engine: null,
     result: null,
     layouts: {},
-    data: {}
+    data: {},
+    mouse: {}
   },
   mutations: {
     initRete(state){
@@ -851,6 +852,21 @@ const store = () => new Vuex.Store({
         editor.on('process connectioncreated', async()=>{
             await engine.abort();
             await engine.process( editor.toJSON() )
+        });
+        editor.on('nodetranslate', ({ node, x, y })=>{
+            return !(node.name === 'Map')
+        });
+        editor.on('zoom',()=>{
+            const mapSize = 600;
+            const mapPosition = editor.nodes.find(node=>node.name === 'Map').position;
+            return !((state.mouse.x > mapPosition[0] && state.mouse.x < mapPosition[0]+mapSize) &&
+            (state.mouse.y > mapPosition[1] && state.mouse.y < mapPosition[1]+mapSize))
+        });
+        editor.on('mousemove', ({x,y})=>{
+            state.mouse = {
+                x: x,
+                y: y
+            }
         });
         // editor.on('connectioncreated', async (conn)=>{
         //     if(conn.input.node.name === 'Break' || conn.output.node.name === 'Break'){
