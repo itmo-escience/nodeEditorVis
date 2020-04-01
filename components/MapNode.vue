@@ -1,5 +1,5 @@
 <template>
-<div class="node map-node" :class="[selected(), node.name] | kebab">
+    <div class="node map-node" :class="[selected(), node.name] | kebab">
         <div class="title">{{node.name}}</div>
         <!-- Inputs-->
         <div class="node-body d-flex">
@@ -13,7 +13,7 @@
                     </div>
                 </div>
             </div>
-            <div id="map" ref="map"></div>
+            <div id="map" ref="map" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)"></div>
         </div>
     </div>
 </template>
@@ -28,10 +28,14 @@ export default{
     components:{ Socket: VueRenderPlugin.Socket },
     data(){
         return {
-            scene: null
+            scene: null,
+            freez: false
         }
     },
     methods: {
+        freezEditor(freez){
+            this.freez = freez;
+        },
         initScene(){
             const map = new Mapbox({
                 container: this.$refs.map,
@@ -47,27 +51,30 @@ export default{
     },
     mounted(){
         setTimeout(()=>{ this.initScene() }, 250);
+        this.editor.on('zoom nodetranslate', ()=>{
+            return !this.freez
+        })
     },
     updated(){
         const data = this.node.data;
-        const pointLayer = new PointLayer({})
-            .source(data.data, {
-            parser: {
-                type: 'json',
-                x: data.lon,
-                y: data.lat
-            }
-            })
-            .color(data.color)
-            .shape('circle');
+        const pointLayer = new PointLayer({});
+        if(data.data){
+            pointLayer.source(data.data, {
+                parser: {
+                    type: 'json',
+                    x: data.lon,
+                    y: data.lat
+                }
+            }).shape('circle');
+        }
+        if(data.color){
+            pointLayer.color(data.color);
+        }
+            
         if(data.size){
            pointLayer.size(data.size.field, [data.size.from, data.size.to]) 
         }
-            // .active(true)
-            // .style({
-            //   opacity: 1.0
-        // });
-      this.scene.addLayer(pointLayer);
+        this.scene.addLayer(pointLayer);
     }
 }
 </script>

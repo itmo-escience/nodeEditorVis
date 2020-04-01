@@ -30,9 +30,12 @@ const store = () => new Vuex.Store({
     result: null,
     layouts: {},
     data: {},
-    mouse: {}
+    freez: false
   },
   mutations: {
+    freezEditor(state, freez){
+        state.freez = freez;
+    },
     initRete(state){
         const numSocket = new Rete.Socket('Number');
         const objSocket = new Rete.Socket('Object');
@@ -43,11 +46,11 @@ const store = () => new Vuex.Store({
         const sizeSocket = new Rete.Socket('Size');
 
         class ColorControl extends Rete.Control {
-            constructor(emitter, key){
+            constructor(emitter, key, freez){
                 super(key);
                 this.render = 'vue';
                 this.component = VueColorControl;
-                this.props = { emitter, ikey: key};
+                this.props = { emitter, ikey: key, freez: freez};
             }
         }
         class NumControl extends Rete.Control {
@@ -679,11 +682,14 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node
-                    .addControl(new ColorControl(this.editor, 'color'))
+                    .addControl(new ColorControl(this.editor, 'color', 'freez'))
                     .addOutput(new Rete.Output('color', 'Color', strSocket));
             }
             worker(node, inputs, outputs){
-                outputs['color'] = node.data.color;
+                state.freez = node.data.freez;
+                if(node.data.color){
+                   outputs['color'] = node.data.color; 
+                }
             }
         }
         class FieldsComponent extends Rete.Component {
@@ -782,9 +788,6 @@ const store = () => new Vuex.Store({
                 node.data.y = inputs.y.length ? inputs.y[0] : node.data.y;
                 node.data.color = inputs.color.length ? inputs.color[0] : node.data.color;
                 node.data.DATA = inputs.data[0];
-                
-                // console.log(this.data.component)
-                // console.log(node)
             }
         }
 
@@ -846,27 +849,12 @@ const store = () => new Vuex.Store({
             engine.register(c);
         });
 
-        // editor.on('showcontextmenu', ({ e, node }) => {
-        //     return node && !(node.name.includes('Input')  || node.name.includes('Output'));
-        // });
         editor.on('process connectioncreated', async()=>{
             await engine.abort();
             await engine.process( editor.toJSON() )
         });
         editor.on('nodetranslate', ({ node, x, y })=>{
-            return !(node.name === 'Map')
-        });
-        editor.on('zoom',()=>{
-            const mapSize = 600;
-            const mapPosition = editor.nodes.find(node=>node.name === 'Map').position;
-            return !((state.mouse.x > mapPosition[0] && state.mouse.x < mapPosition[0]+mapSize) &&
-            (state.mouse.y > mapPosition[1] && state.mouse.y < mapPosition[1]+mapSize))
-        });
-        editor.on('mousemove', ({x,y})=>{
-            state.mouse = {
-                x: x,
-                y: y
-            }
+            return !state.freez
         });
         // editor.on('connectioncreated', async (conn)=>{
         //     if(conn.input.node.name === 'Break' || conn.output.node.name === 'Break'){
