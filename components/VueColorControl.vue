@@ -1,5 +1,12 @@
 <template>
-    <verte picker="square" model="hex" draggable="false" @input="change($event)"></verte>
+    <verte 
+        picker="square" 
+        model="hex" 
+        display="widget" 
+        draggable="false" 
+        showHistory="false" 
+        @input="change($event)">
+    </verte>
 </template>
 <script>
     import Verte from 'verte';
@@ -8,20 +15,10 @@
     export default { 
         props: ['emitter', 'ikey', 'getData', 'putData'],
         components: { Verte },
-        data() {
-          return {
-            color: 0,
-          }
-        },
         methods: {
           change(color){
-            console.log(color)
-            //this.color = +e.target.value;
-            //this.update();
-          },
-          update() {
             if (this.ikey)
-              this.putData(this.ikey, this.value)
+              this.putData(this.ikey, color)
             this.emitter.trigger('process');
           }
         },
