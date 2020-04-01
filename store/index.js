@@ -50,7 +50,7 @@ const store = () => new Vuex.Store({
                 super(key);
                 this.render = 'vue';
                 this.component = VueColorControl;
-                this.props = { emitter, ikey: key, freez: freez};
+                this.props = { emitter, key: key, freez: freez};
             }
         }
         class NumControl extends Rete.Control {
@@ -687,6 +687,7 @@ const store = () => new Vuex.Store({
             }
             worker(node, inputs, outputs){
                 state.freez = node.data.freez;
+                console.log(node.data.color)
                 if(node.data.color){
                    outputs['color'] = node.data.color; 
                 }
