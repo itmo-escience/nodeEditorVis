@@ -778,7 +778,6 @@ const store = () => new Vuex.Store({
         const components = [
             // new PrintNumComponent, new PrintAnyComponent,
             // new PrintStrComponent, new PrintObjComponent,
-            // new NumComponent, new StrComponent,
             // new AddComponent, new SubtractComponent,
             // new DivideComponent, new MultiplyComponent,
             // new BranchComponent,
@@ -790,6 +789,7 @@ const store = () => new Vuex.Store({
             // new AnyToObjComponent, new StrToNumComponent,
             // new InputFilterComponent, new InputMapComponent,
             // new OutputFilterComponent, new OutputMapComponent,
+            new StrComponent, new NumComponent,
             new DatasetComponent, new ChartComponent,
             new FieldsComponent
         ];
