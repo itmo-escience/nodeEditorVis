@@ -14,6 +14,7 @@ import * as d3 from "d3";
 import VueNumControl from '~/components/VueNumControl'
 import VueStrControl from '~/components/VueStrControl'
 import VueSelectControl from '~/components/VueSelectControl'
+import VueColorControl from '~/components/VueColorControl'
 
 import ChartNode from '~/components/ChartNode'
 import FieldsNode from '~/components/FieldsNode'
@@ -38,6 +39,14 @@ const store = () => new Vuex.Store({
         const strSocket = new Rete.Socket('String');
         const flowSocket = new Rete.Socket('Flow');
 
+        class ColorControl extends Rete.Control {
+            constructor(emitter, key){
+                super(key);
+                this.render = 'vue';
+                this.component = VueColorControl;
+                this.props = { emitter, ikey: key};
+            }
+        }
         class NumControl extends Rete.Control {
             constructor(emitter, key, readonly) {
                 super(key);
@@ -658,6 +667,20 @@ const store = () => new Vuex.Store({
                 for(let key in node.data){
                     outputs[key] = node.data[key];
                 }
+            }
+        }
+        class ColorComponent extends Rete.Component {
+            constructor(){
+                super('Color')
+                this.path = [];
+            }
+            builder(node){
+                node
+                    .addControl(new ColorControl(this.editor, 'color'))
+                    .addOutput(new Rete.Output('color', 'Color', strSocket));
+            }
+            worker(node, inputs, outputs){
+                console.log(node.data.color)
             }
         }
         class FieldsComponent extends Rete.Component {

@@ -10,7 +10,8 @@
     async mounted(){
       this.$store.commit('initRete');
       const state = this.$store.state;
-      state.data['cars.csv'] = await d3.csv('/data/cars.csv');
+      //state.data['cars.csv'] = await d3.csv('/data/cars.csv');
+      state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
       
       state.editor.fromJSON({
           "id": "demo@0.1.0",
