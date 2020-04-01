@@ -2,14 +2,12 @@
     <input type="number" 
         :readonly="readonly" 
         :value="value" 
-        @input="change($event)" 
-        @dblclick.stop="" 
-        @pointerdown.stop="" 
-        @pointermove.stop=""/>
+        @input="change($event)"
+        :placeholder="placeholder"/>
 </template>
 <script>
     export default { 
-        props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
+        props: ['placeholder', 'emitter', 'ikey', 'getData', 'putData'],
         data() {
           return {
             value: 0,

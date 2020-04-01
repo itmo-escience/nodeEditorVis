@@ -18,6 +18,7 @@ import VueColorControl from '~/components/VueColorControl'
 
 import ChartNode from '~/components/ChartNode'
 import FieldsNode from '~/components/FieldsNode'
+import MapNode from '~/components/MapNode'
 
 Vue.use(Vuex)
 
@@ -38,6 +39,7 @@ const store = () => new Vuex.Store({
         const anySocket = new Rete.Socket('Any');
         const strSocket = new Rete.Socket('String');
         const flowSocket = new Rete.Socket('Flow');
+        const sizeSocket = new Rete.Socket('Size');
 
         class ColorControl extends Rete.Control {
             constructor(emitter, key){
@@ -48,11 +50,11 @@ const store = () => new Vuex.Store({
             }
         }
         class NumControl extends Rete.Control {
-            constructor(emitter, key, readonly) {
+            constructor(emitter, key, placeholder) {
                 super(key);
                 this.render = 'vue';
                 this.component = VueNumControl;
-                this.props = { emitter, ikey: key, readonly };
+                this.props = { emitter, ikey: key, placeholder };
             }
 
             setValue(val) {
@@ -680,7 +682,7 @@ const store = () => new Vuex.Store({
                     .addOutput(new Rete.Output('color', 'Color', strSocket));
             }
             worker(node, inputs, outputs){
-                console.log(node.data.color)
+                outputs['color'] = node.data.color;
             }
         }
         class FieldsComponent extends Rete.Component {
@@ -713,6 +715,47 @@ const store = () => new Vuex.Store({
             }
             worker(node, inputs, outputs){
                 outputs['data'] = state.data[ node.data.dataset ]; 
+            }
+        }
+        class SizeComponent extends Rete.Component {
+            constructor(){
+                super('Size')
+                this.path = [];
+            }
+            builder(node){
+                node.addInput(new Rete.Input('field', 'Field', strSocket))
+                    .addControl(new NumControl(this.editor, 'from', 'from'))
+                    .addControl(new NumControl(this.editor, 'to', 'to'))
+                    .addOutput(new Rete.Output('size', 'Size', sizeSocket));
+            }
+            worker(node, inputs, outputs){
+                outputs['size'] = {
+                    from: node.data.from,
+                    to: node.data.to,
+                    field: inputs.field[0]
+                }
+            }
+        }
+        class MapComponent extends Rete.Component {
+            constructor(){
+                super('Map')
+                this.data.component = MapNode;
+                this.path = [];
+            }
+            builder(node){
+                node
+                    .addInput(new Rete.Input('data','Data', objSocket))
+                    .addInput(new Rete.Input('lat','Lat', strSocket))
+                    .addInput(new Rete.Input('lon','Lon', strSocket))
+                    .addInput(new Rete.Input('color','Color', strSocket))
+                    .addInput(new Rete.Input('size','Size', sizeSocket));
+            }
+            worker(node, inputs, outputs){
+                node.data.data = inputs.data[0];
+                node.data.lat = inputs.lat[0];
+                node.data.lon = inputs.lon[0];
+                node.data.color = inputs.color[0];
+                node.data.size = inputs.size[0];
             }
         }
         class ChartComponent extends Rete.Component {
@@ -789,9 +832,12 @@ const store = () => new Vuex.Store({
             // new AnyToObjComponent, new StrToNumComponent,
             // new InputFilterComponent, new InputMapComponent,
             // new OutputFilterComponent, new OutputMapComponent,
+            new ColorComponent,
             new StrComponent, new NumComponent,
             new DatasetComponent, new ChartComponent,
-            new FieldsComponent
+            new FieldsComponent,
+            new MapComponent,
+            new SizeComponent,
         ];
 
         components.map(c => {

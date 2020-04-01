@@ -10,8 +10,8 @@
     async mounted(){
       this.$store.commit('initRete');
       const state = this.$store.state;
-      //state.data['cars.csv'] = await d3.csv('/data/cars.csv');
       state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
+      state.data['branches.json'] = await this.$axios.$get('/data/branches.json');
       
       state.editor.fromJSON({
           "id": "demo@0.1.0",
@@ -19,23 +19,30 @@
               "1": {
                   "id": 1,
                   "data": { 
-                    'options': ['cars.csv'],
-                    'dataset': 'cars.csv'
+                    'options': ['branches.json', 'cars.csv'],
+                    'dataset': 'branches.json'
                   },
                   "position": [80, 200],
                   "name": "Dataset"
               },
+              // "2": {
+              //     "id": 2,
+              //     "data": {
+              //       'width': 500, 'height': 500,
+              //       'type': 'point',
+              //       'DATA': [],
+              //       'x': 'width', 'y': 'height',
+              //       'color':''
+              //     },
+              //     "position": [500, 200],
+              //     "name": "Chart"
+              // }
               "2": {
                   "id": 2,
                   "data": {
-                    'width': 500, 'height': 500,
-                    'type': 'point',
-                    'DATA': [],
-                    'x': 'width', 'y': 'height',
-                    'color':''
                   },
                   "position": [500, 200],
-                  "name": "Chart"
+                  "name": "Map"
               }
           }
       });
