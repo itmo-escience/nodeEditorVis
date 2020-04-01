@@ -5,7 +5,7 @@ const routerBase = process.env.DEPLOY_ENV === 'GH_PAGES' ? {
 } : {}
 const prefix = process.env.DEPLOY_ENV === 'GH_PAGES' ? {
   axios: {
-    prefix: '/nodeEditorVis/'
+    baseURL: 'https://itmo-escience.github.io/nodeEditorVis/'
   }
 } : {}
 module.exports = {
