@@ -57,8 +57,10 @@ export default{
                     break
             }
             chart
-                .position(`${data.x}*${data.y}`)
-                .color(data.color);
+                .position(`${data.x}*${data.y}`);
+            if(data.color){
+                chart.color(data.color);
+            }
 
             this.chart.render();
         }

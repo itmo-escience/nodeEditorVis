@@ -762,7 +762,7 @@ const store = () => new Vuex.Store({
             constructor() {
                 super('Chart')
                 this.data.component = ChartNode;
-                this.path = null;
+                this.path = [];
             }
             builder(node){
                 node
