@@ -10,15 +10,18 @@ import G2 from '@antv/g2';
 import DataSet from '@antv/data-set';
 
 import * as d3 from "d3";
+import { PointLayer } from '@antv/l7';
 
 import VueNumControl from '~/components/VueNumControl'
 import VueStrControl from '~/components/VueStrControl'
 import VueSelectControl from '~/components/VueSelectControl'
 import VueColorControl from '~/components/VueColorControl'
+import VueClosedColorControl from '~/components/VueClosedColorControl'
 
 import ChartNode from '~/components/ChartNode'
 import FieldsNode from '~/components/FieldsNode'
 import MapNode from '~/components/MapNode'
+import CategoryNode from '~/components/CategoryNode'
 
 Vue.use(Vuex)
 
@@ -44,6 +47,8 @@ const store = () => new Vuex.Store({
         const strSocket = new Rete.Socket('String');
         const flowSocket = new Rete.Socket('Flow');
         const sizeSocket = new Rete.Socket('Size');
+        const layerSocket = new Rete.Socket('Layer');
+        const colorSocket = new Rete.Socket('Color');
 
         class ColorControl extends Rete.Control {
             constructor(emitter, key, freez){
@@ -51,6 +56,14 @@ const store = () => new Vuex.Store({
                 this.render = 'vue';
                 this.component = VueColorControl;
                 this.props = { emitter, key: key, freez: freez};
+            }
+        }
+        class ClosedColorControl extends Rete.Control{
+            constructor(emitter, node, key, freez){
+                super(key)
+                this.render = 'vue';
+                this.component = VueClosedColorControl;
+                this.props = { emitter, node, key: key, freez: freez};
             }
         }
         class NumControl extends Rete.Control {
@@ -687,7 +700,6 @@ const store = () => new Vuex.Store({
             }
             worker(node, inputs, outputs){
                 state.freez = node.data.freez;
-                console.log(node.data.color)
                 if(node.data.color){
                    outputs['color'] = node.data.color; 
                 }
@@ -744,6 +756,68 @@ const store = () => new Vuex.Store({
                 }
             }
         }
+        class ColorCategoryComponent extends Rete.Component {
+            constructor(){
+                super('Color Category')
+                this.data.component = CategoryNode
+                this.path = []
+            }
+            build(node){
+                node
+                    .addInput(new Rete.Input('field', 'Field', strSocket))
+                    .addOutput(new Rete.Output('colors', 'Colors', colorSocket));
+                node.data.values.forEach(v=>{
+                     node.addControl(new ClosedColorControl(this.editor, node, 'field'+v, 'freez'))
+                });
+                node.data.colors = {};
+            }
+            worker(node, inputs, outputs){
+                state.freez = node.data.freez;
+                outputs.colors = {
+                    field: inputs.field[0],
+                    colors: Object.values(node.data.colors)
+                };
+            }
+        }
+        class PointLayerComponent extends Rete.Component {
+            constructor(){
+                super('Point Layer')
+                this.path = ['Layers']
+            }
+            build(node){
+                node
+                    .addInput(new Rete.Input('data','Data', objSocket))
+                    .addInput(new Rete.Input('lat','Lat', strSocket))
+                    .addInput(new Rete.Input('lon','Lon', strSocket))
+                    .addInput(new Rete.Input('color','Color', strSocket))
+                    .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
+                    .addInput(new Rete.Input('size','Size', sizeSocket))
+                    .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
+            }
+            worker(node, inputs, outputs){
+                const pointLayer = new PointLayer({});
+                if(inputs.data.length){
+                    pointLayer.source(inputs.data[0], {
+                        parser: {
+                            type: 'json',
+                            x: inputs.lon[0],
+                            y: inputs.lat[0]
+                        }
+                    }).shape('circle');
+                }
+                if(inputs.colors.length){
+                    pointLayer.color(inputs.colors[0].field, inputs.colors[0].colors)
+                }else if(inputs.color.length){
+                     pointLayer.color(inputs.color[0]);
+                }
+                    
+                if(inputs.size[0]){
+                    const size = inputs.size[0];
+                    pointLayer.size(size.field, [size.from, size.to]) 
+                }
+                outputs['layer'] = pointLayer;
+            }
+        }
         class MapComponent extends Rete.Component {
             constructor(){
                 super('Map')
@@ -752,18 +826,10 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node
-                    .addInput(new Rete.Input('data','Data', objSocket))
-                    .addInput(new Rete.Input('lat','Lat', strSocket))
-                    .addInput(new Rete.Input('lon','Lon', strSocket))
-                    .addInput(new Rete.Input('color','Color', strSocket))
-                    .addInput(new Rete.Input('size','Size', sizeSocket));
+                    .addInput(new Rete.Input('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
-                node.data.data = inputs.data[0];
-                node.data.lat = inputs.lat[0];
-                node.data.lon = inputs.lon[0];
-                node.data.color = inputs.color[0];
-                node.data.size = inputs.size[0];
+                node.data.layers = inputs.layer;
             }
         }
         class ChartComponent extends Rete.Component {
@@ -818,6 +884,7 @@ const store = () => new Vuex.Store({
                         },
                     }
                 }
+                return true
             }
         });
 
@@ -842,7 +909,8 @@ const store = () => new Vuex.Store({
             new DatasetComponent, new ChartComponent,
             new FieldsComponent,
             new MapComponent,
-            new SizeComponent,
+            new PointLayerComponent,
+            new SizeComponent, new ColorCategoryComponent,
         ];
 
         components.map(c => {

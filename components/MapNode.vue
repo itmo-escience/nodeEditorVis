@@ -56,25 +56,12 @@ export default{
         })
     },
     updated(){
-        const data = this.node.data;
-        const pointLayer = new PointLayer({});
-        if(data.data){
-            pointLayer.source(data.data, {
-                parser: {
-                    type: 'json',
-                    x: data.lon,
-                    y: data.lat
-                }
-            }).shape('circle');
+        const layers = this.node.data.layers;
+        if(layers){
+            layers.forEach(layer=>{
+                this.scene.addLayer(layer);
+            });
         }
-        if(data.color){
-            pointLayer.color(data.color);
-        }
-            
-        if(data.size){
-           pointLayer.size(data.size.field, [data.size.from, data.size.to]) 
-        }
-        this.scene.addLayer(pointLayer);
     }
 }
 </script>
