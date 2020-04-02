@@ -6,7 +6,7 @@
           :draggable="false" 
           :showHistory="false" 
           @input="change($event)">
-          <svg viewBox="0 0 24 10">
+          <svg height="20" viewBox="0 0 24 10">
             <rect width="24" height="10"></rect>
             <path d="M0 20h24v20H0z"/>
         </svg>

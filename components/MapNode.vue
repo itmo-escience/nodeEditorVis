@@ -57,7 +57,11 @@ export default{
     },
     updated(){
         const layers = this.node.data.layers;
+        console.log(this.scene.getLayers())
         if(layers){
+            this.scene.getLayers().forEach(layer=>{
+                this.scene.removeLayer(layer);
+            });
             layers.forEach(layer=>{
                 this.scene.addLayer(layer);
             });

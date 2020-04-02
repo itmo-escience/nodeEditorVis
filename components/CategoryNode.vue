@@ -14,12 +14,12 @@
 
         <div class="d-flex">
             <div class="values">
-                <div v-for="value in node.data.values" :key="value">
+                <div class="value" v-for="(value, i) in node.data.values" :key="i">
                     {{ value.length > 15 ? value.toString().slice(0,15)+'...' : value.toString().slice(0,15) }}
                 </div>
             </div>
             <div>
-                <div class="color-control" v-for="control in controls()" v-control="control" :key="control"></div>
+                <div class="color-control" v-for="(control, i) in controls()" v-control="control" :key="i"></div>
             </div>
         </div>
     </div>
@@ -54,7 +54,11 @@
         max-width: 150px;
         text-align: left;
     }
+    .value{
+        height: 20px;
+    }
     .color-control{
         margin-left: 20px;
+        height: 20px;
     }
 </style>

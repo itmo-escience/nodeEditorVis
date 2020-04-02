@@ -825,8 +825,7 @@ const store = () => new Vuex.Store({
                 this.path = [];
             }
             builder(node){
-                node
-                    .addInput(new Rete.Input('layer', 'Layer', layerSocket));
+                node.addInput(new Rete.Input('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
                 node.data.layers = inputs.layer;
@@ -882,6 +881,10 @@ const store = () => new Vuex.Store({
                             editor.addNode(fields);
                             editor.connect(node.outputs.get('data'), fields.inputs.get('data'));
                         },
+                    }
+                }else if(node.name === 'Map'){
+                    return{
+                        'Clone': false
                     }
                 }
                 return true
