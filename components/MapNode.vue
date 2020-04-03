@@ -38,7 +38,6 @@ export default{
         },
         initScene(){
             const map = new Mapbox({
-                // container: this.$refs.map,
                 style: 'dark',
                 pitch: 3,
                 center: [30.29, 59.92],
@@ -51,7 +50,7 @@ export default{
         }
     },
     mounted(){
-        setTimeout(()=>{ this.initScene() }, 250);
+        setTimeout(()=>{ this.initScene() }, 500);
         this.editor.on('zoom nodetranslate', ()=>{
             return !this.freez
         });
@@ -59,9 +58,9 @@ export default{
     updated(){
         const layers = this.node.data.layers;
         if(layers){
-            // this.scene.getLayers().forEach(layer=>{
-            //     this.scene.removeLayer(layer);
-            // });
+            this.scene.getLayers().forEach(layer=>{
+                this.scene.removeLayer(layer);
+            });
             layers.forEach(layer=>{
                 this.scene.addLayer(layer);
             });
@@ -75,5 +74,9 @@ export default{
         height: 500px;
         margin: 15px;
         position: relative;
+    }
+    .l7-scene canvas {
+        width: 500px !important;
+        height: 500px !important;
     }
 </style>

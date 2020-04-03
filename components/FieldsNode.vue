@@ -13,7 +13,7 @@
                 <Socket v-socket:output="output" type="output" :socket="output.socket"></Socket>
             </div>
         </div>
-        <div v-if="node.name === 'Fields'" class="field-menu d-fex" ref="menu" @mouseover="hodMenu" @mouseout="hideMenu">
+        <div v-if="node.name === 'Parse'" class="field-menu d-fex" ref="menu" @mouseover="hodMenu" @mouseout="hideMenu">
             <div class="menu-item" @click="colorCategory">Color category</div>
         </div>
         <!-- <div class="control" v-for="control in controls()" v-control="control"></div>-->
@@ -29,7 +29,7 @@
         data(){return { name: null }},
         methods:{
             async colorCategory(){
-                if(this.node.name === 'Fields'){
+                if(this.node.name === 'Parse'){
                     const component = this.editor.components.get('Color Category');
                     const unique = [...new Set(this.node.data.map(item => item[this.name]))];
                     const fields = await component.createNode( { values: unique } );
@@ -39,15 +39,15 @@
                 }
             },
             hideMenu(){
-                if(this.node.name === 'Fields')
+                if(this.node.name === 'Parse')
                     this.$refs.menu.style.visibility = 'hidden';
             },
             hodMenu(){
-                if(this.node.name === 'Fields')
+                if(this.node.name === 'Parse')
                     this.$refs.menu.style.visibility = 'visible';
             },
             showMenu(e, name){
-                if(this.node.name === 'Fields'){
+                if(this.node.name === 'Parse'){
                     const menu = this.$refs.menu
                     menu.style.visibility = 'visible';
                     menu.style.top = e.target.offsetTop + 'px';

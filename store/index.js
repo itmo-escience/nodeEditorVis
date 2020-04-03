@@ -784,8 +784,9 @@ const store = () => new Vuex.Store({
                 this.path = []
             }
             build(node){
+                let fieldSocket = typeof node.data.values[0] === 'number' ? numArrSocket : strArrSocket;
                 node
-                    .addInput(new Rete.Input('field', 'Field', strSocket))
+                    .addInput(new Rete.Input('field', 'Field', fieldSocket))
                     .addOutput(new Rete.Output('colors', 'Colors', colorSocket));
                 node.data.values.forEach(v=>{
                      node.addControl(new ClosedColorControl(this.editor, node, 'field'+v, 'freez'))
