@@ -13,7 +13,7 @@
                     </div>
                 </div>
             </div>
-            <div id="map" ref="map" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)"></div>
+            <div class="map-container" ref="map" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)"></div>
         </div>
     </div>
 </template>
@@ -38,13 +38,14 @@ export default{
         },
         initScene(){
             const map = new Mapbox({
-                container: this.$refs.map,
+                // container: this.$refs.map,
                 style: 'dark',
                 pitch: 3,
                 center: [30.29, 59.92],
                 zoom: 9,
             });
             this.scene = new Scene({
+                id: this.$refs.map,
                 map: map,
             });
         }
@@ -53,15 +54,14 @@ export default{
         setTimeout(()=>{ this.initScene() }, 250);
         this.editor.on('zoom nodetranslate', ()=>{
             return !this.freez
-        })
+        });
     },
     updated(){
         const layers = this.node.data.layers;
-        console.log(this.scene.getLayers())
         if(layers){
-            this.scene.getLayers().forEach(layer=>{
-                this.scene.removeLayer(layer);
-            });
+            // this.scene.getLayers().forEach(layer=>{
+            //     this.scene.removeLayer(layer);
+            // });
             layers.forEach(layer=>{
                 this.scene.addLayer(layer);
             });
@@ -70,7 +70,7 @@ export default{
 }
 </script>
 <style>
-    #map {
+    .map-container {
         width: 500px;
         height: 500px;
         margin: 15px;

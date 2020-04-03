@@ -49,6 +49,8 @@ const store = () => new Vuex.Store({
         const sizeSocket = new Rete.Socket('Size');
         const layerSocket = new Rete.Socket('Layer');
         const colorSocket = new Rete.Socket('Color');
+        const strArrSocket = new Rete.Socket('String Array');
+        const numArrSocket = new Rete.Socket('Number Array');
 
         class ColorControl extends Rete.Control {
             constructor(emitter, key, freez){
@@ -723,6 +725,25 @@ const store = () => new Vuex.Store({
                 }
             }
         }
+        class ParseComponent extends Rete.Component {
+            constructor(){
+                super('Parse')
+                this.data.component = FieldsNode;
+                this.path = null;
+            }
+            builder(node){
+                node.addInput(new Rete.Input('data', 'Data', objSocket));
+                for(let key in node.data[0]){
+                    let socket = isNaN(+ node.data[0][key]) ? strArrSocket : numArrSocket;
+                    node.addOutput(new Rete.Output(key, key, socket));
+                }
+            }
+            worker(node, inputs, outputs){
+                for(let key in node.data[0]){
+                    outputs[key] = node.data.map(d=>d[key]);
+                }
+            }
+        }
         class DatasetComponent extends Rete.Component {
             constructor() {
                 super('Dataset')
@@ -786,36 +807,49 @@ const store = () => new Vuex.Store({
             }
             build(node){
                 node
-                    .addInput(new Rete.Input('data','Data', objSocket))
-                    .addInput(new Rete.Input('lat','Lat', strSocket))
-                    .addInput(new Rete.Input('lon','Lon', strSocket))
+                    //.addInput(new Rete.Input('data','Data', objSocket))
+                    .addInput(new Rete.Input('lat','Lat', numArrSocket))
+                    .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     .addInput(new Rete.Input('size','Size', sizeSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
-                const pointLayer = new PointLayer({});
-                if(inputs.data.length){
-                    pointLayer.source(inputs.data[0], {
-                        parser: {
-                            type: 'json',
-                            x: inputs.lon[0],
-                            y: inputs.lat[0]
+                if( (inputs.lat.length && inputs.lon.length) && 
+                    inputs.lat[0].length === inputs.lon[0].length )
+                {
+                    const data = [];
+                    for(let i=0; i<inputs.lat[0].length; i++){
+                        let obj = {
+                            x: inputs.lon[0][i], 
+                            y: inputs.lat[0][i] 
                         }
-                    }).shape('circle');
+                        data.push(obj);
+                    }
+                    console.log(data)
+                    const pointLayer = new PointLayer()
+                        .source(data, {
+                            parser: {
+                                type: 'json',
+                                x: 'x',
+                                y: 'y'
+                            }
+                    });
+                    outputs['layer'] = pointLayer;
                 }
-                if(inputs.colors.length){
-                    pointLayer.color(inputs.colors[0].field, inputs.colors[0].colors)
-                }else if(inputs.color.length){
-                     pointLayer.color(inputs.color[0]);
-                }
+
+                // 
+                // if(inputs.colors.length){
+                //     pointLayer.color(inputs.colors[0].field, inputs.colors[0].colors)
+                // }else if(inputs.color.length){
+                //      pointLayer.color(inputs.color[0]);
+                // }
                     
-                if(inputs.size[0]){
-                    const size = inputs.size[0];
-                    pointLayer.size(size.field, [size.from, size.to]) 
-                }
-                outputs['layer'] = pointLayer;
+                // if(inputs.size[0]){
+                //     const size = inputs.size[0];
+                //     pointLayer.size(size.field, [size.from, size.to]) 
+                // }
             }
         }
         class MapComponent extends Rete.Component {
@@ -881,6 +915,13 @@ const store = () => new Vuex.Store({
                             editor.addNode(fields);
                             editor.connect(node.outputs.get('data'), fields.inputs.get('data'));
                         },
+                        async 'Parse'(){
+                            const component = new ParseComponent;
+                            const fields = await component.createNode( state.data[ node.data.dataset ] );
+                            fields.position = [node.position[0]+250, node.position[1] ];
+                            editor.addNode(fields);
+                            editor.connect(node.outputs.get('data'), fields.inputs.get('data'));
+                        }
                     }
                 }else if(node.name === 'Map'){
                     return{
@@ -910,7 +951,7 @@ const store = () => new Vuex.Store({
             new ColorComponent,
             new StrComponent, new NumComponent,
             new DatasetComponent, new ChartComponent,
-            new FieldsComponent,
+            new FieldsComponent, new ParseComponent,
             new MapComponent,
             new PointLayerComponent,
             new SizeComponent, new ColorCategoryComponent,

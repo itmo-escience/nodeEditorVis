@@ -1,6 +1,6 @@
 <template>
     <div class="node" :class="[selected(), node.name] | kebab">
-        <!--- hide title <div class="title">{{node.name}}</div> -->
+        <div class="title">{{node.name}}</div>
         <div class="input d-flex" v-for="input in inputs()" :key="input.key">
             <Socket v-socket:input="input" type="input" :socket="input.socket"></Socket>
             <div class="input-title" v-show="!input.showControl()">{{input.name}}</div>
@@ -13,7 +13,7 @@
                 <Socket v-socket:output="output" type="output" :socket="output.socket"></Socket>
             </div>
         </div>
-        <div class="field-menu d-fex" ref="menu" @mouseover="hodMenu" @mouseout="hideMenu">
+        <div v-if="node.name === 'Fields'" class="field-menu d-fex" ref="menu" @mouseover="hodMenu" @mouseout="hideMenu">
             <div class="menu-item" @click="colorCategory">Color category</div>
         </div>
         <!-- <div class="control" v-for="control in controls()" v-control="control"></div>-->
@@ -29,25 +29,31 @@
         data(){return { name: null }},
         methods:{
             async colorCategory(){
-                const component = this.editor.components.get('Color Category');
-                const unique = [...new Set(this.node.data.map(item => item[this.name]))];
-                const fields = await component.createNode( { values: unique } );
-                fields.position = [this.node.position[0]+250, this.node.position[1] ];
-                this.editor.addNode(fields);
-                this.editor.connect(this.node.outputs.get( this.name ), fields.inputs.get('field'));
+                if(this.node.name === 'Fields'){
+                    const component = this.editor.components.get('Color Category');
+                    const unique = [...new Set(this.node.data.map(item => item[this.name]))];
+                    const fields = await component.createNode( { values: unique } );
+                    fields.position = [this.node.position[0]+250, this.node.position[1] ];
+                    this.editor.addNode(fields);
+                    this.editor.connect(this.node.outputs.get( this.name ), fields.inputs.get('field'));
+                }
             },
             hideMenu(){
-                this.$refs.menu.style.visibility = 'hidden';
+                if(this.node.name === 'Fields')
+                    this.$refs.menu.style.visibility = 'hidden';
             },
             hodMenu(){
-                this.$refs.menu.style.visibility = 'visible';
+                if(this.node.name === 'Fields')
+                    this.$refs.menu.style.visibility = 'visible';
             },
             showMenu(e, name){
-                const menu = this.$refs.menu
-                menu.style.visibility = 'visible';
-                menu.style.top = e.target.offsetTop + 'px';
-                menu.style.left = e.target.offsetLeft + e.target.offsetWidth + 'px';
-                this.name = name;
+                if(this.node.name === 'Fields'){
+                    const menu = this.$refs.menu
+                    menu.style.visibility = 'visible';
+                    menu.style.top = e.target.offsetTop + 'px';
+                    menu.style.left = e.target.offsetLeft + e.target.offsetWidth + 'px';
+                    this.name = name;
+                }
             }
         }
     }

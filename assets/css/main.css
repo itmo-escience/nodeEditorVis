@@ -1,3 +1,5 @@
+.socket-output-number-array > path{ stroke: #aaff00 !important; }
+.socket-output-string-array > path{ stroke: #a002a0 !important; }
 .socket-output-number > path{ stroke: #9acd32 !important; }
 .socket-output-string > path{ stroke: #FF00FF !important; }
 .socket-output-object > path { stroke: #0000FF !important; }
@@ -6,6 +8,8 @@
 .socket-output-flow > path{ stroke: #e6e6e6 !important; }
 .socket-output-size > path{ stroke: #091580 !important; }
 
+.socket.output.number-array, .socket.input.number-array { background: #aaff00; }
+.socket.output.string-array, .socket.input.string-array { background: #a002a0; }
 .socket.output.number, .socket.input.number { background: #9acd32; }
 .socket.output.string, .socket.input.string { background: #FF00FF; }
 .socket.output.object, .socket.input.object { background: #0000FF; }
