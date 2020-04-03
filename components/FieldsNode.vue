@@ -15,6 +15,7 @@
         </div>
         <div v-if="node.name === 'Parse'" class="field-menu d-fex" ref="menu" @mouseover="hodMenu" @mouseout="hideMenu">
             <div class="menu-item" @click="colorCategory">Color category</div>
+            <div v-if="typeof node.data[0][name] === 'number'" class="menu-item" @click="range">Range</div>
         </div>
         <!-- <div class="control" v-for="control in controls()" v-control="control"></div>-->
         <!-- Inputs-->
@@ -28,6 +29,21 @@
         components:{ Socket: VueRenderPlugin.Socket },
         data(){return { name: null }},
         methods:{
+            async range(){
+                if(this.node.name === 'Parse'){
+                    const component = this.editor.components.get('Size');
+                    const values = this.node.data.map(item => item[this.name]);
+                    const range = await component.createNode( { 
+                        values: values,
+                        field: this.name,
+                        domainFrom: Math.min(...values),
+                        domainTo: Math.max(...values),
+                    });
+                    range.position = [this.node.position[0]+250, this.node.position[1] ];
+                    this.editor.addNode(range);
+                    this.editor.connect(this.node.outputs.get( this.name ), range.inputs.get('column'));
+                }
+            },
             async colorCategory(){
                 if(this.node.name === 'Parse'){
                     const component = this.editor.components.get('Color Category');

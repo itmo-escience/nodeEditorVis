@@ -761,19 +761,25 @@ const store = () => new Vuex.Store({
         class SizeComponent extends Rete.Component {
             constructor(){
                 super('Size')
-                this.path = [];
+                this.path = null;
             }
             builder(node){
-                node.addInput(new Rete.Input('field', 'Field', strSocket))
-                    .addControl(new NumControl(this.editor, 'from', 'from'))
-                    .addControl(new NumControl(this.editor, 'to', 'to'))
+                node.addInput(new Rete.Input('column', 'Column', numArrSocket))
+
+                node
+                    // .addInput(new Rete.Input('field', 'Field', strSocket))
+                    .addControl(new NumControl(this.editor, 'rangeFrom', 'range from'))
+                    .addControl(new NumControl(this.editor, 'rangeTo', 'range to'))
+                    .addControl(new NumControl(this.editor, 'domainFrom', 'domain from'))
+                    .addControl(new NumControl(this.editor, 'domainTo', 'domain to'))
                     .addOutput(new Rete.Output('size', 'Size', sizeSocket));
             }
             worker(node, inputs, outputs){
                 outputs['size'] = {
-                    from: node.data.from,
-                    to: node.data.to,
-                    field: inputs.field[0]
+                    domain: [node.data.domainFrom, node.data.domainTo],
+                    range: [node.data.rangeFrom, node.data.rangeTo],
+                    values: node.data.values,
+                    field: node.data.field
                 }
             }
         }
@@ -824,11 +830,11 @@ const store = () => new Vuex.Store({
                     for(let i=0; i<inputs.lat[0].length; i++){
                         let obj = {
                             x: inputs.lon[0][i], 
-                            y: inputs.lat[0][i] 
+                            y: inputs.lat[0][i],
+                            ...(inputs.size.length ? {size: inputs.size[0].values[i]} : {}) 
                         }
                         data.push(obj);
                     }
-                    console.log(data)
                     const pointLayer = new PointLayer()
                         .source(data, {
                             parser: {
@@ -836,21 +842,30 @@ const store = () => new Vuex.Store({
                                 x: 'x',
                                 y: 'y'
                             }
-                    });
+                    }).shape('circle');
+                    if(inputs.colors.length){
+                        pointLayer.color(inputs.colors[0].field, inputs.colors[0].colors)
+                    }else if(inputs.color.length){
+                        pointLayer.color(inputs.color[0]);
+                    }
+                    if(inputs.size.length){
+                        const size = inputs.size[0];
+                        console.log(size)
+                        pointLayer.size('size', s=>{
+                            const domain = size.domain;
+                            const range = size.range;
+                            s = s > domain[1] ? domain[1] : s;
+                            s = s < domain[0] ? domain[0] : s;
+                            return (((s - domain[0]) * (range[1] - range[0])) / (domain[1] - domain[0])) + range[0]
+                        }); 
+                    }
                     outputs['layer'] = pointLayer;
                 }
 
                 // 
-                // if(inputs.colors.length){
-                //     pointLayer.color(inputs.colors[0].field, inputs.colors[0].colors)
-                // }else if(inputs.color.length){
-                //      pointLayer.color(inputs.color[0]);
-                // }
+                
                     
-                // if(inputs.size[0]){
-                //     const size = inputs.size[0];
-                //     pointLayer.size(size.field, [size.from, size.to]) 
-                // }
+                
             }
         }
         class MapComponent extends Rete.Component {
