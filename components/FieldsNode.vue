@@ -15,7 +15,8 @@
         </div>
         <div v-if="node.name === 'Parse'" class="field-menu d-fex" ref="menu" @mouseover="hodMenu" @mouseout="hideMenu">
             <div class="menu-item" @click="colorCategory">Color category</div>
-            <div v-if="typeof node.data[0][name] === 'number'" class="menu-item" @click="range">Range</div>
+            <div class="menu-item" @click="shapeCategory">2d Shape category</div>
+            <div class="menu-item" @click="range" v-if="typeof node.data[0][name] === 'number'" >Range</div>
         </div>
         <!-- <div class="control" v-for="control in controls()" v-control="control"></div>-->
         <!-- Inputs-->
@@ -47,6 +48,16 @@
             async colorCategory(){
                 if(this.node.name === 'Parse'){
                     const component = this.editor.components.get('Color Category');
+                    const unique = [...new Set(this.node.data.map(item => item[this.name]))];
+                    const fields = await component.createNode( { values: unique } );
+                    fields.position = [this.node.position[0]+250, this.node.position[1] ];
+                    this.editor.addNode(fields);
+                    this.editor.connect(this.node.outputs.get( this.name ), fields.inputs.get('field'));
+                }
+            },
+            async shapeCategory(){
+                if(this.node.name === 'Parse'){
+                    const component = this.editor.components.get('2d Shape Category');
                     const unique = [...new Set(this.node.data.map(item => item[this.name]))];
                     const fields = await component.createNode( { values: unique } );
                     fields.position = [this.node.position[0]+250, this.node.position[1] ];

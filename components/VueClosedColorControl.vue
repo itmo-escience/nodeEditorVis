@@ -18,7 +18,7 @@
     import 'verte/dist/verte.css';
 
     export default { 
-        props: ['emitter', 'node', 'key', 'freez', 'getData', 'putData'],
+        props: ['emitter', 'node', 'ikey', 'freez', 'getData', 'putData'],
         components: { Verte },
         methods: {
           freezEditor(freez){
@@ -26,7 +26,7 @@
             this.emitter.trigger('process');
           },
           change(color){
-            this.node.data.colors[this.key] = color;
+            this.node.data.colors[this.ikey] = color;
             this.emitter.trigger('process');
           }
         }

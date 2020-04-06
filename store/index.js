@@ -17,6 +17,7 @@ import VueStrControl from '~/components/VueStrControl'
 import VueSelectControl from '~/components/VueSelectControl'
 import VueColorControl from '~/components/VueColorControl'
 import VueClosedColorControl from '~/components/VueClosedColorControl'
+import VueShapeSelectControl from '~/components/VueShapeSelectControl'
 
 import ChartNode from '~/components/ChartNode'
 import FieldsNode from '~/components/FieldsNode'
@@ -51,6 +52,7 @@ const store = () => new Vuex.Store({
         const colorSocket = new Rete.Socket('Color');
         const strArrSocket = new Rete.Socket('String Array');
         const numArrSocket = new Rete.Socket('Number Array');
+        const shapeSocket = new Rete.Socket('Shape');
 
         class ColorControl extends Rete.Control {
             constructor(emitter, key, freez){
@@ -65,7 +67,18 @@ const store = () => new Vuex.Store({
                 super(key)
                 this.render = 'vue';
                 this.component = VueClosedColorControl;
-                this.props = { emitter, node, key: key, freez: freez};
+                this.props = { emitter, node, ikey: key, freez: freez};
+            }
+        }
+        class ShapeSelectControl extends Rete.Control{
+            constructor(emitter, node, key, options){
+                super(key)
+                this.render = 'vue';
+                this.component = VueShapeSelectControl;
+                this.props = { emitter, node, ikey: key, options: options};
+            }
+            setValue(val) {
+                this.vueContext.value = val;
             }
         }
         class NumControl extends Rete.Control {
@@ -786,24 +799,65 @@ const store = () => new Vuex.Store({
         class ColorCategoryComponent extends Rete.Component {
             constructor(){
                 super('Color Category')
-                this.data.component = CategoryNode
+                this.data.component = CategoryNode;
                 this.path = []
             }
             build(node){
                 let fieldSocket = typeof node.data.values[0] === 'number' ? numArrSocket : strArrSocket;
                 node
                     .addInput(new Rete.Input('field', 'Field', fieldSocket))
-                    .addOutput(new Rete.Output('colors', 'Colors', colorSocket));
-                node.data.values.forEach(v=>{
-                     node.addControl(new ClosedColorControl(this.editor, node, 'field'+v, 'freez'))
-                });
+                    .addOutput(new Rete.Output('colors', 'Colors', colorSocket));    
                 node.data.colors = {};
+                node.data.values.forEach(v=>{
+                     node.addControl(new ClosedColorControl(this.editor, node, 'field'+v, 'freez'));
+                     node.data.colors['field'+v] = '#fff';
+                });
+                
             }
             worker(node, inputs, outputs){
                 state.freez = node.data.freez;
                 outputs.colors = {
                     field: inputs.field[0],
-                    colors: Object.values(node.data.colors)
+                    colors: node.data.colors
+                };
+            }
+        }
+        class TwoDShapeComponent extends Rete.Component {
+            constructor(){
+                super('2d Shape')
+                this.path = [];
+            }
+            builder(node){
+                const shapes = ['circle','square','triangle','hexagon'];
+                node.addControl(new SelectControl(this.editor, 'shape', shapes));
+                node.addOutput(new Rete.Output('shape', 'Shape', strSocket));
+            }
+            worker(node,inputs,outputs){
+                outputs.shape = node.data.shape;
+            }
+        }
+        class TwoDShapeCategoryComponent extends Rete.Component {
+            constructor(){
+                super('2d Shape Category')
+                this.data.component = CategoryNode
+                this.path = null;
+            }
+            builder(node){
+                const shapes = ['circle','square','triangle','hexagon'];
+                let fieldSocket = typeof node.data.values[0] === 'number' ? numArrSocket : strArrSocket;
+                node
+                    .addInput(new Rete.Input('field', 'Field', fieldSocket))
+                    .addOutput(new Rete.Output('shapes', 'Shapes', shapeSocket));
+                node.data.shapes = {};
+                node.data.values.forEach(v=>{
+                    node.addControl(new ShapeSelectControl(this.editor, node, 'field'+v, shapes))
+                    node.data.shapes['field'+v] = 'circle'; 
+                });
+            }
+            worker(node,inputs,outputs){
+                outputs.shapes = {
+                    field: inputs.field[0],
+                    shapes: node.data.shapes
                 };
             }
         }
@@ -816,8 +870,9 @@ const store = () => new Vuex.Store({
                 node
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
-                    .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('shape','Shape', strSocket))
+                    .addInput(new Rete.Input('shapes', 'Shape by Cat', shapeSocket))
+                    .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     .addInput(new Rete.Input('size','Size', sizeSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
@@ -831,7 +886,9 @@ const store = () => new Vuex.Store({
                         let obj = {
                             x: inputs.lon[0][i], 
                             y: inputs.lat[0][i],
-                            ...(inputs.size.length ? {size: inputs.size[0].values[i]} : {}) 
+                            ...(inputs.size.length ? {size: inputs.size[0].values[i]} : {}), 
+                            ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                            ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                         }
                         data.push(obj);
                     }
@@ -842,16 +899,21 @@ const store = () => new Vuex.Store({
                                 x: 'x',
                                 y: 'y'
                             }
-                    }).shape('circle');
+                    });
                     if(inputs.colors.length){
-                        pointLayer.color(inputs.colors[0].field, inputs.colors[0].colors)
+                        pointLayer.color('color', c=>{
+                            return inputs.colors[0].colors['field'+c]
+                        });
                     }else if(inputs.color.length){
                         pointLayer.color(inputs.color[0]);
                     }
                     
                     if(inputs.shape.length){
-                        console.log(inputs.shape[0]);
                         pointLayer.shape(inputs.shape[0]);
+                    }else if(inputs.shapes.length){
+                        pointLayer.shape('shape', s=>{
+                            return inputs.shapes[0].shapes['field'+s]
+                        });
                     }
 
                     if(inputs.size.length){
@@ -866,20 +928,6 @@ const store = () => new Vuex.Store({
                     }
                     outputs['layer'] = pointLayer;
                 }
-            }
-        }
-        class TwoDShapeComponent extends Rete.Component {
-            constructor(){
-                super('2d Shape')
-                this.path = [];
-            }
-            builder(node){
-                const shapes = ['point','circle','square','triangle','hexagon','image','text'];
-                node.addControl(new SelectControl(this.editor, 'shape', shapes));
-                node.addOutput(new Rete.Output('shape', 'Shape', strSocket));
-            }
-            worker(node,inputs,outputs){
-                outputs.shape = node.data.shape;
             }
         }
         class MapComponent extends Rete.Component {
@@ -993,7 +1041,7 @@ const store = () => new Vuex.Store({
             new MapComponent,
             new PointLayerComponent,
             new SizeComponent, new ColorCategoryComponent,
-            new TwoDShapeComponent
+            new TwoDShapeComponent, new TwoDShapeCategoryComponent
         ];
 
         components.map(c => {

@@ -67,7 +67,6 @@ export default{
             this.editor.removeNode(this.node);
         },
         updateMap(){
-            console.log(this.node.data.update)
             if(this.node.data.update){
                const layers = this.node.data.layers;
                 if(layers){
