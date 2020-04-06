@@ -818,6 +818,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
+                    .addInput(new Rete.Input('shape','Shape', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     .addInput(new Rete.Input('size','Size', sizeSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
@@ -848,9 +849,14 @@ const store = () => new Vuex.Store({
                     }else if(inputs.color.length){
                         pointLayer.color(inputs.color[0]);
                     }
+
+                    if(inputs.shape.length){
+                        console.log(inputs.shape[0]);
+                        pointLayer.shape(inputs.shape[0]);
+                    }
+
                     if(inputs.size.length){
                         const size = inputs.size[0];
-                        console.log(size)
                         pointLayer.size('size', s=>{
                             const domain = size.domain;
                             const range = size.range;
@@ -861,11 +867,20 @@ const store = () => new Vuex.Store({
                     }
                     outputs['layer'] = pointLayer;
                 }
-
-                // 
-                
-                    
-                
+            }
+        }
+        class TwoDShapeComponent extends Rete.Component {
+            constructor(){
+                super('2d Shape')
+                this.path = [];
+            }
+            builder(node){
+                const shapes = ['point','circle','square','triangle','hexagon','image','text'];
+                node.addControl(new SelectControl(this.editor, 'shape', shapes));
+                node.addOutput(new Rete.Output('shape', 'Shape', strSocket));
+            }
+            worker(node,inputs,outputs){
+                outputs.shape = node.data.shape;
             }
         }
         class MapComponent extends Rete.Component {
@@ -976,6 +991,7 @@ const store = () => new Vuex.Store({
             new MapComponent,
             new PointLayerComponent,
             new SizeComponent, new ColorCategoryComponent,
+            new TwoDShapeComponent
         ];
 
         components.map(c => {
