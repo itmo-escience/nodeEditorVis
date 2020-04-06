@@ -814,7 +814,6 @@ const store = () => new Vuex.Store({
             }
             build(node){
                 node
-                    //.addInput(new Rete.Input('data','Data', objSocket))
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
@@ -849,7 +848,7 @@ const store = () => new Vuex.Store({
                     }else if(inputs.color.length){
                         pointLayer.color(inputs.color[0]);
                     }
-
+                    
                     if(inputs.shape.length){
                         console.log(inputs.shape[0]);
                         pointLayer.shape(inputs.shape[0]);
@@ -887,6 +886,7 @@ const store = () => new Vuex.Store({
             constructor(){
                 super('Map')
                 this.data.component = MapNode;
+                this.data.render = 'vue';
                 this.path = [];
             }
             builder(node){
@@ -899,6 +899,8 @@ const store = () => new Vuex.Store({
             }
             worker(node, inputs, outputs){
                 node.data.layers = Object.values(inputs).map(input=>input[0]);
+                node.data.update = true;
+                this.editor.nodes.find(n=>n.id===node.id).update();
             }
         }
         class ChartComponent extends Rete.Component {
