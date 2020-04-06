@@ -12,6 +12,9 @@
                         <div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
                     </div>
                 </div>
+                
+                <div class="add" @click="addLayer">Add</div>   
+
             </div>
             <div class="map-container" ref="map" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)"></div>
         </div>
@@ -47,6 +50,21 @@ export default{
                 id: this.$refs.map,
                 map: map,
             });
+        },
+        async addLayer(){
+            const component = this.editor.components.get('Map');
+            const inputs = this.inputs();
+            const mapNode = await component.createNode( { inputs: inputs } );
+            mapNode.position = this.node.position;
+            this.editor.addNode(mapNode);
+            inputs.forEach((input, i)=>{
+                const connection = input.connections[0];
+                if(connection){
+                    const output = connection.output;
+                    this.editor.connect(output.node.outputs.get(output.key), mapNode.inputs.get( 'layer'+i ));
+                }
+            });
+            this.editor.removeNode(this.node);
         }
     },
     mounted(){
@@ -62,7 +80,7 @@ export default{
                 this.scene.removeLayer(layer);
             });
             layers.forEach(layer=>{
-                this.scene.addLayer(layer);
+                if(layer) this.scene.addLayer(layer);
             });
         }
     }
@@ -78,5 +96,13 @@ export default{
     .l7-scene canvas {
         width: 500px !important;
         height: 500px !important;
+    }
+    .add{
+        margin-left: 5px;
+    }
+    .add:after{
+        content: url(/plus.svg);
+        position: relative;
+        top: 5px; left: 5px;
     }
 </style>

@@ -875,10 +875,15 @@ const store = () => new Vuex.Store({
                 this.path = [];
             }
             builder(node){
-                node.addInput(new Rete.Input('layer', 'Layer', layerSocket));
+                const inputs = node.data.inputs; 
+                if(inputs){
+                    inputs.forEach(input=> node.addInput(new Rete.Input(input.key, input.name, layerSocket)));
+                }
+                const index = inputs ? inputs.length : 0;
+                node.addInput(new Rete.Input('layer'+index, 'Layer'+index, layerSocket));
             }
             worker(node, inputs, outputs){
-                node.data.layers = inputs.layer;
+                node.data.layers = Object.values(inputs).map(input=>input[0]);
             }
         }
         class ChartComponent extends Rete.Component {
