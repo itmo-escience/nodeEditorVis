@@ -69,7 +69,7 @@ export default{
         updateMap(){
             if(this.node.data.update){
                const layers = this.node.data.layers;
-                if(layers){
+                if(layers && this.scene){
                     this.scene.getLayers().forEach(layer=>{
                         this.scene.removeLayer(layer);
                     });
@@ -83,7 +83,11 @@ export default{
         }
     },
     mounted(){
-        setTimeout(()=>{ this.initScene() }, 500);
+        setTimeout(()=>{ 
+            this.initScene();
+            this.node.data.update = true;
+            this.updateMap(); 
+        }, 500);
         this.editor.on('zoom nodetranslate', ()=>{
             return !this.freez
         });
