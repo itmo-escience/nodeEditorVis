@@ -9,20 +9,19 @@ import ContextMenuPlugin from 'rete-context-menu-plugin';
 import G2 from '@antv/g2';
 import DataSet from '@antv/data-set';
 
-import * as d3 from "d3";
 import { PointLayer } from '@antv/l7';
 
-import VueNumControl from '~/components/VueNumControl'
-import VueStrControl from '~/components/VueStrControl'
-import VueSelectControl from '~/components/VueSelectControl'
-import VueColorControl from '~/components/VueColorControl'
-import VueClosedColorControl from '~/components/VueClosedColorControl'
-import VueShapeSelectControl from '~/components/VueShapeSelectControl'
+import VueNumControl from '~/components/controls/VueNumControl'
+import VueStrControl from '~/components/controls/VueStrControl'
+import VueSelectControl from '~/components/controls/VueSelectControl'
+import VueColorControl from '~/components/controls/VueColorControl'
+import VueClosedColorControl from '~/components/controls/VueClosedColorControl'
+import VueShapeSelectControl from '~/components/controls/VueShapeSelectControl'
 
-import ChartNode from '~/components/ChartNode'
-import FieldsNode from '~/components/FieldsNode'
-import MapNode from '~/components/MapNode'
-import CategoryNode from '~/components/CategoryNode'
+import ChartNode from '~/components/nodes/ChartNode'
+import FieldsNode from '~/components/nodes/FieldsNode'
+import MapNode from '~/components/nodes/MapNode'
+import CategoryNode from '~/components/nodes/CategoryNode'
 
 Vue.use(Vuex)
 
@@ -34,7 +33,11 @@ const store = () => new Vuex.Store({
     result: null,
     layouts: {},
     data: {},
-    freez: false
+    freez: false,
+    shapes: [
+        'circle','square','triangle','hexagon', // 2D
+        'cylinder', 'triangleColumn', 'hexagonColumn', 'squareColumn' // 3D
+        ]
   },
   mutations: {
     freezEditor(state, freez){
@@ -822,35 +825,33 @@ const store = () => new Vuex.Store({
                 };
             }
         }
-        class TwoDShapeComponent extends Rete.Component {
+        class PointShapeComponent extends Rete.Component {
             constructor(){
-                super('2d Shape')
+                super('Shape')
                 this.path = [];
             }
             builder(node){
-                const shapes = ['circle','square','triangle','hexagon'];
-                node.addControl(new SelectControl(this.editor, 'shape', shapes));
+                node.addControl(new SelectControl(this.editor, 'shape', state.shapes));
                 node.addOutput(new Rete.Output('shape', 'Shape', strSocket));
             }
             worker(node,inputs,outputs){
                 outputs.shape = node.data.shape;
             }
         }
-        class TwoDShapeCategoryComponent extends Rete.Component {
+        class PointShapeCategoryComponent extends Rete.Component {
             constructor(){
-                super('2d Shape Category')
+                super('Shape Category')
                 this.data.component = CategoryNode
                 this.path = null;
             }
             builder(node){
-                const shapes = ['circle','square','triangle','hexagon'];
                 let fieldSocket = typeof node.data.values[0] === 'number' ? numArrSocket : strArrSocket;
                 node
                     .addInput(new Rete.Input('field', 'Field', fieldSocket))
                     .addOutput(new Rete.Output('shapes', 'Shapes', shapeSocket));
                 node.data.shapes = {};
                 node.data.values.forEach(v=>{
-                    node.addControl(new ShapeSelectControl(this.editor, node, 'field'+v, shapes))
+                    node.addControl(new ShapeSelectControl(this.editor, node, 'field'+v, state.shapes))
                     node.data.shapes['field'+v] = 'circle'; 
                 });
             }
@@ -1041,7 +1042,7 @@ const store = () => new Vuex.Store({
             new MapComponent,
             new PointLayerComponent,
             new SizeComponent, new ColorCategoryComponent,
-            new TwoDShapeComponent, new TwoDShapeCategoryComponent
+            new PointShapeComponent, new PointShapeCategoryComponent
         ];
 
         components.map(c => {

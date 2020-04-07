@@ -57,7 +57,7 @@
             },
             async shapeCategory(){
                 if(this.node.name === 'Parse'){
-                    const component = this.editor.components.get('2d Shape Category');
+                    const component = this.editor.components.get('Shape Category');
                     const unique = [...new Set(this.node.data.map(item => item[this.name]))];
                     const fields = await component.createNode( { values: unique } );
                     fields.position = [this.node.position[0]+250, this.node.position[1] ];
