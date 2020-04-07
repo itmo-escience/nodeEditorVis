@@ -1,5 +1,6 @@
 <template>
   <div>
+    <input id="file" type="file" @change="newData"/>
     <div id='editor'></div>
   </div>
 </template>
@@ -7,6 +8,17 @@
   import * as d3 from "d3";
 
   export default {
+    methods:{
+      newData(e){
+        let file = e.target.files[0];
+        let fr = new FileReader();
+        fr.readAsText(file);
+        fr.onload = async ()=> {
+          const data = file.name.endsWith('.csv') ? await d3.csvParse(fr.result) : JSON.parse(fr.result);
+          this.$store.commit('addData', {[file.name]: data});
+        };  
+      }
+    },
     async mounted(){
       this.$store.commit('initRete');
       const state = this.$store.state;
@@ -21,7 +33,6 @@
             x1: d.target[0],
             y1: d.target[1]
           }));
-      console.log(state.data['arcs.json'])
       state.editor.fromJSON({
           "id": "demo@0.1.0",
           "nodes": {
@@ -54,5 +65,9 @@
     height: 100%;
     z-index: 2;
     background: #fff;
+  }
+  #file{
+    position: absolute;
+    z-index: 5;
   }
 </style>

@@ -44,6 +44,9 @@ const store = () => new Vuex.Store({
     freezEditor(state, freez){
         state.freez = freez;
     },
+    addData(state, data){
+        state.data = {...state.data, ...data};
+    },
     initRete(state){
         const numSocket = new Rete.Socket('Number');
         const objSocket = new Rete.Socket('Object');
@@ -1010,7 +1013,7 @@ const store = () => new Vuex.Store({
                     // .addInput(new Rete.Input('shapes', 'Shape by Cat', lineShapesSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
-                    // .addInput(new Rete.Input('size','Size', sizeSocket))
+                    .addInput(new Rete.Input('size','Size', numSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
