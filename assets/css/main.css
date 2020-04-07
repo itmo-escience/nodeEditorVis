@@ -9,6 +9,10 @@
 .socket-output-size > path{ stroke: #091580 !important; }
 .socket-output-shape > path{ stroke: #04c0f0 !important; }
 .socket-output-color > path{ stroke: #ee0063 !important; }
+.socket-output-point-shape > path{ stroke: #f7de04 !important; }
+.socket-output-line-shape > path{ stroke: #b3a103 !important; }
+.socket-output-point-shapes > path{ stroke: #b4a200 !important; }
+.socket-output-line-shapes > path{ stroke: #746800 !important; }
 
 .socket.output.number-array, .socket.input.number-array { background: #aaff00; }
 .socket.output.string-array, .socket.input.string-array { background: #a002a0; }
@@ -21,3 +25,7 @@
 .socket.output.size, .socket.input.size { background: #091580; }
 .socket.output.shape, .socket.input.shape { background: #04c0f0; }
 .socket.output.color, .socket.input.color { background: #ee0063; }
+.socket.output.point-shape, .socket.input.point-shape { background: #f7de04; }
+.socket.output.line-shape, .socket.input.line-shape { background: #b3a103; }
+.socket.output.point-shapes, .socket.input.point-shapes { background: #b4a200; }
+.socket.output.line-shapes, .socket.input.line-shapes { background: #746800; }

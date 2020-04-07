@@ -9,7 +9,7 @@ import ContextMenuPlugin from 'rete-context-menu-plugin';
 import G2 from '@antv/g2';
 import DataSet from '@antv/data-set';
 
-import { PointLayer } from '@antv/l7';
+import { PointLayer, LineLayer } from '@antv/l7';
 
 import VueNumControl from '~/components/controls/VueNumControl'
 import VueStrControl from '~/components/controls/VueStrControl'
@@ -36,8 +36,9 @@ const store = () => new Vuex.Store({
     freez: false,
     shapes: [
         'circle','square','triangle','hexagon', // 2D
-        'cylinder', 'triangleColumn', 'hexagonColumn', 'squareColumn' // 3D
-        ]
+        'cylinder', 'triangleColumn', 'hexagonColumn', 'squareColumn', // 3D
+        ],
+    lineShapes: ['line', 'arc', 'greatcircle', 'arc3d']
   },
   mutations: {
     freezEditor(state, freez){
@@ -56,6 +57,10 @@ const store = () => new Vuex.Store({
         const strArrSocket = new Rete.Socket('String Array');
         const numArrSocket = new Rete.Socket('Number Array');
         const shapeSocket = new Rete.Socket('Shape');
+        const lineShapeSocket = new Rete.Socket('Line Shape');
+        const pointShapeSocket = new Rete.Socket('Point Shape');
+        const lineShapesSocket = new Rete.Socket('Line Shapes');
+        const pointShapesSocket = new Rete.Socket('Point Shapes');
 
         class ColorControl extends Rete.Control {
             constructor(emitter, key, freez){
@@ -851,22 +856,22 @@ const store = () => new Vuex.Store({
                 };
             }
         }
-        class PointShapeComponent extends Rete.Component {
+        class LineShapeComponent extends Rete.Component {
             constructor(){
-                super('Shape')
-                this.path = [];
+                super('Line Shape')
+                this.path = ['Shapes'];
             }
             builder(node){
-                node.addControl(new SelectControl(this.editor, 'shape', state.shapes));
-                node.addOutput(new Rete.Output('shape', 'Shape', strSocket));
+                node.addControl(new SelectControl(this.editor, 'shape', state.lineShapes));
+                node.addOutput(new Rete.Output('shape', 'Shape', lineShapeSocket));
             }
             worker(node,inputs,outputs){
                 outputs.shape = node.data.shape;
             }
         }
-        class PointShapeCategoryComponent extends Rete.Component {
+        class LineShapeCategoryComponent extends Rete.Component {
             constructor(){
-                super('Shape Category')
+                super('Line Shape Category')
                 this.data.component = CategoryNode
                 this.path = null;
             }
@@ -874,7 +879,44 @@ const store = () => new Vuex.Store({
                 let fieldSocket = typeof node.data.values[0] === 'number' ? numArrSocket : strArrSocket;
                 node
                     .addInput(new Rete.Input('field', 'Field', fieldSocket))
-                    .addOutput(new Rete.Output('shapes', 'Shapes', shapeSocket));
+                    .addOutput(new Rete.Output('shapes', 'Shapes', lineShapesSocket));
+                node.data.shapes = {};
+                node.data.values.forEach(v=>{
+                    node.addControl(new ShapeSelectControl(this.editor, node, 'field'+v, state.lineShapes))
+                    node.data.shapes['field'+v] = 'line';
+                });
+            }
+            worker(node,inputs,outputs){
+                outputs.shapes = {
+                    field: inputs.field[0],
+                    shapes: node.data.shapes
+                };
+            }
+        }
+        class PointShapeComponent extends Rete.Component {
+            constructor(){
+                super('Point Shape')
+                this.path = ['Shapes'];
+            }
+            builder(node){
+                node.addControl(new SelectControl(this.editor, 'shape', state.shapes));
+                node.addOutput(new Rete.Output('shape', 'Shape', pointShapeSocket));
+            }
+            worker(node,inputs,outputs){
+                outputs.shape = node.data.shape;
+            }
+        }
+        class PointShapeCategoryComponent extends Rete.Component {
+            constructor(){
+                super('Point Shape Category')
+                this.data.component = CategoryNode
+                this.path = null;
+            }
+            builder(node){
+                let fieldSocket = typeof node.data.values[0] === 'number' ? numArrSocket : strArrSocket;
+                node
+                    .addInput(new Rete.Input('field', 'Field', fieldSocket))
+                    .addOutput(new Rete.Output('shapes', 'Shapes', pointShapesSocket));
                 node.data.shapes = {};
                 node.data.values.forEach(v=>{
                     node.addControl(new ShapeSelectControl(this.editor, node, 'field'+v, state.shapes))
@@ -897,8 +939,8 @@ const store = () => new Vuex.Store({
                 node
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
-                    .addInput(new Rete.Input('shape','Shape', strSocket))
-                    .addInput(new Rete.Input('shapes', 'Shape by Cat', shapeSocket))
+                    .addInput(new Rete.Input('shape','Shape', pointShapeSocket))
+                    .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     .addInput(new Rete.Input('size','Size', sizeSocket))
@@ -949,6 +991,79 @@ const store = () => new Vuex.Store({
                         });
                     }
                     outputs['layer'] = pointLayer;
+                }
+            }
+        }
+        class LineLayerComponent extends Rete.Component {
+            constructor(){
+                super('Line Layer')
+                this.path = ['Layers']
+            }
+            build(node){
+                node
+                    .addInput(new Rete.Input('x','X', numArrSocket))
+                    .addInput(new Rete.Input('x1','X1', numArrSocket))
+                    .addInput(new Rete.Input('y','Y', numArrSocket))
+                    .addInput(new Rete.Input('y1','Y1', numArrSocket))
+                    .addInput(new Rete.Input('shape','Shape', lineShapeSocket))
+                    // .addInput(new Rete.Input('shapes', 'Shape by Cat', lineShapesSocket))
+                    .addInput(new Rete.Input('color','Color', strSocket))
+                    // .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
+                    // .addInput(new Rete.Input('size','Size', sizeSocket))
+                    .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
+            }
+            worker(node, inputs, outputs){
+                if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) && 
+                    (inputs.x[0].length === inputs.y[0].length) &&
+                    (inputs.x[0].length === inputs.x1[0].length) &&
+                    (inputs.x[0].length === inputs.y1[0].length) )
+                {
+                    const data = [];
+                    for(let i=0; i<inputs.x[0].length; i++){
+                        let obj = {
+                            x: inputs.x[0][i], 
+                            x1: inputs.x1[0][i], 
+                            y: inputs.y[0][i],
+                            y1: inputs.y1[0][i],
+                            // ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                            // ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                            // ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
+                        }
+                        data.push(obj);
+                    }
+                    const lineLayer = new LineLayer()
+                        .source(data, {
+                            parser: {
+                                type: 'json',
+                                x: 'x',
+                                x1: 'x1',
+                                y: 'y',
+                                y1: 'y1'
+                            }
+                    });
+                    
+                    // if(inputs.colors.length){
+                    //     lineLayer.color('color', c=>{
+                    //         return inputs.colors[0].colors['field'+c]
+                    //     });
+                    // }else if(inputs.color.length){
+                    //     lineLayer.color(inputs.color[0]);
+                    // }
+                    if(inputs.color.length){
+                        lineLayer.color(inputs.color[0]);
+                    }
+
+                    if(inputs.shape.length){
+                        lineLayer.shape(inputs.shape[0]);
+                    }
+                    // else if(inputs.shapes.length){
+                    //     lineLayer.shape('shape', s=>{
+                    //         console.log(inputs.shapes[0].shapes['field'+s])
+                    //         return inputs.shapes[0].shapes['field'+s]
+                    //     });
+                    // }
+    
+                    outputs['layer'] = lineLayer;
                 }
             }
         }
@@ -1061,10 +1176,11 @@ const store = () => new Vuex.Store({
             new DatasetComponent, new ChartComponent,
             new FieldsComponent, new ParseComponent,
             new MapComponent,
-            new PointLayerComponent,
+            new PointLayerComponent, new LineLayerComponent,
             new RangeComponent, new SizeComponent, 
             new ColorCategoryComponent,
-            new PointShapeComponent, new PointShapeCategoryComponent
+            new PointShapeComponent, new PointShapeCategoryComponent,
+            new LineShapeComponent, new LineShapeCategoryComponent
         ];
 
         components.map(c => {

@@ -12,31 +12,28 @@
       const state = this.$store.state;
       state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
       state.data['branches.json'] = await this.$axios.$get('/data/branches.json');
-      
+      const arcs = await this.$axios.$get('/data/arcs.json')
+      state.data['arcs.json'] = arcs.map(d=>({
+            id: d.id,
+            clients_count: d.clients_count,
+            x: d.source[0],
+            y: d.source[1],
+            x1: d.target[0],
+            y1: d.target[1]
+          }));
+      console.log(state.data['arcs.json'])
       state.editor.fromJSON({
           "id": "demo@0.1.0",
           "nodes": {
               "1": {
                   "id": 1,
                   "data": { 
-                    'options': ['branches.json', 'cars.csv'],
+                    'options': ['branches.json', 'cars.csv', 'arcs.json'],
                     'dataset': 'branches.json'
                   },
                   "position": [80, 200],
                   "name": "Dataset"
               },
-              // "2": {
-              //     "id": 2,
-              //     "data": {
-              //       'width': 500, 'height': 500,
-              //       'type': 'point',
-              //       'DATA': [],
-              //       'x': 'width', 'y': 'height',
-              //       'color':''
-              //     },
-              //     "position": [500, 200],
-              //     "name": "Chart"
-              // }
               "2": {
                   "id": 2,
                   "data": {
