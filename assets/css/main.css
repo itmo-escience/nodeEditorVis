@@ -7,6 +7,8 @@
 .socket-output-any > path{ stroke: #6699ff !important; }
 .socket-output-flow > path{ stroke: #e6e6e6 !important; }
 .socket-output-size > path{ stroke: #091580 !important; }
+.socket-output-shape > path{ stroke: #04c0f0 !important; }
+.socket-output-color > path{ stroke: #ee0063 !important; }
 
 .socket.output.number-array, .socket.input.number-array { background: #aaff00; }
 .socket.output.string-array, .socket.input.string-array { background: #a002a0; }
@@ -17,3 +19,5 @@
 .socket.output.any, .socket.input.any { background: #6699ff; }
 .socket.output.flow, .socket.input.flow { background: #e6e6e6; }
 .socket.output.size, .socket.input.size { background: #091580; }
+.socket.output.shape, .socket.input.shape { background: #04c0f0; }
+.socket.output.color, .socket.input.color { background: #ee0063; }
