@@ -771,6 +771,7 @@ const store = () => new Vuex.Store({
                 this.path = null;
             }
             builder(node){
+                node.data.dataset = 'branches.json';
                 node
                     .addControl(new SelectControl( this.editor, 'dataset', node.data.options ))
                     .addOutput(new Rete.Output( 'data', 'Data', objSocket ));
