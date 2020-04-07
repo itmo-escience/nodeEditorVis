@@ -1009,7 +1009,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('shape','Shape', lineShapeSocket))
                     // .addInput(new Rete.Input('shapes', 'Shape by Cat', lineShapesSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
-                    // .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
+                    .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     // .addInput(new Rete.Input('size','Size', sizeSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
@@ -1027,7 +1027,7 @@ const store = () => new Vuex.Store({
                             y: inputs.y[0][i],
                             y1: inputs.y1[0][i],
                             // ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-                            // ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                            ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
                             // ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                         }
                         data.push(obj);
@@ -1043,14 +1043,11 @@ const store = () => new Vuex.Store({
                             }
                     });
                     
-                    // if(inputs.colors.length){
-                    //     lineLayer.color('color', c=>{
-                    //         return inputs.colors[0].colors['field'+c]
-                    //     });
-                    // }else if(inputs.color.length){
-                    //     lineLayer.color(inputs.color[0]);
-                    // }
-                    if(inputs.color.length){
+                    if(inputs.colors.length){
+                        lineLayer.color('color', c=>{
+                            return inputs.colors[0].colors['field'+c]
+                        });
+                    }else if(inputs.color.length){
                         lineLayer.color(inputs.color[0]);
                     }
 
