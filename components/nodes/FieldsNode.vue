@@ -32,7 +32,7 @@
         methods:{
             async range(){
                 if(this.node.name === 'Parse'){
-                    const component = this.editor.components.get('Size');
+                    const component = this.editor.components.get('Range');
                     const values = this.node.data.map(item => item[this.name]);
                     const range = await component.createNode( { 
                         values: values,

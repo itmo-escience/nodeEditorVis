@@ -774,31 +774,57 @@ const store = () => new Vuex.Store({
                 outputs['data'] = state.data[ node.data.dataset ]; 
             }
         }
-        class SizeComponent extends Rete.Component {
+        class RangeComponent extends Rete.Component {
             constructor(){
-                super('Size')
+                super('Range')
                 this.path = null;
             }
             builder(node){
                 node.addInput(new Rete.Input('column', 'Column', numArrSocket))
 
                 node
-                    // .addInput(new Rete.Input('field', 'Field', strSocket))
                     .addControl(new NumControl(this.editor, 'rangeFrom', 'range from'))
                     .addControl(new NumControl(this.editor, 'rangeTo', 'range to'))
-                    .addControl(new NumControl(this.editor, 'domainFrom', 'domain from'))
-                    .addControl(new NumControl(this.editor, 'domainTo', 'domain to'))
+                    .addControl(new NumControl(this.editor, 'domainFrom', 'domain from', true))
+                    .addControl(new NumControl(this.editor, 'domainTo', 'domain to', true))
+                    .addOutput(new Rete.Output('range', 'Range', numArrSocket));
+            }
+            worker(node, inputs, outputs){
+                const domainFrom = node.data.domainFrom;
+                const domainTo = node.data.domainTo;
+                const rangeFrom = node.data.rangeFrom;
+                const rangeTo = node.data.rangeTo;
+                outputs['range'] = inputs.column[0].map(v=>{
+                    v = v > domainTo ? domainTo : v;
+                    v = v < domainFrom ? domainFrom : v;
+                    return (((v - domainFrom) * (rangeTo - rangeFrom)) / (domainTo - domainFrom)) + rangeFrom
+                });
+            }
+        }
+        class SizeComponent extends Rete.Component{
+            constructor(){
+                super('Size')
+                this.path = [];
+            }
+            builder(node){
+                node
+                    .addInput(new Rete.Input('x', 'X range', numArrSocket))
+                    .addInput(new Rete.Input('y', 'Y range', numArrSocket))
+                    .addInput(new Rete.Input('z', 'Z range', numArrSocket))
                     .addOutput(new Rete.Output('size', 'Size', sizeSocket));
             }
             worker(node, inputs, outputs){
-                outputs['size'] = {
-                    domain: [node.data.domainFrom, node.data.domainTo],
-                    range: [node.data.rangeFrom, node.data.rangeTo],
-                    values: node.data.values,
-                    field: node.data.field
+                outputs['size'] = [];
+                for(let i=0; i < (inputs.x[0].length || inputs.y[0].length || inputs.z[0].length); i++){
+                   outputs['size'].push({
+                        x: inputs.x.length ? inputs.x[0][i] : 5,
+                        y: inputs.y.length ? inputs.y[0][i] : 5,
+                        z: inputs.z.length ? inputs.z[0][i] : 0,  
+                    }) 
                 }
             }
         }
+
         class ColorCategoryComponent extends Rete.Component {
             constructor(){
                 super('Color Category')
@@ -887,7 +913,7 @@ const store = () => new Vuex.Store({
                         let obj = {
                             x: inputs.lon[0][i], 
                             y: inputs.lat[0][i],
-                            ...(inputs.size.length ? {size: inputs.size[0].values[i]} : {}), 
+                            ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
                             ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
                             ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                         }
@@ -918,14 +944,9 @@ const store = () => new Vuex.Store({
                     }
 
                     if(inputs.size.length){
-                        const size = inputs.size[0];
                         pointLayer.size('size', s=>{
-                            const domain = size.domain;
-                            const range = size.range;
-                            s = s > domain[1] ? domain[1] : s;
-                            s = s < domain[0] ? domain[0] : s;
-                            return (((s - domain[0]) * (range[1] - range[0])) / (domain[1] - domain[0])) + range[0]
-                        }); 
+                            return [ s.x, s.y, s.z ];
+                        });
                     }
                     outputs['layer'] = pointLayer;
                 }
@@ -1041,7 +1062,8 @@ const store = () => new Vuex.Store({
             new FieldsComponent, new ParseComponent,
             new MapComponent,
             new PointLayerComponent,
-            new SizeComponent, new ColorCategoryComponent,
+            new RangeComponent, new SizeComponent, 
+            new ColorCategoryComponent,
             new PointShapeComponent, new PointShapeCategoryComponent
         ];
 

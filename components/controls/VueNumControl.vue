@@ -1,6 +1,5 @@
 <template>
-    <input type="number" 
-        :readonly="readonly" 
+    <input type="number"
         :value="value" 
         @input="change($event)"
         :placeholder="placeholder"/>
@@ -24,7 +23,7 @@
             this.emitter.trigger('process');
           }
         },
-        mounted() {
+        mounted(){
           this.value = this.getData(this.ikey);
         }
     }
