@@ -76,7 +76,7 @@ const store = () => new Vuex.Store({
                 super(key);
                 this.render = 'vue';
                 this.component = VueColorControl;
-                this.props = { emitter, key: key, freez: freez};
+                this.props = { emitter, ikey: key, freez: freez};
             }
         }
         class ClosedColorControl extends Rete.Control{

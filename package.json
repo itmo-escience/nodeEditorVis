@@ -28,7 +28,7 @@
     "rete-connection-plugin": "^0.9.0",
     "rete-context-menu-plugin": "^0.5.2",
     "rete-vue-render-plugin": "^0.5.0",
-    "verte": "0.0.12"
+    "vue-color": "^2.7.1"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
