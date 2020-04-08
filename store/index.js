@@ -17,6 +17,7 @@ import VueSelectControl from '~/components/controls/VueSelectControl'
 import VueColorControl from '~/components/controls/VueColorControl'
 import VueClosedColorControl from '~/components/controls/VueClosedColorControl'
 import VueShapeSelectControl from '~/components/controls/VueShapeSelectControl'
+import VueFileLoadControl from '~/components/controls/VueFileLoadControl'
 
 import ChartNode from '~/components/nodes/ChartNode'
 import FieldsNode from '~/components/nodes/FieldsNode'
@@ -44,9 +45,6 @@ const store = () => new Vuex.Store({
     freezEditor(state, freez){
         state.freez = freez;
     },
-    addData(state, data){
-        state.data = {...state.data, ...data};
-    },
     initRete(state){
         const numSocket = new Rete.Socket('Number');
         const objSocket = new Rete.Socket('Object');
@@ -65,6 +63,14 @@ const store = () => new Vuex.Store({
         const lineShapesSocket = new Rete.Socket('Line Shapes');
         const pointShapesSocket = new Rete.Socket('Point Shapes');
 
+        class FileLoadControl extends Rete.Control {
+            constructor(emitter, key){
+                super(key)
+                this.render = 'vue';
+                this.component = VueFileLoadControl;
+                this.props = { emitter, ikey: key }
+            }
+        }
         class ColorControl extends Rete.Control {
             constructor(emitter, key, freez){
                 super(key);
@@ -783,6 +789,20 @@ const store = () => new Vuex.Store({
                 outputs['data'] = state.data[ node.data.dataset ]; 
             }
         }
+        class LoadDataComponent extends Rete.Component {
+            constructor(){
+                super('Load Data')
+                this.path = []
+            }
+            builder(node){
+                node
+                    .addControl(new FileLoadControl(this.editor, 'data'))
+                    .addOutput(new Rete.Output('data', 'Data', objSocket));
+            }
+            worker(node, inputs, outputs){
+                outputs['data'] = node.data.data;
+            }
+        }
         class RangeComponent extends Rete.Component {
             constructor(){
                 super('Range')
@@ -833,7 +853,6 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-
         class ColorCategoryComponent extends Rete.Component {
             constructor(){
                 super('Color Category')
@@ -1147,6 +1166,16 @@ const store = () => new Vuex.Store({
                             editor.connect(node.outputs.get('data'), fields.inputs.get('data'));
                         }
                     }
+                }else if(node.name === 'Load Data'){
+                    return {
+                        async 'Parse'(){
+                            const component = new ParseComponent;
+                            const parser = await component.createNode( node.data.data );
+                            parser.position = [node.position[0]+250, node.position[1] ];
+                            editor.addNode(parser);
+                            editor.connect(node.outputs.get('data'), parser.inputs.get('data'));
+                        }
+                    }
                 }else if(node.name === 'Map'){
                     return{
                         'Clone': false
@@ -1181,7 +1210,8 @@ const store = () => new Vuex.Store({
             new RangeComponent, new SizeComponent, 
             new ColorCategoryComponent,
             new PointShapeComponent, new PointShapeCategoryComponent,
-            new LineShapeComponent, new LineShapeCategoryComponent
+            new LineShapeComponent, new LineShapeCategoryComponent,
+            new LoadDataComponent
         ];
 
         components.map(c => {

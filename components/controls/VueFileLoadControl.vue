@@ -1,0 +1,23 @@
+<template>
+    <input id="file" type="file" @change="newData"/>
+</template>
+<script>
+import * as d3 from "d3";
+
+export default{
+    props: ['emitter', 'ikey', 'getData', 'putData'],
+    methods:{
+      newData(e){
+        let file = e.target.files[0];
+        let fr = new FileReader();
+        fr.readAsText(file);
+        fr.onload = async ()=> {
+            const data = file.name.endsWith('.csv') ? await d3.csvParse(fr.result) : JSON.parse(fr.result);
+            console.log(this.ikey, data)
+            this.putData(this.ikey, data);
+            this.emitter.trigger('process');
+        };  
+      }
+    }
+}
+</script>
