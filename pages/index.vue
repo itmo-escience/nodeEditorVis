@@ -50,7 +50,7 @@
     position: fixed;
     left: 0; bottom: 0;
     width: 100%;
-    height: 100%;
+    height: 100% !important;
     z-index: 2;
     background: #fff;
   }
