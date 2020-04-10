@@ -774,7 +774,7 @@ const store = () => new Vuex.Store({
                 if(!node.data.values && (inputs.strings.length || inputs.nums.length)){
                     const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
                     const connection = inputs.strings.length ? node.inputs.strings.connections[0] : node.inputs.nums.connections[0];
-
+                    
                     const component = this.editor.components.get('Color Category');
                     const colors = await component.createNode({ values: [...new Set( values )] });
                     colors.position = node.position;
@@ -1269,8 +1269,8 @@ const store = () => new Vuex.Store({
                     // .addInput(new Rete.Input('y1','Y1', numArrSocket))
                     // .addInput(new Rete.Input('shape','Shape', lineShapeSocket))
                     // // .addInput(new Rete.Input('shapes', 'Shape by Cat', lineShapesSocket))
-                    // .addInput(new Rete.Input('color','Color', strSocket))
-                    // .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
+                    .addInput(new Rete.Input('color','Color', strSocket))
+                    .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     // .addInput(new Rete.Input('size','Size', numSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
@@ -1279,19 +1279,25 @@ const store = () => new Vuex.Store({
                 if(inputs.geometry.length){
                     const data = {
                         type: "FeatureCollection",
-                        features: inputs.geometry[0].map(g=>({ type: "Feature", geometry: g }))
+                        features: inputs.geometry[0].map((g, i)=>({ 
+                            type: "Feature",
+                            properties: { 
+                                ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                            },
+                            geometry: g 
+                        }))
                     }
                     const layer = new PolygonLayer({})
                         .source(data)
                         .shape('extrude').size(200);
 
-                    // if(inputs.colors.length){
-                    //     lineLayer.color('color', c=>{
-                    //         return inputs.colors[0].colors['field'+c]
-                    //     });
-                    // }else if(inputs.color.length){
-                    //     lineLayer.color(inputs.color[0]);
-                    // }
+                    if(inputs.colors.length){
+                        layer.color('color', c=>{
+                            return inputs.colors[0].colors['field'+c]
+                        });
+                    }else if(inputs.color.length){
+                        layer.color(inputs.color[0]);
+                    }
 
                     // if(inputs.shape.length){
                     //     lineLayer.shape(inputs.shape[0]);
