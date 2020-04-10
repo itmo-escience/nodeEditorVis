@@ -723,10 +723,36 @@ const store = () => new Vuex.Store({
                 }
             }
         }
+        class ColorCategoryComponent extends Rete.Component {
+            constructor(){
+                super('Color Category')
+                this.data.component = CategoryNode;
+                this.path = ['Color']
+            }
+            build(node){
+                let fieldSocket = typeof node.data.values[0] === 'number' ? numArrSocket : strArrSocket;
+                node
+                    .addInput(new Rete.Input('field', 'Field', fieldSocket))
+                    .addOutput(new Rete.Output('colors', 'Colors', colorSocket));    
+                node.data.colors = {};
+                node.data.values.forEach(v=>{
+                     node.addControl(new ClosedColorControl(this.editor, node, 'field'+v, 'freez'));
+                     node.data.colors['field'+v] = '#fff';
+                });
+                
+            }
+            worker(node, inputs, outputs){
+                state.freez = node.data.freez;
+                outputs.colors = {
+                    field: inputs.field[0],
+                    colors: node.data.colors
+                };
+            }
+        }
         class ColorComponent extends Rete.Component {
             constructor(){
                 super('Color')
-                this.path = [];
+                this.path = ['Color'];
             }
             builder(node){
                 node
@@ -857,32 +883,7 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-        class ColorCategoryComponent extends Rete.Component {
-            constructor(){
-                super('Color Category')
-                this.data.component = CategoryNode;
-                this.path = []
-            }
-            build(node){
-                let fieldSocket = typeof node.data.values[0] === 'number' ? numArrSocket : strArrSocket;
-                node
-                    .addInput(new Rete.Input('field', 'Field', fieldSocket))
-                    .addOutput(new Rete.Output('colors', 'Colors', colorSocket));    
-                node.data.colors = {};
-                node.data.values.forEach(v=>{
-                     node.addControl(new ClosedColorControl(this.editor, node, 'field'+v, 'freez'));
-                     node.data.colors['field'+v] = '#fff';
-                });
-                
-            }
-            worker(node, inputs, outputs){
-                state.freez = node.data.freez;
-                outputs.colors = {
-                    field: inputs.field[0],
-                    colors: node.data.colors
-                };
-            }
-        }
+        
         class LineShapeComponent extends Rete.Component {
             constructor(){
                 super('Line Shape')
