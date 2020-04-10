@@ -1,11 +1,11 @@
 <template>
     <div class="node" :class="[selected(), node.name] | kebab">
         <div class="title">{{node.data.name}}</div>
-        <div class="input d-flex" v-for="input in inputs()" :key="input.key">
+        <!-- <div class="input d-flex" v-for="input in inputs()" :key="input.key">
             <Socket v-socket:input="input" type="input" :socket="input.socket"></Socket>
             <div class="input-title" v-show="!input.showControl()">{{input.name}}</div>
             <div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
-        </div>
+        </div> -->
         <!-- Outputs-->
         <div class="output d-flex" v-for="output in outputs()" :key="output.key">
             <div class="fields-output-title">{{output.name}}</div>
@@ -14,10 +14,10 @@
             </div>
         </div>
         <div v-if="node.name === 'Parse'" class="field-menu d-fex" ref="menu" @mouseover="hodMenu" @mouseout="hideMenu">
-            <div class="menu-item" @click="colorCategory">Color category</div>
+            <!--<<div class="menu-item" @click="colorCategory">Color category</div>
             <div class="menu-item" @click="pointShapeCategory">Point Shape category</div>
-            <!--<div class="menu-item" @click="lineShapeCategory">Line Shape category</div>-->
-            <div class="menu-item" @click="range" v-if="typeof node.data.data[0][name] === 'number'" >Range</div>
+            div class="menu-item" @click="lineShapeCategory">Line Shape category</div>
+            <div class="menu-item" @click="range" v-if="typeof node.data.data[0][name] === 'number'" >Range</div>-->
         </div>
         <!-- <div class="control" v-for="control in controls()" v-control="control"></div>-->
         <!-- Inputs-->

@@ -63,6 +63,7 @@ const store = () => new Vuex.Store({
         const pointShapeSocket = new Rete.Socket('Point Shape');
         const lineShapesSocket = new Rete.Socket('Line Shapes');
         const pointShapesSocket = new Rete.Socket('Point Shapes');
+        const geometrySocket = new Rete.Socket('Geometry');
 
         class FileLoadControl extends Rete.Control {
             constructor(emitter, key, name){
@@ -791,14 +792,33 @@ const store = () => new Vuex.Store({
                 this.path = null;
             }
             builder(node){
-                for(let key in node.data.data[0]){
-                    let socket = isNaN(+ node.data.data[0][key]) ? strArrSocket : numArrSocket;
-                    node.addOutput(new Rete.Output(key, key, socket));
+                if(node.data.data.type === 'FeatureCollection'){
+                    const props = node.data.data.features[0].properties;
+                    const geometry = node.data.data.features[0].geometry;
+                    for(let key in props){
+                        let socket = isNaN(+ props[key]) ? strArrSocket : numArrSocket;
+                        node.addOutput(new Rete.Output(key, key, socket));
+                    }
+                    // let socket = geometry.type === 'Polygon' || geometry.type === 'MultiPolygon' ? polygonSocket: ;
+                    node.addOutput(new Rete.Output('geom', 'Geometry', geometrySocket));
+                }else{
+                    for(let key in node.data.data[0]){
+                        let socket = isNaN(+ node.data.data[0][key]) ? strArrSocket : numArrSocket;
+                        node.addOutput(new Rete.Output(key, key, socket));
+                    }
                 }
             }
             worker(node, inputs, outputs){
-                for(let key in node.data.data[0]){
-                    outputs[key] = node.data.data.map(d=>d[key]);
+                if(node.data.data.type === 'FeatureCollection'){
+                    const props = node.data.data.features[0].properties;
+                    for(let key in props){
+                        outputs[key] = node.data.data.features.map(f=> f.properties[key]);
+                    }
+                    outputs.geom = node.data.data.features.map(f=> f.geometry);
+                }else{
+                   for(let key in node.data.data[0]){
+                        outputs[key] = node.data.data.map(d=>d[key]);
+                    } 
                 }
             }
         }
@@ -1116,13 +1136,17 @@ const store = () => new Vuex.Store({
                     // .addInput(new Rete.Input('color','Color', strSocket))
                     // .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     // .addInput(new Rete.Input('size','Size', numSocket))
-                    .addInput(new Rete.Input('geojson', 'GeoJson', objSocket))
+                    .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
-                if(inputs.geojson.length){
+                if(inputs.geometry.length){
+                    const data = {
+                        type: "FeatureCollection",
+                        features: inputs.geometry[0].map(g=>({ type: "Feature", geometry: g }))
+                    }
                     const layer = new PolygonLayer({})
-                        .source(inputs.geojson[0])
+                        .source(data)
                         .shape('extrude').size(200);
 
                     // if(inputs.colors.length){
