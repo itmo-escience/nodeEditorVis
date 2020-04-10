@@ -731,23 +731,59 @@ const store = () => new Vuex.Store({
                 this.path = ['Color']
             }
             build(node){
-                let fieldSocket = typeof node.data.values[0] === 'number' ? numArrSocket : strArrSocket;
-                node
-                    .addInput(new Rete.Input('field', 'Field', fieldSocket))
-                    .addOutput(new Rete.Output('colors', 'Colors', colorSocket));    
-                node.data.colors = {};
-                node.data.values.forEach(v=>{
-                     node.addControl(new ClosedColorControl(this.editor, node, 'field'+v, 'freez'));
-                     node.data.colors['field'+v] = '#fff';
-                });
-                
+                if(node.data.values){
+                    if(typeof node.data.values[0] === 'number'){
+                        node.addInput(new Rete.Input('nums', 'Num Values', numArrSocket));
+                    }else{
+                        node.addInput(new Rete.Input('strings', 'Str Values', strArrSocket));
+                    }
+                    node.addOutput(new Rete.Output('colors', 'Colors', colorSocket)); 
+                    node.data.colors = {};
+                    node.data.values.forEach(v=>{
+                        node.addControl(new ClosedColorControl(this.editor, node, 'field'+v, 'freez'));
+                        node.data.colors['field'+v] = '#fff';
+                    });
+                }else{
+                   node
+                    .addInput(new Rete.Input('strings', 'Str Values', strArrSocket))
+                    .addInput(new Rete.Input('nums', 'Num Values', numArrSocket)); 
+                }
             }
-            worker(node, inputs, outputs){
-                state.freez = node.data.freez;
-                outputs.colors = {
-                    field: inputs.field[0],
-                    colors: node.data.colors
-                };
+            async worker(node, inputs, outputs){
+                if(node.data.values){
+                    const values = Object.values(inputs)[0][0];
+
+                    if(JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])){
+                        const component = this.editor.components.get('Color Category');
+                        const colors = await component.createNode({ values: [...new Set( values )] });
+                        colors.position = node.position;
+                        this.editor.addNode(colors);
+                        const conn = node.inputs[Object.keys(inputs)[0]].connections[0];
+                        const n = this.editor.nodes.find(n=> n.id === conn.node);
+                        this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( Object.keys(inputs)[0] ));
+                        this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                    }
+
+                    state.freez = node.data.freez;
+                    outputs.colors = {
+                        field: values,
+                        colors: node.data.colors
+                    };
+                }
+                
+                if(!node.data.values && (inputs.strings.length || inputs.nums.length)){
+                    const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
+                    const connection = inputs.strings.length ? node.inputs.strings.connections[0] : node.inputs.nums.connections[0];
+
+                    const component = this.editor.components.get('Color Category');
+                    const colors = await component.createNode({ values: [...new Set( values )] });
+                    colors.position = node.position;
+                    this.editor.addNode(colors);
+                    const n = this.editor.nodes.find(n=> n.id === connection.node);
+                    const input = inputs.strings.length ? colors.inputs.get('strings') : colors.inputs.get('nums');
+                    this.editor.connect(n.outputs.get( connection.output ), input);
+                    this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                }
             }
         }
         class ColorComponent extends Rete.Component {
@@ -799,7 +835,6 @@ const store = () => new Vuex.Store({
                         let socket = isNaN(+ props[key]) ? strArrSocket : numArrSocket;
                         node.addOutput(new Rete.Output(key, key, socket));
                     }
-                    // let socket = geometry.type === 'Polygon' || geometry.type === 'MultiPolygon' ? polygonSocket: ;
                     node.addOutput(new Rete.Output('geom', 'Geometry', geometrySocket));
                 }else{
                     for(let key in node.data.data[0]){
