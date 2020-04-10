@@ -9,7 +9,7 @@ import ContextMenuPlugin from 'rete-context-menu-plugin';
 import G2 from '@antv/g2';
 import DataSet from '@antv/data-set';
 
-import { PointLayer, LineLayer } from '@antv/l7';
+import { PointLayer, LineLayer, PolygonLayer } from '@antv/l7';
 
 import VueNumControl from '~/components/controls/VueNumControl'
 import VueStrControl from '~/components/controls/VueStrControl'
@@ -684,6 +684,8 @@ const store = () => new Vuex.Store({
                 node.data.obj = inputs['obj'][0];
             }
         }
+
+
         class ValuesComponent extends Rete.Component {
             constructor(){
                 super("Values");
@@ -1087,6 +1089,47 @@ const store = () => new Vuex.Store({
                 }
             }
         }
+        class PolygonLayerComponent extends Rete.Component {
+            constructor(){
+                super('Polygon Layer')
+                this.path = ['Layers']
+            }
+            build(node){
+                node
+                    // .addInput(new Rete.Input('x','X', numArrSocket))
+                    // .addInput(new Rete.Input('x1','X1', numArrSocket))
+                    // .addInput(new Rete.Input('y','Y', numArrSocket))
+                    // .addInput(new Rete.Input('y1','Y1', numArrSocket))
+                    // .addInput(new Rete.Input('shape','Shape', lineShapeSocket))
+                    // // .addInput(new Rete.Input('shapes', 'Shape by Cat', lineShapesSocket))
+                    // .addInput(new Rete.Input('color','Color', strSocket))
+                    // .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
+                    // .addInput(new Rete.Input('size','Size', numSocket))
+                    .addInput(new Rete.Input('geojson', 'GeoJson', objSocket))
+                    .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
+            }
+            worker(node, inputs, outputs){
+                if(inputs.geojson.length){
+                    const layer = new PolygonLayer({})
+                        .source(inputs.geojson[0])
+                        .shape('extrude').size(200);
+
+                    // if(inputs.colors.length){
+                    //     lineLayer.color('color', c=>{
+                    //         return inputs.colors[0].colors['field'+c]
+                    //     });
+                    // }else if(inputs.color.length){
+                    //     lineLayer.color(inputs.color[0]);
+                    // }
+
+                    // if(inputs.shape.length){
+                    //     lineLayer.shape(inputs.shape[0]);
+                    // }
+            
+                    outputs['layer'] = layer;
+                }
+            }
+        }
         class MapComponent extends Rete.Component {
             constructor(){
                 super('Map')
@@ -1207,6 +1250,7 @@ const store = () => new Vuex.Store({
             new FieldsComponent, new ParseComponent,
             new MapComponent,
             new PointLayerComponent, new LineLayerComponent,
+            new PolygonLayerComponent,
             new RangeComponent, new SizeComponent, 
             new ColorCategoryComponent,
             new PointShapeComponent, new PointShapeCategoryComponent,
