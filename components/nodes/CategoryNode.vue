@@ -15,7 +15,7 @@
         <div class="d-flex">
             <div class="values">
                 <div class="value" v-for="(value, i) in node.data.values" :key="i">
-                    {{ value.length > 15 ? value.toString().slice(0,15)+'...' : value.toString().slice(0,15) }}
+                    {{ value ? (value.length > 15 ? value.toString().slice(0,15)+'...' : value.toString().slice(0,15)) : 'Null'  }}
                 </div>
             </div>
             <div>
