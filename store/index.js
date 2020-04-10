@@ -887,7 +887,6 @@ const store = () => new Vuex.Store({
             }
             async worker(node, inputs, outputs){
                 if(node.data.data){
-                    console.log(node.data)
                     const component = new ParseComponent;
                     const parse = await component.createNode( {name: node.data.name, data: node.data.data} );
                     parse.position = node.position;
@@ -1271,7 +1270,8 @@ const store = () => new Vuex.Store({
                     // // .addInput(new Rete.Input('shapes', 'Shape by Cat', lineShapesSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
-                    // .addInput(new Rete.Input('size','Size', numSocket))
+                    .addInput(new Rete.Input('size','Size', numSocket))
+                    .addInput(new Rete.Input('sizes','Sizes', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
@@ -1283,10 +1283,12 @@ const store = () => new Vuex.Store({
                             type: "Feature",
                             properties: { 
                                 ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                                ...(inputs.sizes.length ? {size: inputs.sizes[0][i]} : {}), 
                             },
                             geometry: g 
                         }))
                     }
+                    console.log(data)
                     const layer = new PolygonLayer({})
                         .source(data)
                         .shape('extrude').size(200);
@@ -1299,9 +1301,11 @@ const store = () => new Vuex.Store({
                         layer.color(inputs.color[0]);
                     }
 
-                    // if(inputs.shape.length){
-                    //     lineLayer.shape(inputs.shape[0]);
-                    // }
+                    if(inputs.size.length){
+                        layer.size(inputs.size[0]);
+                    }else if(inputs.sizes.length){
+                        layer.size('size');
+                    }
             
                     outputs['layer'] = layer;
                 }
