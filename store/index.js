@@ -34,6 +34,7 @@ const store = () => new Vuex.Store({
     result: null,
     layouts: {},
     data: {},
+    options: ['', 'branches.json', 'cars.csv', 'arcs.json'],
     freez: false,
     shapes: [
         'circle','square','triangle','hexagon', // 2D
@@ -764,7 +765,6 @@ const store = () => new Vuex.Store({
                 this.path = null;
             }
             builder(node){
-                node.addInput(new Rete.Input('data', 'Data', objSocket));
                 for(let key in node.data[0]){
                     let socket = isNaN(+ node.data[0][key]) ? strArrSocket : numArrSocket;
                     node.addOutput(new Rete.Output(key, key, socket));
@@ -779,22 +779,24 @@ const store = () => new Vuex.Store({
         class DatasetComponent extends Rete.Component {
             constructor() {
                 super('Dataset')
-                this.path = null;
+                this.path = ['Data'];
             }
             builder(node){
-                node.data.dataset = 'branches.json';
-                node
-                    .addControl(new SelectControl( this.editor, 'dataset', node.data.options ))
-                    .addOutput(new Rete.Output( 'data', 'Data', objSocket ));
+                node.data.dataset = '';
+                node.addControl(new SelectControl( this.editor, 'dataset', state.options ));
             }
-            worker(node, inputs, outputs){
-                outputs['data'] = state.data[ node.data.dataset ]; 
+            async worker(node, inputs, outputs){
+                const component = new ParseComponent;
+                const parse = await component.createNode( state.data[ node.data.dataset ] );
+                parse.position = node.position;
+                editor.addNode(parse);
+                this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
             }
         }
         class LoadDataComponent extends Rete.Component {
             constructor(){
                 super('Load Data')
-                this.path = []
+                this.path = ['Data']
             }
             builder(node){
                 node
@@ -1192,34 +1194,39 @@ const store = () => new Vuex.Store({
                 return component.name;
             },
             nodeItems: node => {
-                if (node.name === 'Dataset') {
-                    return {
-                        async 'Fields'(){ 
-                            const component = new FieldsComponent;
-                            const fields = await component.createNode( state.data[ node.data.dataset ] );
-                            fields.position = [node.position[0]+250, node.position[1] ];
-                            editor.addNode(fields);
-                            editor.connect(node.outputs.get('data'), fields.inputs.get('data'));
-                        },
-                        async 'Parse'(){
-                            const component = new ParseComponent;
-                            const fields = await component.createNode( state.data[ node.data.dataset ] );
-                            fields.position = [node.position[0]+250, node.position[1] ];
-                            editor.addNode(fields);
-                            editor.connect(node.outputs.get('data'), fields.inputs.get('data'));
-                        }
-                    }
-                }else if(node.name === 'Load Data'){
-                    return {
-                        async 'Parse'(){
-                            const component = new ParseComponent;
-                            const parser = await component.createNode( node.data.data );
-                            parser.position = [node.position[0]+250, node.position[1] ];
-                            editor.addNode(parser);
-                            editor.connect(node.outputs.get('data'), parser.inputs.get('data'));
-                        }
-                    }
-                }else if(node.name === 'Map'){
+                // if (node.name === 'Dataset') {
+                //     return {
+                //         // async 'Fields'(){ 
+                //         //     const component = new FieldsComponent;
+                //         //     const fields = await component.createNode( state.data[ node.data.dataset ] );
+                //         //     fields.position = [node.position[0]+250, node.position[1] ];
+                //         //     editor.addNode(fields);
+                //         //     editor.connect(node.outputs.get('data'), fields.inputs.get('data'));
+                //         // },
+                //         async 'Parse'(){
+                //             const component = new ParseComponent;
+                //             const fields = await component.createNode( state.data[ node.data.dataset ] );
+                //             fields.position = [node.position[0]+250, node.position[1] ];
+                //             editor.addNode(fields);
+                //             editor.connect(node.outputs.get('data'), fields.inputs.get('data'));
+                //         }
+                //     }
+                // }else if(node.name === 'Load Data'){
+                //     return {
+                //         async 'Parse'(){
+                //             const component = new ParseComponent;
+                //             const parser = await component.createNode( node.data.data );
+                //             parser.position = [node.position[0]+250, node.position[1] ];
+                //             editor.addNode(parser);
+                //             editor.connect(node.outputs.get('data'), parser.inputs.get('data'));
+                //         }
+                //     }
+                // }else if(node.name === 'Map'){
+                //     return{
+                //         'Clone': false
+                //     }
+                // }
+                if(node.name === 'Map'){
                     return{
                         'Clone': false
                     }

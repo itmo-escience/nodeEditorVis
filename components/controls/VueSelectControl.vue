@@ -1,6 +1,6 @@
 <template>
     <select @change="change($event)">
-        <option v-for="option in options" :key="option" :value="option">{{ option }}</option>
+        <option v-for="(option, index) in options" :key="option" :value="option" :disabled="!option" :selected="!index">{{ option }}</option>
     </select>
 </template>
 <script>

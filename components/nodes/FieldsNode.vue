@@ -1,6 +1,6 @@
 <template>
     <div class="node" :class="[selected(), node.name] | kebab">
-        <div class="title">{{node.name}}</div>
+        <!-- <div class="title">{{node.name}}</div> -->
         <div class="input d-flex" v-for="input in inputs()" :key="input.key">
             <Socket v-socket:input="input" type="input" :socket="input.socket"></Socket>
             <div class="input-title" v-show="!input.showControl()">{{input.name}}</div>
