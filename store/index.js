@@ -963,25 +963,62 @@ const store = () => new Vuex.Store({
         class LineShapeCategoryComponent extends Rete.Component {
             constructor(){
                 super('Line Shape Category')
-                this.data.component = CategoryNode
-                this.path = null;
+                this.data.component = CategoryNode;
+                this.path = ['Shapes']
             }
-            builder(node){
-                let fieldSocket = typeof node.data.values[0] === 'number' ? numArrSocket : strArrSocket;
-                node
-                    .addInput(new Rete.Input('field', 'Field', fieldSocket))
-                    .addOutput(new Rete.Output('shapes', 'Shapes', lineShapesSocket));
-                node.data.shapes = {};
-                node.data.values.forEach(v=>{
-                    node.addControl(new ShapeSelectControl(this.editor, node, 'field'+v, state.lineShapes))
-                    node.data.shapes['field'+v] = 'line';
-                });
+            build(node){
+                if(node.data.values){
+                    if(typeof node.data.values[0] === 'number'){
+                        node.addInput(new Rete.Input('nums', 'Num Values', numArrSocket));
+                    }else{
+                        node.addInput(new Rete.Input('strings', 'Str Values', strArrSocket));
+                    }
+                    node.addOutput(new Rete.Output('shapes', 'Shapes', lineShapesSocket)); 
+                    node.data.shapes = {};
+                    node.data.values.forEach(v=>{
+                        node.addControl(new ShapeSelectControl(this.editor, node, 'field'+v, state.lineShapes))
+                        node.data.shapes['field'+v] = 'circle'; 
+                    });
+                }else{
+                   node
+                    .addInput(new Rete.Input('strings', 'Str Values', strArrSocket))
+                    .addInput(new Rete.Input('nums', 'Num Values', numArrSocket)); 
+                }
             }
-            worker(node,inputs,outputs){
-                outputs.shapes = {
-                    field: inputs.field[0],
-                    shapes: node.data.shapes
-                };
+            async worker(node, inputs, outputs){
+                if(node.data.values){
+                    const values = Object.values(inputs)[0][0];
+
+                    if(JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])){
+                        const component = this.editor.components.get('Line Shape Category');
+                        const colors = await component.createNode({ values: [...new Set( values )] });
+                        colors.position = node.position;
+                        this.editor.addNode(colors);
+                        const conn = node.inputs[Object.keys(inputs)[0]].connections[0];
+                        const n = this.editor.nodes.find(n=> n.id === conn.node);
+                        this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( Object.keys(inputs)[0] ));
+                        this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                    }
+
+                    outputs.shapes = {
+                        field: values,
+                        shapes: node.data.shapes
+                    };
+                }
+                
+                if(!node.data.values && (inputs.strings.length || inputs.nums.length)){
+                    const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
+                    const connection = inputs.strings.length ? node.inputs.strings.connections[0] : node.inputs.nums.connections[0];
+
+                    const component = this.editor.components.get('Line Shape Category');
+                    const colors = await component.createNode({ values: [...new Set( values )] });
+                    colors.position = node.position;
+                    this.editor.addNode(colors);
+                    const n = this.editor.nodes.find(n=> n.id === connection.node);
+                    const input = inputs.strings.length ? colors.inputs.get('strings') : colors.inputs.get('nums');
+                    this.editor.connect(n.outputs.get( connection.output ), input);
+                    this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                }
             }
         }
         class PointShapeComponent extends Rete.Component {
