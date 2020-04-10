@@ -65,11 +65,11 @@ const store = () => new Vuex.Store({
         const pointShapesSocket = new Rete.Socket('Point Shapes');
 
         class FileLoadControl extends Rete.Control {
-            constructor(emitter, key){
+            constructor(emitter, key, name){
                 super(key)
                 this.render = 'vue';
                 this.component = VueFileLoadControl;
-                this.props = { emitter, ikey: key }
+                this.props = { emitter, DATA: key, name: name }
             }
         }
         class ColorControl extends Rete.Control {
@@ -791,14 +791,14 @@ const store = () => new Vuex.Store({
                 this.path = null;
             }
             builder(node){
-                for(let key in node.data[0]){
-                    let socket = isNaN(+ node.data[0][key]) ? strArrSocket : numArrSocket;
+                for(let key in node.data.data[0]){
+                    let socket = isNaN(+ node.data.data[0][key]) ? strArrSocket : numArrSocket;
                     node.addOutput(new Rete.Output(key, key, socket));
                 }
             }
             worker(node, inputs, outputs){
-                for(let key in node.data[0]){
-                    outputs[key] = node.data.map(d=>d[key]);
+                for(let key in node.data.data[0]){
+                    outputs[key] = node.data.data.map(d=>d[key]);
                 }
             }
         }
@@ -812,11 +812,13 @@ const store = () => new Vuex.Store({
                 node.addControl(new SelectControl( this.editor, 'dataset', state.options ));
             }
             async worker(node, inputs, outputs){
-                const component = new ParseComponent;
-                const parse = await component.createNode( state.data[ node.data.dataset ] );
-                parse.position = node.position;
-                editor.addNode(parse);
-                this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                if(node.data.dataset){
+                    const component = new ParseComponent;
+                    const parse = await component.createNode( {name: node.data.dataset, data: state.data[ node.data.dataset ]} );
+                    parse.position = node.position;
+                    editor.addNode(parse);
+                    this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                }
             }
         }
         class LoadDataComponent extends Rete.Component {
@@ -826,11 +828,17 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node
-                    .addControl(new FileLoadControl(this.editor, 'data'))
-                    .addOutput(new Rete.Output('data', 'Data', objSocket));
+                    .addControl(new FileLoadControl(this.editor, 'data', 'name'));
             }
-            worker(node, inputs, outputs){
-                outputs['data'] = node.data.data;
+            async worker(node, inputs, outputs){
+                if(node.data.data){
+                    console.log(node.data)
+                    const component = new ParseComponent;
+                    const parse = await component.createNode( {name: node.data.name, data: node.data.data} );
+                    parse.position = node.position;
+                    editor.addNode(parse);
+                    this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                }
             }
         }
         class RangeComponent extends Rete.Component {

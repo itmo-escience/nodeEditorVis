@@ -1,6 +1,6 @@
 <template>
     <div class="node" :class="[selected(), node.name] | kebab">
-        <!-- <div class="title">{{node.name}}</div> -->
+        <div class="title">{{node.data.name}}</div>
         <div class="input d-flex" v-for="input in inputs()" :key="input.key">
             <Socket v-socket:input="input" type="input" :socket="input.socket"></Socket>
             <div class="input-title" v-show="!input.showControl()">{{input.name}}</div>
@@ -17,7 +17,7 @@
             <div class="menu-item" @click="colorCategory">Color category</div>
             <div class="menu-item" @click="pointShapeCategory">Point Shape category</div>
             <!--<div class="menu-item" @click="lineShapeCategory">Line Shape category</div>-->
-            <div class="menu-item" @click="range" v-if="typeof node.data[0][name] === 'number'" >Range</div>
+            <div class="menu-item" @click="range" v-if="typeof node.data.data[0][name] === 'number'" >Range</div>
         </div>
         <!-- <div class="control" v-for="control in controls()" v-control="control"></div>-->
         <!-- Inputs-->
@@ -34,7 +34,7 @@
             async range(){
                 if(this.node.name === 'Parse'){
                     const component = this.editor.components.get('Range');
-                    const values = this.node.data.map(item => item[this.name]);
+                    const values = this.node.data.data.map(item => item[this.name]);
                     const range = await component.createNode( { 
                         values: values,
                         field: this.name,
@@ -49,7 +49,7 @@
             async colorCategory(){
                 if(this.node.name === 'Parse'){
                     const component = this.editor.components.get('Color Category');
-                    const unique = [...new Set(this.node.data.map(item => item[this.name]))];
+                    const unique = [...new Set(this.node.data.data.map(item => item[this.name]))];
                     const fields = await component.createNode( { values: unique } );
                     fields.position = [this.node.position[0]+250, this.node.position[1] ];
                     this.editor.addNode(fields);
@@ -59,7 +59,7 @@
             async pointShapeCategory(){
                 if(this.node.name === 'Parse'){
                     const component = this.editor.components.get('Point Shape Category');
-                    const unique = [...new Set(this.node.data.map(item => item[this.name]))];
+                    const unique = [...new Set(this.node.data.data.map(item => item[this.name]))];
                     const fields = await component.createNode( { values: unique } );
                     fields.position = [this.node.position[0]+250, this.node.position[1] ];
                     this.editor.addNode(fields);
@@ -69,7 +69,7 @@
             async lineShapeCategory(){
                 if(this.node.name === 'Parse'){
                     const component = this.editor.components.get('Line Shape Category');
-                    const unique = [...new Set(this.node.data.map(item => item[this.name]))];
+                    const unique = [...new Set(this.node.data.data.map(item => item[this.name]))];
                     const fields = await component.createNode( { values: unique } );
                     fields.position = [this.node.position[0]+250, this.node.position[1] ];
                     this.editor.addNode(fields);
