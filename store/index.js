@@ -9,7 +9,7 @@ import ContextMenuPlugin from 'rete-context-menu-plugin';
 import G2 from '@antv/g2';
 import DataSet from '@antv/data-set';
 
-import { PointLayer, LineLayer, PolygonLayer } from '@antv/l7';
+import { PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@antv/l7';
 
 import VueNumControl from '~/components/controls/VueNumControl'
 import VueStrControl from '~/components/controls/VueStrControl'
@@ -18,6 +18,7 @@ import VueColorControl from '~/components/controls/VueColorControl'
 import VueClosedColorControl from '~/components/controls/VueClosedColorControl'
 import VueShapeSelectControl from '~/components/controls/VueShapeSelectControl'
 import VueFileLoadControl from '~/components/controls/VueFileLoadControl'
+import VueRampControl from '~/components/controls/VueRampControl'
 
 import ChartNode from '~/components/nodes/ChartNode'
 import FieldsNode from '~/components/nodes/FieldsNode'
@@ -64,6 +65,8 @@ const store = () => new Vuex.Store({
         const lineShapesSocket = new Rete.Socket('Line Shapes');
         const pointShapesSocket = new Rete.Socket('Point Shapes');
         const geometrySocket = new Rete.Socket('Geometry');
+        const heatMapSocket = new Rete.Socket('HeatMap');
+        const rampColorsSocket = new Rete.Socket('Ramp Colors')
 
         class FileLoadControl extends Rete.Control {
             constructor(emitter, key, name){
@@ -98,6 +101,14 @@ const store = () => new Vuex.Store({
             }
             setValue(val) {
                 this.vueContext.value = val;
+            }
+        }
+        class RampControl extends Rete.Control{
+            constructor(emitter, key, freez){
+                super(key)
+                this.render = 'vue';
+                this.component = VueRampControl;
+                this.props = { emitter, ikey: key, freez: freez};
             }
         }
         class NumControl extends Rete.Control {
@@ -1159,7 +1170,7 @@ const store = () => new Vuex.Store({
                                 x: 'x',
                                 y: 'y'
                             }
-                    });
+                        });
                     if(inputs.colors.length){
                         pointLayer.color('color', c=>{
                             return inputs.colors[0].colors['field'+c]
@@ -1311,6 +1322,130 @@ const store = () => new Vuex.Store({
                 }
             }
         }
+        class HeatMapLayerComponent extends Rete.Component {
+            constructor(){
+                super('HeatMap Layer')
+                this.path = ['Layers']
+            }
+            build(node){
+                node
+                    .addInput(new Rete.Input('lat','Lat', numArrSocket))
+                    .addInput(new Rete.Input('lon','Lon', numArrSocket))
+                    // .addInput(new Rete.Input('shape','Shape', lineShapeSocket))
+                    .addInput(new Rete.Input('size','Size', sizeSocket))
+                    .addInput(new Rete.Input('color','Color', strSocket))
+                    .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
+                    .addInput(new Rete.Input('shape','Shape', pointShapeSocket))
+                    .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
+                    .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
+            }
+            worker(node, inputs, outputs){
+                if( (inputs.lat.length && inputs.lon.length) || inputs.geometry.length ){
+                    
+                    let data = [];
+                    const layer = new HeatmapLayer();
+
+                    if( (inputs.lat.length && inputs.lon.length) && 
+                    inputs.lat[0].length === inputs.lon[0].length )
+                    {
+                        for(let i=0; i<inputs.lat[0].length; i++){
+                            let obj = {
+                                x: inputs.lon[0][i], 
+                                y: inputs.lat[0][i],
+                                ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                                ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                                // ...(inputs.sizes.length ? {size: inputs.sizes[0][i]} : {}), 
+                            }
+                            data.push(obj);
+                        }
+                    layer.source(data, {
+                                parser: {
+                                    type: 'json',
+                                    x: 'x',
+                                    y: 'y'
+                                }
+                            });
+
+                    }else if(inputs.geometry.length){
+                        data = {
+                            type: "FeatureCollection",
+                            features: inputs.geometry[0].map((g, i)=>({ 
+                                type: "Feature",
+                                properties: {
+                                    ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                                    ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                                    // ...(inputs.sizes.length ? {size: inputs.sizes[0][i]} : {}), 
+                                },
+                                geometry: g 
+                            }))
+                        }
+                        
+                        layer.source(data);
+                    }
+                    
+                    // console.log(data)
+                    
+                    layer.shape('heatmap');
+
+                    if(inputs.colors.length){
+                        layer.color('color', c=>{
+                            return inputs.colors[0].colors['field'+c]
+                        });
+                    }else if(inputs.color.length){
+                        layer.color(inputs.color[0]);
+                    }
+                    
+                    if(inputs.shape.length){
+                        pointLayer.shape(inputs.shape[0]);
+                    }
+
+                    if(inputs.size.length){
+                        pointLayer.size('size', s=>{
+                            return [ s.x, s.y, s.z ];
+                        });
+                    }
+            
+                    outputs['layer'] = layer;
+                }
+            }
+        }
+        class RampColorsComponent extends Rete.Component {
+            constructor(){
+                super('Ramp Colors')
+                this.path = []
+            }
+            builder(node){
+                node
+                    .addOutput(new Rete.Output('rampColors', 'Ramp Colors', rampColorsSocket))
+                    .addControl(new RampControl(this.editor, 'ramp', 'freez'));
+            }
+            worker(node, inputs, outputs){
+                state.freez = node.data.freez;
+                outputs['rampColors'] = node.data['ramp']; 
+            }
+        }
+        class HeatMapComponent extends Rete.Component {
+            constructor(){
+                super('HeatMap')
+                this.path = []
+            }
+            builder(node){
+                node
+                    .addControl(new NumControl(this.editor, 'intensity', 'intensity'))
+                    .addControl(new NumControl(this.editor, 'radius', 'radius'))
+                    .addControl(new NumControl(this.editor, 'opacity', 'opacity'))
+                    .addInput(new Rete.Input('rampColors', 'Ramp Colors', rampColorsSocket))
+                    .addOutput(new Rete.Output('heatmap', 'HeapMap', heatMapSocket));
+            }
+            worker(node, inputs, outputs){
+                outputs.heatmap = {
+                    intensity: node.data.intensity,
+                    radius: node.data.radius,
+                    opacity: node.data.opacity,
+                    rampColors: inputs['rampColors'][0]
+                  }
+            }
+        }
         class MapComponent extends Rete.Component {
             constructor(){
                 super('Map')
@@ -1436,12 +1571,13 @@ const store = () => new Vuex.Store({
             new FieldsComponent, new ParseComponent,
             new MapComponent,
             new PointLayerComponent, new LineLayerComponent,
-            new PolygonLayerComponent,
+            new PolygonLayerComponent, //new HeatMapLayerComponent,
             new RangeComponent, new SizeComponent, 
             new ColorCategoryComponent,
             new PointShapeComponent, new PointShapeCategoryComponent,
             new LineShapeComponent, new LineShapeCategoryComponent,
-            new LoadDataComponent
+            new LoadDataComponent,
+            // new HeatMapComponent, new RampColorsComponent
         ];
 
         components.map(c => {
