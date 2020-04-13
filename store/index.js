@@ -1585,7 +1585,7 @@ const store = () => new Vuex.Store({
             engine.register(c);
         });
 
-        editor.on('process connectioncreated', async()=>{
+        editor.on('process connectioncreated connectionremoved', async()=>{
             await engine.abort();
             await engine.process( editor.toJSON() )
         });
