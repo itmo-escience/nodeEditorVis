@@ -1141,6 +1141,7 @@ const store = () => new Vuex.Store({
                 node
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
+                    .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
                     .addInput(new Rete.Input('shape','Shape', pointShapeSocket))
                     .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
@@ -1149,50 +1150,70 @@ const store = () => new Vuex.Store({
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
-                if( (inputs.lat.length && inputs.lon.length) && 
-                    inputs.lat[0].length === inputs.lon[0].length )
-                {
-                    const data = [];
-                    for(let i=0; i<inputs.lat[0].length; i++){
-                        let obj = {
-                            x: inputs.lon[0][i], 
-                            y: inputs.lat[0][i],
-                            ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-                            ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
-                            ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
-                        }
-                        data.push(obj);
-                    }
-                    const pointLayer = new PointLayer()
-                        .source(data, {
-                            parser: {
-                                type: 'json',
-                                x: 'x',
-                                y: 'y'
+                if( (inputs.lat.length && inputs.lon.length) || inputs.geometry.length ){
+                    let data = [];
+                    const layer = new PointLayer();
+                
+                    if( (inputs.lat.length && inputs.lon.length) && 
+                        inputs.lat[0].length === inputs.lon[0].length )
+                    {
+                        for(let i=0; i<inputs.lat[0].length; i++){
+                            let obj = {
+                                x: inputs.lon[0][i], 
+                                y: inputs.lat[0][i],
+                                ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                                ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                                ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                             }
-                        });
+                            data.push(obj);
+                        }
+                        layer.source(data, {
+                                parser: {
+                                    type: 'json',
+                                    x: 'x',
+                                    y: 'y'
+                                }
+                            });
+                    }else if(inputs.geometry.length){
+                        data = {
+                            type: "FeatureCollection",
+                            features: inputs.geometry[0].map((g, i)=>({ 
+                                type: "Feature",
+                                properties: {
+                                    ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                                    ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                                    ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
+                                },
+                                geometry: g 
+                            }))
+                        }
+                        
+                        layer.source(data);
+                    }
+
                     if(inputs.colors.length){
-                        pointLayer.color('color', c=>{
+                        layer.color('color', c=>{
                             return inputs.colors[0].colors['field'+c]
                         });
                     }else if(inputs.color.length){
-                        pointLayer.color(inputs.color[0]);
+                        layer.color(inputs.color[0]);
                     }
                     
                     if(inputs.shape.length){
-                        pointLayer.shape(inputs.shape[0]);
+                        layer.shape(inputs.shape[0]);
                     }else if(inputs.shapes.length){
-                        pointLayer.shape('shape', s=>{
+                        layer.shape('shape', s=>{
                             return inputs.shapes[0].shapes['field'+s]
                         });
                     }
 
                     if(inputs.size.length){
-                        pointLayer.size('size', s=>{
+                        layer.size('size', s=>{
                             return [ s.x, s.y, s.z ];
                         });
                     }
-                    outputs['layer'] = pointLayer;
+                    outputs['layer'] = layer;
+                    
                 }
             }
         }
@@ -1207,6 +1228,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('x1','X1', numArrSocket))
                     .addInput(new Rete.Input('y','Y', numArrSocket))
                     .addInput(new Rete.Input('y1','Y1', numArrSocket))
+                    .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
                     .addInput(new Rete.Input('shape','Shape', lineShapeSocket))
                     // .addInput(new Rete.Input('shapes', 'Shape by Cat', lineShapesSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
@@ -1215,54 +1237,65 @@ const store = () => new Vuex.Store({
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
-                if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) && 
-                    (inputs.x[0].length === inputs.y[0].length) &&
-                    (inputs.x[0].length === inputs.x1[0].length) &&
-                    (inputs.x[0].length === inputs.y1[0].length) )
-                {
-                    const data = [];
-                    for(let i=0; i<inputs.x[0].length; i++){
-                        let obj = {
-                            x: inputs.x[0][i], 
-                            x1: inputs.x1[0][i], 
-                            y: inputs.y[0][i],
-                            y1: inputs.y1[0][i],
-                            // ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-                            ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
-                            // ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
-                        }
-                        data.push(obj);
-                    }
-                    const lineLayer = new LineLayer()
-                        .source(data, {
-                            parser: {
-                                type: 'json',
-                                x: 'x',
-                                x1: 'x1',
-                                y: 'y',
-                                y1: 'y1'
+                if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) || inputs.geometry.length ){
+                    let data = [];
+                    const layer = new LineLayer();
+
+                    if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) && 
+                        (inputs.x[0].length === inputs.y[0].length) &&
+                        (inputs.x[0].length === inputs.x1[0].length) &&
+                        (inputs.x[0].length === inputs.y1[0].length) )
+                    {
+                        for(let i=0; i<inputs.x[0].length; i++){
+                            let obj = {
+                                x: inputs.x[0][i], 
+                                x1: inputs.x1[0][i], 
+                                y: inputs.y[0][i],
+                                y1: inputs.y1[0][i],
+                                // ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                                ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {})
                             }
-                    });
-                    
+                            data.push(obj);
+                        }
+                        
+                        layer.source(data, {
+                                parser: {
+                                    type: 'json',
+                                    x: 'x',
+                                    x1: 'x1',
+                                    y: 'y',
+                                    y1: 'y1'
+                                }
+                        });
+                    }else if(inputs.geometry.length){
+                        data = {
+                            type: "FeatureCollection",
+                            features: inputs.geometry[0].map((g, i)=>({ 
+                                type: "Feature",
+                                properties: {
+                                    ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}),
+                                },
+                                geometry: g 
+                            }))
+                        }
+                        
+                        layer.source(data);
+                    }
+                        
                     if(inputs.colors.length){
-                        lineLayer.color('color', c=>{
+                        layer.color('color', c=>{
                             return inputs.colors[0].colors['field'+c]
                         });
                     }else if(inputs.color.length){
-                        lineLayer.color(inputs.color[0]);
+                        layer.color(inputs.color[0]);
                     }
 
                     if(inputs.shape.length){
-                        lineLayer.shape(inputs.shape[0]);
+                        layer.shape(inputs.shape[0]);
                     }
-                    // else if(inputs.shapes.length){
-                    //     lineLayer.shape('shape', s=>{
-                    //         console.log(inputs.shapes[0].shapes['field'+s])
-                    //         return inputs.shapes[0].shapes['field'+s]
-                    //     });
-                    // }
     
-                    outputs['layer'] = lineLayer;
+                    outputs['layer'] = layer;
+                    
                 }
             }
         }
