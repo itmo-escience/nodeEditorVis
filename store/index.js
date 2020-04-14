@@ -1365,6 +1365,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
+                    .addInput(new Rete.Input('shape','Shape', pointShapeSocket))
                     .addInput(new Rete.Input('style', 'Heatmap', heatMapSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
