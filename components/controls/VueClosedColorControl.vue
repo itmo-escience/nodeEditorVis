@@ -5,7 +5,7 @@
     </svg>
     <div id="pallet" v-if="opened">
       <Chrome 
-        value="#000"
+        :value="color"
         @input="updateValue"/>
     </div>
   </div>
@@ -18,7 +18,7 @@ export default{
   props: ['emitter', 'ikey', 'freez', 'getData', 'putData'],
   data(){
     return {
-      color: '#000',
+      color: "#"+((1<<24)*Math.random()|0).toString(16),
       opened: false
     }
   },
