@@ -85,6 +85,7 @@
         },
         mounted(){
             this.pallet = new Array( this.value.colors.length ).fill(false);
+            this.update();
         }
     }
 </script>
