@@ -1364,13 +1364,8 @@ const store = () => new Vuex.Store({
                 node
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
-                    // .addInput(new Rete.Input('shape','Shape', lineShapeSocket))
-                    // .addInput(new Rete.Input('size','Size', sizeSocket))
-                    .addInput(new Rete.Input('style', 'Heatmap', heatMapSocket))
-                    .addInput(new Rete.Input('color','Color', strSocket))
-                    .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
-                    .addInput(new Rete.Input('shape','Shape', pointShapeSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
+                    .addInput(new Rete.Input('style', 'Heatmap', heatMapSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
@@ -1385,10 +1380,7 @@ const store = () => new Vuex.Store({
                         for(let i=0; i<inputs.lat[0].length; i++){
                             let obj = {
                                 x: inputs.lon[0][i], 
-                                y: inputs.lat[0][i],
-                                // ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-                                // ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
-                                // ...(inputs.sizes.length ? {size: inputs.sizes[0][i]} : {}), 
+                                y: inputs.lat[0][i]
                             }
                             data.push(obj);
                         }
@@ -1405,11 +1397,7 @@ const store = () => new Vuex.Store({
                             type: "FeatureCollection",
                             features: inputs.geometry[0].map((g, i)=>({ 
                                 type: "Feature",
-                                properties: {
-                                    // ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-                                    // ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
-                                    // ...(inputs.sizes.length ? {size: inputs.sizes[0][i]} : {}), 
-                                },
+                                properties: {},
                                 geometry: g 
                             }))
                         }
@@ -1417,17 +1405,7 @@ const store = () => new Vuex.Store({
                         layer.source(data);
                     }
                     
-                    // console.log(data)
-                    
                     layer.shape('heatmap');
-
-                    if(inputs.colors.length){
-                        layer.color('color', c=>{
-                            return inputs.colors[0].colors['field'+c]
-                        });
-                    }else if(inputs.color.length){
-                        layer.color(inputs.color[0]);
-                    }
                     
                     if(inputs.shape.length){
                         layer.shape(inputs.shape[0]);
@@ -1436,15 +1414,25 @@ const store = () => new Vuex.Store({
                     if(inputs.style.length){
                         layer.style(inputs.style[0]);
                     }
-
-                    // if(inputs.size.length){
-                    //     layer.size('size', s=>{
-                    //         return [ s.x, s.y, s.z ];
-                    //     });
-                    // }
             
                     outputs['layer'] = layer;
                 }
+            }
+        }
+        class GridComponent extends Rete.Component {
+            constructor(){
+                super('Grid')
+                this.path = []
+            }
+            builder(node){
+                node
+                    .addControl(new NumControl(this.editor, 'size', 'size'))
+                    .addControl(new SelectControl(this.editor, 'type', ['grid', 'hexagon']))
+                    .addControl(new SelectControl(this.editor, 'method', ['count','max','min','sum','mean']))
+                    .addInput(new Rete.Input('field', 'Field', numArrSocket));
+            }
+            worker(node, inputs, outputs){
+
             }
         }
         class HeatMapComponent extends Rete.Component {
