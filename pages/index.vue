@@ -26,10 +26,7 @@
           "nodes": {
               "1": {
                   "id": 1,
-                  "data": { 
-                    'options': ['branches.json', 'cars.csv', 'arcs.json'],
-                    'dataset': 'branches.json'
-                  },
+                  "data": {},
                   "position": [80, 200],
                   "name": "Dataset"
               },
@@ -50,7 +47,7 @@
     position: fixed;
     left: 0; bottom: 0;
     width: 100%;
-    height: 100%;
+    height: 100% !important;
     z-index: 2;
     background: #fff;
   }

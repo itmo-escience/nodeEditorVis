@@ -76,8 +76,8 @@ export default{
                     layers.forEach(layer=>{
                         if(layer) this.scene.addLayer(layer);
                     });
+                    if(layers.length && layers[layers.length-1]) layers[layers.length-1].fitBounds();
                 }
-
                 this.node.data.update = false;
             }            
         }
