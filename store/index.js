@@ -1365,7 +1365,8 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     // .addInput(new Rete.Input('shape','Shape', lineShapeSocket))
-                    .addInput(new Rete.Input('size','Size', sizeSocket))
+                    // .addInput(new Rete.Input('size','Size', sizeSocket))
+                    .addInput(new Rete.Input('style', 'Heatmap', heatMapSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     .addInput(new Rete.Input('shape','Shape', pointShapeSocket))
@@ -1373,7 +1374,7 @@ const store = () => new Vuex.Store({
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
-                if( (inputs.lat.length && inputs.lon.length) || inputs.geometry.length ){
+                if( ((inputs.lat.length && inputs.lon.length) || inputs.geometry.length) && inputs.style.length ){
                     
                     let data = [];
                     const layer = new HeatmapLayer();
@@ -1385,8 +1386,8 @@ const store = () => new Vuex.Store({
                             let obj = {
                                 x: inputs.lon[0][i], 
                                 y: inputs.lat[0][i],
-                                ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-                                ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                                // ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                                // ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
                                 // ...(inputs.sizes.length ? {size: inputs.sizes[0][i]} : {}), 
                             }
                             data.push(obj);
@@ -1405,8 +1406,8 @@ const store = () => new Vuex.Store({
                             features: inputs.geometry[0].map((g, i)=>({ 
                                 type: "Feature",
                                 properties: {
-                                    ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-                                    ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                                    // ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                                    // ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
                                     // ...(inputs.sizes.length ? {size: inputs.sizes[0][i]} : {}), 
                                 },
                                 geometry: g 
@@ -1429,32 +1430,21 @@ const store = () => new Vuex.Store({
                     }
                     
                     if(inputs.shape.length){
-                        pointLayer.shape(inputs.shape[0]);
+                        layer.shape(inputs.shape[0]);
                     }
 
-                    if(inputs.size.length){
-                        pointLayer.size('size', s=>{
-                            return [ s.x, s.y, s.z ];
-                        });
+                    if(inputs.style.length){
+                        layer.style(inputs.style[0]);
                     }
+
+                    // if(inputs.size.length){
+                    //     layer.size('size', s=>{
+                    //         return [ s.x, s.y, s.z ];
+                    //     });
+                    // }
             
                     outputs['layer'] = layer;
                 }
-            }
-        }
-        class RampColorsComponent extends Rete.Component {
-            constructor(){
-                super('Ramp Colors')
-                this.path = []
-            }
-            builder(node){
-                node
-                    .addOutput(new Rete.Output('rampColors', 'Ramp Colors', rampColorsSocket))
-                    .addControl(new RampControl(this.editor, 'ramp', 'freez'));
-            }
-            worker(node, inputs, outputs){
-                state.freez = node.data.freez;
-                outputs['rampColors'] = node.data['ramp']; 
             }
         }
         class HeatMapComponent extends Rete.Component {
@@ -1467,16 +1457,17 @@ const store = () => new Vuex.Store({
                     .addControl(new NumControl(this.editor, 'intensity', 'intensity'))
                     .addControl(new NumControl(this.editor, 'radius', 'radius'))
                     .addControl(new NumControl(this.editor, 'opacity', 'opacity'))
-                    .addInput(new Rete.Input('rampColors', 'Ramp Colors', rampColorsSocket))
+                    .addControl(new RampControl(this.editor, 'ramp', 'freez'))
                     .addOutput(new Rete.Output('heatmap', 'HeapMap', heatMapSocket));
             }
             worker(node, inputs, outputs){
+                state.freez = node.data.freez
                 outputs.heatmap = {
                     intensity: node.data.intensity,
                     radius: node.data.radius,
                     opacity: node.data.opacity,
-                    rampColors: inputs['rampColors'][0]
-                  }
+                    rampColors: node.data['ramp']
+                }
             }
         }
         class MapComponent extends Rete.Component {
@@ -1604,13 +1595,13 @@ const store = () => new Vuex.Store({
             new FieldsComponent, new ParseComponent,
             new MapComponent,
             new PointLayerComponent, new LineLayerComponent,
-            new PolygonLayerComponent, //new HeatMapLayerComponent,
+            new PolygonLayerComponent, new HeatMapLayerComponent,
             new RangeComponent, new SizeComponent, 
             new ColorCategoryComponent,
             new PointShapeComponent, new PointShapeCategoryComponent,
             new LineShapeComponent, new LineShapeCategoryComponent,
             new LoadDataComponent,
-            new HeatMapComponent, new RampColorsComponent
+            new HeatMapComponent
         ];
 
         components.map(c => {
