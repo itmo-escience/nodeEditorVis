@@ -1610,7 +1610,7 @@ const store = () => new Vuex.Store({
             new PointShapeComponent, new PointShapeCategoryComponent,
             new LineShapeComponent, new LineShapeCategoryComponent,
             new LoadDataComponent,
-            // new HeatMapComponent, new RampColorsComponent
+            new HeatMapComponent, new RampColorsComponent
         ];
 
         components.map(c => {
