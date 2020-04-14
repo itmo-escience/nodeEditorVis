@@ -1,33 +1,30 @@
 <template>
-    <div class="slider" ref="slider" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
-        <div class="color" v-for="(color, index) in value.colors" :key="index" :style="{ width: ((value.positions[index+1]-value.positions[index])*200) +'px', zIndex: 10-index }">
-            <div>
-                <!--<verte picker="square" :value="color" model="hex" :draggable="false" :showHistory="false" @input="change($event, index)"></verte>-->
-                <div id="pallet" v-if="pallet[index]">
-                    <Chrome :value="color" @input="change($event, index)"/>
+    <div class="d-flex">
+        <div class="slider d-flex" ref="slider" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
+            <div class="color" v-for="(color, index) in value.colors" :key="index" :style="{ width: ((value.positions[index+1]-value.positions[index])*200) +'px', zIndex: 10-index }">
+                <div>
+                    <div id="pallet" v-if="pallet[index]">
+                        <Chrome :value="color" @input="change($event, index)"/>
+                    </div>
+                    <svg class="picker" viwebox="0 0 10 10" @click="togglePallet(index)">
+                        <rect :width="((value.positions[index+1]-value.positions[index])*200)" :fill="color" height="10"></rect>
+                    </svg>
                 </div>
-                <svg class="picker" viwebox="0 0 10 10" @click="togglePallet(index)">
-                    <rect :width="((value.positions[index+1]-value.positions[index])*200)" :fill="color" height="10"></rect>
+                <svg class="circle" :style="{ left: (value.positions[index+1]*200)-10 +'px' }" height="20" viewBox="0 0 10 10" 
+                    @mousedown="dragStart" @mouseup="dragEnd"  @mousemove="dragging($event, index)">
+                    <circle cx="5" cy="5" r="5" :fill="color"></circle>
                 </svg>
-                
+                <div :style="{visibility: 'hidden'}">{{render}}</div>
             </div>
-            <svg class="circle" :style="{ left: (value.positions[index+1]*200)-10 +'px' }" height="20" viewBox="0 0 10 10" 
-                @mousedown="dragStart" @mouseup="dragEnd"  @mousemove="dragging($event, index)">
-                <circle cx="5" cy="5" r="5" :fill="color"></circle>
-            </svg>
-            <div :style="{visibility: 'hidden'}">{{render}}</div>
         </div>
+        <div class="plus" @click="add"></div>
     </div>
 </template>
 <script>
-    // import Verte from 'verte';
-    // import 'verte/dist/verte.css';
     import { Chrome } from "vue-color";
-
 
     export default { 
         props: ['emitter', 'ikey', 'freez', 'getData', 'putData'],
-        // components: { Verte },
         components: { Chrome },
         data() {
           return {
@@ -41,8 +38,15 @@
           }
         },
         methods: {
+            add(){
+                const positions = this.value.positions;
+                if(positions[positions.length - 1] < 1){
+                    this.value.colors.push('#a3377b');
+                    positions.push(1)
+                    this.render = !this.render;
+                }
+            },
             togglePallet(index){
-                console.log(index)
                 this.pallet[index] = !this.pallet[index];
                 this.render = !this.render;
             },
@@ -85,13 +89,22 @@
     }
 </script>
 <style>
+    .d-flex{ display: flex; }
     .slider{
         position: relative;
         width: 200px;
         height: 10px;
         border-radius: 5px;
         background: #fafafa;
-        display: flex;
+        margin-right: 10px;
+    }
+    .plus{
+        height: 10px;
+        position: relative;
+        top: -7px;
+    }
+    .plus:after{
+        content: url(/plus.svg);
     }
     .color{
         height: 10px;
