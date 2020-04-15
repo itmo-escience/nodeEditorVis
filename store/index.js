@@ -177,43 +177,6 @@ const store = () => new Vuex.Store({
             }
         }
 
-
-        class ValuesComponent extends Rete.Component {
-            constructor(){
-                super("Values");
-                this.path = null;
-            }
-
-            builder(node) {
-                node.addInput(new Rete.Input('obj', "Object", objSocket));
-                for(let key in node.data){
-                    let socket;
-                    switch(typeof node.data[key]){
-                        case 'boolean':
-                            socket = boolSocket;
-                            break
-                        case 'number':
-                            socket = numSocket;
-                            break
-                        case 'object':
-                            socket = objSocket;
-                            break
-                        case 'string':
-                            socket = strSocket;
-                            break
-                        default:
-                            socket = anySocket;
-                    }
-                    node.addOutput(new Rete.Output(key, key, socket));
-                }
-            }
-
-            worker(node, inputs, outputs){
-                for(let key in node.data){
-                    outputs[key] = node.data[key];
-                }
-            }
-        }
         class ColorCategoryComponent extends Rete.Component {
             constructor(){
                 super('Color Category')
