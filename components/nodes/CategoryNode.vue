@@ -14,24 +14,33 @@
 
         <div class="d-flex">
             <div class="values">
-                <div class="value" v-for="(value, i) in node.data.values" :key="i">
+                <div class="value" v-for="(value, i) in node.data.values" v-if="opened || i < 10" :key="i">
                     {{ value ? (value.length > 15 ? value.toString().slice(0,15)+'...' : value.toString().slice(0,15)) : 'Null'  }}
                 </div>
             </div>
             <div>
-                <div class="color-control" v-for="(control, i) in controls()" v-control="control" :key="i"></div>
+                <div class="color-control" v-for="(control, i) in controls()" v-if="opened || i < 10" v-control="control" :key="i"></div>
             </div>
         </div>
+        <div v-if="node.data.values && node.data.values.length > 10" class="arrow" @click="toggle" :class="{up: opened, down: !opened}"></div>
     </div>
 </template>
 <script>
     import VueRenderPlugin from 'rete-vue-render-plugin'
     export default{
         mixins: [VueRenderPlugin.mixin],
-        components:{ Socket: VueRenderPlugin.Socket }
+        components:{ Socket: VueRenderPlugin.Socket },
+        data(){ return { opened: true } },
+        methods: {
+            toggle(){
+                this.opened = !this.opened;
+            }
+        }
     }
 </script>
 <style>
+    .arrow.up:after{ content: url(/arrow-up.svg); }
+    .arrow.down:after{ content: url(/arrow-down.svg); }
     .node{
         background: rgba(110,136,255,0.8);
         border: 2px solid #4e58bf;
