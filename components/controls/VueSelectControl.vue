@@ -1,5 +1,5 @@
 <template>
-    <select @change="change($event)">
+    <select @change="change($event)" @mouseover="freezEditor(true)" @mouseleave="freezEditor(false)">
         <option v-for="(option, index) in options" :key="option" :value="option" :disabled="!option" :selected="!index">{{ option }}</option>
     </select>
 </template>
@@ -9,9 +9,13 @@
         data() {
           return {
             value: '',
+            freez: false
           }
         },
         methods: {
+          freezEditor(freez){
+            this.freez = freez;
+          },
           change(e){
             this.value = e.target.value;
             this.update();
@@ -24,6 +28,7 @@
         },
         mounted() {
           this.value = this.getData(this.ikey);
+          this.emitter.on('nodetranslate', ()=> !this.freez);
         }
     }
 </script>
