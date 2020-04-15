@@ -56,9 +56,6 @@ const store = () => new Vuex.Store({
         const colorSocket = new Rete.Socket('Color');
         const strArrSocket = new Rete.Socket('String Array');
         const numArrSocket = new Rete.Socket('Number Array');
-        const shapeSocket = new Rete.Socket('Shape');
-        const lineShapeSocket = new Rete.Socket('Line Shape');
-        const pointShapeSocket = new Rete.Socket('Point Shape');
         const lineShapesSocket = new Rete.Socket('Line Shapes');
         const pointShapesSocket = new Rete.Socket('Point Shapes');
         const geometrySocket = new Rete.Socket('Geometry');
@@ -978,19 +975,6 @@ const store = () => new Vuex.Store({
             }
         }
         
-        class LineShapeComponent extends Rete.Component {
-            constructor(){
-                super('Line Shape')
-                this.path = ['Shapes'];
-            }
-            builder(node){
-                node.addControl(new SelectControl(this.editor, 'shape', state.lineShapes));
-                node.addOutput(new Rete.Output('shape', 'Shape', lineShapeSocket));
-            }
-            worker(node,inputs,outputs){
-                outputs.shape = node.data.shape;
-            }
-        }
         class LineShapeCategoryComponent extends Rete.Component {
             constructor(){
                 super('Line Shape Category')
@@ -1052,19 +1036,7 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-        class PointShapeComponent extends Rete.Component {
-            constructor(){
-                super('Point Shape')
-                this.path = ['Shapes'];
-            }
-            builder(node){
-                node.addControl(new SelectControl(this.editor, 'shape', state.shapes));
-                node.addOutput(new Rete.Output('shape', 'Shape', pointShapeSocket));
-            }
-            worker(node,inputs,outputs){
-                outputs.shape = node.data.shape;
-            }
-        }
+        
         class PointShapeCategoryComponent extends Rete.Component {
             constructor(){
                 super('Point Shape Category')
@@ -1133,11 +1105,13 @@ const store = () => new Vuex.Store({
                 this.path = ['Layers']
             }
             build(node){
+                node.data.shape = state.shapes[0];
+
                 node
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
-                    .addInput(new Rete.Input('shape','Shape', pointShapeSocket))
+                    .addControl(new SelectControl(this.editor, 'shape', state.shapes))
                     .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
@@ -1194,12 +1168,12 @@ const store = () => new Vuex.Store({
                         layer.color(inputs.color[0]);
                     }
                     
-                    if(inputs.shape.length){
-                        layer.shape(inputs.shape[0]);
-                    }else if(inputs.shapes.length){
+                    if(inputs.shapes.length){
                         layer.shape('shape', s=>{
                             return inputs.shapes[0].shapes['field'+s]
                         });
+                    }else{
+                        layer.shape(node.data.shape);
                     }
 
                     if(inputs.size.length){
@@ -1218,14 +1192,15 @@ const store = () => new Vuex.Store({
                 this.path = ['Layers']
             }
             build(node){
+                node.data.shape = state.lineShapes[0];
+
                 node
                     .addInput(new Rete.Input('x','X', numArrSocket))
                     .addInput(new Rete.Input('x1','X1', numArrSocket))
                     .addInput(new Rete.Input('y','Y', numArrSocket))
                     .addInput(new Rete.Input('y1','Y1', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
-                    .addInput(new Rete.Input('shape','Shape', lineShapeSocket))
-                    // .addInput(new Rete.Input('shapes', 'Shape by Cat', lineShapesSocket))
+                    .addControl(new SelectControl(this.editor, 'shape', state.lineShapes))
                     .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     .addInput(new Rete.Input('size','Size', numSocket))
@@ -1285,9 +1260,7 @@ const store = () => new Vuex.Store({
                         layer.color(inputs.color[0]);
                     }
 
-                    if(inputs.shape.length){
-                        layer.shape(inputs.shape[0]);
-                    }
+                    layer.shape(node.data.shape);
     
                     outputs['layer'] = layer;
                     
@@ -1301,12 +1274,6 @@ const store = () => new Vuex.Store({
             }
             build(node){
                 node
-                    // .addInput(new Rete.Input('x','X', numArrSocket))
-                    // .addInput(new Rete.Input('x1','X1', numArrSocket))
-                    // .addInput(new Rete.Input('y','Y', numArrSocket))
-                    // .addInput(new Rete.Input('y1','Y1', numArrSocket))
-                    // .addInput(new Rete.Input('shape','Shape', lineShapeSocket))
-                    // // .addInput(new Rete.Input('shapes', 'Shape by Cat', lineShapesSocket))
                     .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     .addInput(new Rete.Input('size','Size', numSocket))
@@ -1614,8 +1581,9 @@ const store = () => new Vuex.Store({
             new PolygonLayerComponent, new HeatMapLayerComponent,
             new RangeComponent, new SizeComponent, 
             new ColorCategoryComponent,
-            new PointShapeComponent, new PointShapeCategoryComponent,
-            new LineShapeComponent, new LineShapeCategoryComponent,
+            // new PointShapeComponent, 
+            new PointShapeCategoryComponent,
+            new LineShapeCategoryComponent,
             new LoadDataComponent,
             new HeatMapComponent, new GridComponent
         ];
