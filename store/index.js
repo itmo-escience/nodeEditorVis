@@ -191,10 +191,8 @@ const store = () => new Vuex.Store({
                         node.addInput(new Rete.Input('strings', 'Str Values', strArrSocket));
                     }
                     node.addOutput(new Rete.Output('colors', 'Colors', colorSocket)); 
-                    node.data.colors = {};
                     node.data.values.forEach(v=>{
                         node.addControl(new ClosedColorControl(this.editor, node, 'field'+v));
-                        node.data.colors['field'+v] = '#fff';
                     });
                 }else{
                    node
@@ -217,9 +215,12 @@ const store = () => new Vuex.Store({
                         this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
                     }
 
+                    var data = Object.assign({}, node.data);
+                    delete data.values;
+
                     outputs.colors = {
                         field: values,
-                        colors: node.data.colors
+                        colors: data
                     };
                 }
                 
