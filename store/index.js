@@ -66,7 +66,7 @@ const store = () => new Vuex.Store({
         const pointShapesSocket = new Rete.Socket('Point Shapes');
         const geometrySocket = new Rete.Socket('Geometry');
         const heatMapSocket = new Rete.Socket('HeatMap');
-        const rampColorsSocket = new Rete.Socket('Ramp Colors')
+        const gridSocket = new Rete.Socket('Grid')
 
         class FileLoadControl extends Rete.Control {
             constructor(emitter, key, name){
@@ -1366,11 +1366,12 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
                     .addInput(new Rete.Input('shape','Shape', pointShapeSocket))
+                    .addInput(new Rete.Input('grid', 'Grid', gridSocket))
                     .addInput(new Rete.Input('style', 'Heatmap', heatMapSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
-                if( ((inputs.lat.length && inputs.lon.length) || inputs.geometry.length) && inputs.style.length ){
+                if( ((inputs.lat.length && inputs.lon.length) || inputs.geometry.length) && (inputs.style.length || inputs.grid.length) ){
                     
                     let data = [];
                     const layer = new HeatmapLayer();
@@ -1430,7 +1431,8 @@ const store = () => new Vuex.Store({
                     .addControl(new NumControl(this.editor, 'size', 'size'))
                     .addControl(new SelectControl(this.editor, 'type', ['grid', 'hexagon']))
                     .addControl(new SelectControl(this.editor, 'method', ['count','max','min','sum','mean']))
-                    .addInput(new Rete.Input('field', 'Field', numArrSocket));
+                    .addInput(new Rete.Input('field', 'Field', numArrSocket))
+                    .addOutput(new Rete.Output('grid', 'Grid', gridSocket));
             }
             worker(node, inputs, outputs){
 
