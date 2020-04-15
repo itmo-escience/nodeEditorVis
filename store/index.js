@@ -36,7 +36,6 @@ const store = () => new Vuex.Store({
     layouts: {},
     data: {},
     options: ['', 'branches.json', 'cars.csv', 'arcs.json'],
-    freez: false,
     shapes: [
         'circle','square','triangle','hexagon', // 2D
         'cylinder', 'triangleColumn', 'hexagonColumn', 'squareColumn', // 3D
@@ -44,9 +43,6 @@ const store = () => new Vuex.Store({
     lineShapes: ['line', 'arc', 'greatcircle', 'arc3d']
   },
   mutations: {
-    freezEditor(state, freez){
-        state.freez = freez;
-    },
     initRete(state){
         const numSocket = new Rete.Socket('Number');
         const objSocket = new Rete.Socket('Object');
@@ -77,19 +73,19 @@ const store = () => new Vuex.Store({
             }
         }
         class ColorControl extends Rete.Control {
-            constructor(emitter, key, freez){
+            constructor(emitter, key){
                 super(key);
                 this.render = 'vue';
                 this.component = VueColorControl;
-                this.props = { emitter, ikey: key, freez: freez};
+                this.props = { emitter, ikey: key};
             }
         }
         class ClosedColorControl extends Rete.Control{
-            constructor(emitter, node, key, freez){
+            constructor(emitter, node, key){
                 super(key)
                 this.render = 'vue';
                 this.component = VueClosedColorControl;
-                this.props = { emitter, node, ikey: key, freez: freez};
+                this.props = { emitter, node, ikey: key};
             }
         }
         class ShapeSelectControl extends Rete.Control{
@@ -104,11 +100,11 @@ const store = () => new Vuex.Store({
             }
         }
         class RampControl extends Rete.Control{
-            constructor(emitter, key, freez){
+            constructor(emitter, key){
                 super(key)
                 this.render = 'vue';
                 this.component = VueRampControl;
-                this.props = { emitter, ikey: key, freez: freez};
+                this.props = { emitter, ikey: key};
             }
         }
         class NumControl extends Rete.Control {
@@ -751,7 +747,7 @@ const store = () => new Vuex.Store({
                     node.addOutput(new Rete.Output('colors', 'Colors', colorSocket)); 
                     node.data.colors = {};
                     node.data.values.forEach(v=>{
-                        node.addControl(new ClosedColorControl(this.editor, node, 'field'+v, 'freez'));
+                        node.addControl(new ClosedColorControl(this.editor, node, 'field'+v));
                         node.data.colors['field'+v] = '#fff';
                     });
                 }else{
@@ -775,7 +771,6 @@ const store = () => new Vuex.Store({
                         this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
                     }
 
-                    state.freez = node.data.freez;
                     outputs.colors = {
                         field: values,
                         colors: node.data.colors
@@ -804,11 +799,10 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node
-                    .addControl(new ColorControl(this.editor, 'color', 'freez'))
+                    .addControl(new ColorControl(this.editor, 'color'))
                     .addOutput(new Rete.Output('color', 'Color', strSocket));
             }
             worker(node, inputs, outputs){
-                state.freez = node.data.freez;
                 if(node.data.color){
                    outputs['color'] = node.data.color; 
                 }
@@ -1449,15 +1443,14 @@ const store = () => new Vuex.Store({
                     .addControl(new NumControl(this.editor, 'size', 'size'))
                     .addControl(new NumControl(this.editor, 'heightFrom', 'height from'))
                     .addControl(new NumControl(this.editor, 'heightTo', 'height to'))
-                    .addControl(new ClosedColorControl(this.editor, node, 'colorFrom', 'freez'))
-                    .addControl(new ClosedColorControl(this.editor, node, 'colorTo', 'freez'))
+                    .addControl(new ClosedColorControl(this.editor, node, 'colorFrom'))
+                    .addControl(new ClosedColorControl(this.editor, node, 'colorTo'))
                     .addControl(new SelectControl(this.editor, 'type', ['grid', 'hexagon']))
                     .addControl(new SelectControl(this.editor, 'method', ['max','min','sum','mean']))
                     .addInput(new Rete.Input('field', 'Field', numArrSocket))
                     .addOutput(new Rete.Output('grid', 'Grid', gridSocket));
             }
             worker(node, inputs, outputs){
-                state.freez = node.data.freez
 
                 outputs.grid = {
                     type: node.data.type,
@@ -1479,11 +1472,10 @@ const store = () => new Vuex.Store({
                     .addControl(new NumControl(this.editor, 'intensity', 'intensity'))
                     .addControl(new NumControl(this.editor, 'radius', 'radius'))
                     .addControl(new NumControl(this.editor, 'opacity', 'opacity'))
-                    .addControl(new RampControl(this.editor, 'ramp', 'freez'))
+                    .addControl(new RampControl(this.editor, 'ramp'))
                     .addOutput(new Rete.Output('heatmap', 'HeapMap', heatMapSocket));
             }
             worker(node, inputs, outputs){
-                state.freez = node.data.freez
                 outputs.heatmap = {
                     intensity: node.data.intensity,
                     radius: node.data.radius,
@@ -1634,9 +1626,6 @@ const store = () => new Vuex.Store({
         editor.on('process connectioncreated connectionremoved', async()=>{
             await engine.abort();
             await engine.process( editor.toJSON() )
-        });
-        editor.on('nodetranslate', ({ node, x, y })=>{
-            return !state.freez
         });
         // editor.on('connectioncreated', async (conn)=>{
         //     if(conn.input.node.name === 'Break' || conn.output.node.name === 'Break'){

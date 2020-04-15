@@ -24,12 +24,13 @@
     import { Chrome } from "vue-color";
 
     export default { 
-        props: ['emitter', 'ikey', 'freez', 'getData', 'putData'],
+        props: ['emitter', 'ikey', 'getData', 'putData'],
         components: { Chrome },
         data() {
           return {
             drag: false,
             render: false,
+            freez: false,
             pallet: [],
             value: {
                 colors: ['#2E8AE6', '#a3377b'],
@@ -70,8 +71,7 @@
                 }
             },
             freezEditor(freez){
-                this.putData(this.freez, freez);
-                this.emitter.trigger('process');
+                this.freez = freez;
             },
             change(color, index){
                 this.value.colors[index] = color.hex;
@@ -86,6 +86,7 @@
         mounted(){
             this.pallet = new Array( this.value.colors.length ).fill(false);
             this.update();
+            this.emitter.on('nodetranslate', ()=>!this.freez);
         }
     }
 </script>

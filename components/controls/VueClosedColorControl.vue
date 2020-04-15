@@ -15,11 +15,12 @@
 import { Chrome } from "vue-color";
 export default{
   components: {Chrome},
-  props: ['emitter', 'ikey', 'freez', 'getData', 'putData'],
+  props: ['emitter', 'ikey', 'getData', 'putData'],
   data(){
     return {
       color: "#"+((1<<24)*Math.random()|0).toString(16),
-      opened: false
+      opened: false,
+      freez: false
     }
   },
   methods: {
@@ -27,8 +28,7 @@ export default{
       this.opened = !this.opened;
     },
     freezEditor(freez){
-      this.putData(this.freez, freez);
-      this.emitter.trigger('process');
+      this.freez=freez;
     },
     updateValue(color){
       this.color = color.hex;
@@ -39,6 +39,7 @@ export default{
   mounted(){
       this.putData(this.ikey, this.color);
       this.emitter.trigger('process');
+      this.emitter.on('nodetranslate', ()=>!this.freez);
   }
 }
 </script>

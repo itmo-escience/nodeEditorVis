@@ -18,6 +18,7 @@
           },
           change(e){
             this.value = e.target.value;
+            this.freezEditor(false);
             this.update();
           },
           update() {
