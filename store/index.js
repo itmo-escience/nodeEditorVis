@@ -1361,11 +1361,12 @@ const store = () => new Vuex.Store({
                 this.path = ['Layers']
             }
             build(node){
+                node.data.shape = 'circle';
                 node
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
-                    .addInput(new Rete.Input('shape','Shape', pointShapeSocket))
+                    .addControl(new SelectControl(this.editor, 'shape', state.shapes.concat(['heatmap'])))
                     .addInput(new Rete.Input('grid', 'Grid', gridSocket))
                     .addInput(new Rete.Input('style', 'Heatmap', heatMapSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
@@ -1382,7 +1383,8 @@ const store = () => new Vuex.Store({
                         for(let i=0; i<inputs.lat[0].length; i++){
                             let obj = {
                                 x: inputs.lon[0][i], 
-                                y: inputs.lat[0][i]
+                                y: inputs.lat[0][i],
+                                ...(inputs.grid.length ? {transform: inputs.grid[0].field[i]} : {}), 
                             }
                             data.push(obj);
                         }
@@ -1391,7 +1393,13 @@ const store = () => new Vuex.Store({
                                     type: 'json',
                                     x: 'x',
                                     y: 'y'
-                                }
+                                },
+                                ...(inputs.grid.length ? {transforms: [{
+                                    type: inputs.grid[0].type,
+                                    size: inputs.grid[0].size,
+                                    field: 'transform',
+                                    method: inputs.grid[0].method
+                                }]} : {})
                             });
 
                     }else if(inputs.geometry.length){
@@ -1399,24 +1407,30 @@ const store = () => new Vuex.Store({
                             type: "FeatureCollection",
                             features: inputs.geometry[0].map((g, i)=>({ 
                                 type: "Feature",
-                                properties: {},
+                                properties: {
+                                    ...(inputs.grid.length ? {transform: inputs.grid[0].field[i]} : {}), 
+                                },
                                 geometry: g 
                             }))
                         }
-                        
-                        layer.source(data);
-                    }
-                    
-                    layer.shape('heatmap');
-                    
-                    if(inputs.shape.length){
-                        layer.shape(inputs.shape[0]);
+                        layer.source(data, (inputs.grid.length ? {transforms: [{
+                                type: inputs.grid[0].type,
+                                size: inputs.grid[0].size,
+                                field: 'transform',
+                                method: inputs.grid[0].method
+                            }]} : {}));
                     }
 
-                    if(inputs.style.length){
+                    if(inputs.grid.length){
+                        node.data.shape = node.data.shape === 'heatmap' ? state.shapes[0] : node.data.shape;
+                        layer
+                            .size(inputs.grid[0].method, inputs.grid[0].height)
+                            .color(inputs.grid[0].method, inputs.grid[0].color);
+                    }else if(inputs.style.length){
                         layer.style(inputs.style[0]);
                     }
-            
+
+                    layer.shape(node.data.shape);
                     outputs['layer'] = layer;
                 }
             }
@@ -1427,15 +1441,32 @@ const store = () => new Vuex.Store({
                 this.path = []
             }
             builder(node){
+                node.data.type = 'hexagon',
+                node.data.method = 'sum',
+                node.data.size = 1000;
+
                 node
                     .addControl(new NumControl(this.editor, 'size', 'size'))
+                    .addControl(new NumControl(this.editor, 'heightFrom', 'height from'))
+                    .addControl(new NumControl(this.editor, 'heightTo', 'height to'))
+                    .addControl(new ClosedColorControl(this.editor, node, 'colorFrom', 'freez'))
+                    .addControl(new ClosedColorControl(this.editor, node, 'colorTo', 'freez'))
                     .addControl(new SelectControl(this.editor, 'type', ['grid', 'hexagon']))
-                    .addControl(new SelectControl(this.editor, 'method', ['count','max','min','sum','mean']))
+                    .addControl(new SelectControl(this.editor, 'method', ['max','min','sum','mean']))
                     .addInput(new Rete.Input('field', 'Field', numArrSocket))
                     .addOutput(new Rete.Output('grid', 'Grid', gridSocket));
             }
             worker(node, inputs, outputs){
+                state.freez = node.data.freez
 
+                outputs.grid = {
+                    type: node.data.type,
+                    method: node.data.method,
+                    size: node.data.size,
+                    field: inputs.field.length ? inputs.field[0] : [],
+                    height: [node.data.heightFrom || 0, node.data.heightTo || 0],
+                    color: [node.data.colorFrom, node.data.colorTo]
+                }
             }
         }
         class HeatMapComponent extends Rete.Component {
@@ -1592,7 +1623,7 @@ const store = () => new Vuex.Store({
             new PointShapeComponent, new PointShapeCategoryComponent,
             new LineShapeComponent, new LineShapeCategoryComponent,
             new LoadDataComponent,
-            new HeatMapComponent
+            new HeatMapComponent, new GridComponent
         ];
 
         components.map(c => {

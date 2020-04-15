@@ -3,7 +3,7 @@
     <svg height="15" viewBox="0 0 24 10" @click="togglePallet">
       <rect width="24" height="10" :fill="color"></rect>
     </svg>
-    <div id="pallet" v-if="opened">
+    <div class="pallet" v-if="opened">
       <Chrome 
         :value="color"
         @input="updateValue"/>
@@ -35,9 +35,13 @@ export default{
       this.putData(this.ikey, color.hex)
       this.emitter.trigger('process');
     }
+  },
+  mounted(){
+      this.putData(this.ikey, this.color);
+      this.emitter.trigger('process');
   }
 }
 </script>
 <style>
-  #pallet{ position: absolute; }
+  .pallet{ position: absolute; }
 </style>
