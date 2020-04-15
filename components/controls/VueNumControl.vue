@@ -2,6 +2,7 @@
     <input type="number"
         :value="value" 
         @input="change($event)"
+        @mouseleave="unFreez"
         :placeholder="placeholder"/>
 </template>
 <script>
@@ -10,10 +11,15 @@
         data() {
           return {
             value: 0,
+            freez: false,
           }
         },
         methods: {
+          unFreez(){
+            this.freez = false;
+          },
           change(e){
+            this.freez = true;
             this.value = +e.target.value;
             this.update();
           },
@@ -25,6 +31,7 @@
         },
         mounted(){
           this.value = this.getData(this.ikey);
+          this.emitter.on('zoom', ()=> !this.freez );
         }
     }
 </script>
