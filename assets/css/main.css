@@ -29,3 +29,8 @@
 .socket.output.line-shape, .socket.input.line-shape { background: #b3a103; }
 .socket.output.point-shapes, .socket.input.point-shapes { background: #b4a200; }
 .socket.output.line-shapes, .socket.input.line-shapes { background: #746800; }
+
+
+.fg-1{ flex-grow: 1; }
+.w-173{ width: 173px; }
+.align-left{ text-align: left; }

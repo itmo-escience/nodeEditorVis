@@ -24,6 +24,7 @@ import ChartNode from '~/components/nodes/ChartNode'
 import FieldsNode from '~/components/nodes/FieldsNode'
 import MapNode from '~/components/nodes/MapNode'
 import CategoryNode from '~/components/nodes/CategoryNode'
+import GridNode from '~/components/nodes/GridNode'
 
 Vue.use(Vuex)
 
@@ -1432,6 +1433,7 @@ const store = () => new Vuex.Store({
         class GridComponent extends Rete.Component {
             constructor(){
                 super('Grid')
+                this.data.component = GridNode;
                 this.path = []
             }
             builder(node){
