@@ -43,6 +43,7 @@ body{ color: #d5d6d6; }
 
 .fg-1{ flex-grow: 1; }
 .w-173{ width: 173px; }
+.mrr-20{ margin-right: 20px; }
 .align-left{ text-align: left; } 
 
 .l7-ctrl-logo { visibility: hidden; }

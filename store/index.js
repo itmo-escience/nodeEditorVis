@@ -20,6 +20,7 @@ import VueShapeSelectControl from '~/components/controls/VueShapeSelectControl'
 import VueFileLoadControl from '~/components/controls/VueFileLoadControl'
 import VueRampControl from '~/components/controls/VueRampControl'
 import VueTwoColorControl from '~/components/controls/VueTwoColorControl'
+import VueTwoRangeControl from '~/components/controls/VueTwoRangeControl'
 
 import ChartNode from '~/components/nodes/ChartNode'
 import FieldsNode from '~/components/nodes/FieldsNode'
@@ -104,6 +105,14 @@ const store = () => new Vuex.Store({
             }
             setValue(val) {
                 this.vueContext.value = val;
+            }
+        }
+        class TwoRangeControl extends Rete.Control{
+            constructor(emitter, key, range){
+                super(key)
+                this.render = 'vue';
+                this.component = VueTwoRangeControl;
+                this.props = { emitter, ikey: key, range};
             }
         }
         class RampControl extends Rete.Control{
@@ -359,26 +368,27 @@ const store = () => new Vuex.Store({
         class RangeComponent extends Rete.Component {
             constructor(){
                 super('Range')
+                this.data.component = GridNode;
                 this.path = []
             }
             build(node){
                 node.addInput(new Rete.Input('nums', 'Num Values', numArrSocket));
                 
                 if(node.data.values){
+                    console.log(node.data)
                     node
-                        .addControl(new NumControl(this.editor, 'rangeFrom', 'range from'))
-                        .addControl(new NumControl(this.editor, 'rangeTo', 'range to'))
-                        .addControl(new NumControl(this.editor, 'domainFrom', 'domain from', true))
-                        .addControl(new NumControl(this.editor, 'domainTo', 'domain to', true))
+                        .addControl(new TwoRangeControl(this.editor, 'domain', [node.data.domainFrom, node.data.domainTo]))
+                        .addControl(new TwoRangeControl(this.editor, 'range', [1, 30]))
                         .addOutput(new Rete.Output('range', 'Range', numArrSocket));
                 }
             }
             async worker(node, inputs, outputs){
                 if(node.data.values){
-                    const domainFrom = node.data.domainFrom;
-                    const domainTo = node.data.domainTo;
-                    const rangeFrom = node.data.rangeFrom;
-                    const rangeTo = node.data.rangeTo;
+                    console.log(node.data.domain)
+                    const domainFrom = node.data.domain[0];
+                    const domainTo = node.data.domain[1];
+                    const rangeFrom = node.data.domain[0];
+                    const rangeTo = node.data.domain[1];
                     outputs['range'] = inputs.nums[0].map(v=>{
                         v = v > domainTo ? domainTo : v;
                         v = v < domainFrom ? domainFrom : v;
@@ -391,7 +401,6 @@ const store = () => new Vuex.Store({
                 }
 
                 if(!node.data.values && inputs.nums.length){
-                    console.log('recreate')
                     const values = inputs.nums[0];
                     const connection = node.inputs.nums.connections[0];
 
@@ -868,8 +877,7 @@ const store = () => new Vuex.Store({
 
                 node
                     .addControl(new NumControl(this.editor, 'size', 'size'))
-                    .addControl(new NumControl(this.editor, 'heightFrom', 'height from'))
-                    .addControl(new NumControl(this.editor, 'heightTo', 'height to'))
+                    .addControl(new TwoRangeControl(this.editor, 'height', [0, 100000]))
                     .addControl(new TwoColorControl(this.editor, 'colors'))
                     .addControl(new SelectControl(this.editor, 'type', ['grid', 'hexagon']))
                     .addControl(new SelectControl(this.editor, 'method', ['max','min','sum','mean']))
@@ -882,7 +890,7 @@ const store = () => new Vuex.Store({
                     method: node.data.method,
                     size: node.data.size,
                     field: inputs.field.length ? inputs.field[0] : [],
-                    height: [node.data.heightFrom || 0, node.data.heightTo || 0],
+                    height: node.data.height,
                     color: node.data.colors
                 }
             }

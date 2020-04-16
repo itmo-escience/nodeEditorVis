@@ -1,14 +1,16 @@
 <template>
-    <div class="slider d-flex" ref="slider" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
-            <svg class="circle" :style="{ left: (positions[0]*width)-10 +'px' }" height="20" viewBox="0 0 10 10" 
-                @mousedown="dragStart" @mouseup="dragEnd"  @mousemove="dragging($event, 0)">
-                <circle cx="5" cy="5" r="5"></circle>
-            </svg>
-            <svg class="circle" :style="{ left: width ? (positions[1]*width)-10 +'px':'calc(100% - 10px)' }" height="20" viewBox="0 0 10 10" 
-                @mousedown="dragStart" @mouseup="dragEnd"  @mousemove="dragging($event, 1)">
-                <circle cx="5" cy="5" r="5"></circle>
-            </svg>
-            <div :style="{visibility: 'hidden'}">{{render}}</div>
+    <div class="container">
+        <div class="slider d-flex" ref="slider">
+                <svg class="circle" :style="{ left: (positions[0]*width)-10 +'px' }" height="20" viewBox="0 0 10 10" 
+                    @mousedown="dragStart"   @mousemove="dragging($event, 0)">
+                    <circle cx="5" cy="5" r="5"></circle>
+                </svg>
+                <svg class="circle" :style="{ left: width ? (positions[1]*width)-10 +'px':'calc(100% - 10px)' }" height="20" viewBox="0 0 10 10" 
+                    @mousedown="dragStart"   @mousemove="dragging($event, 1)">
+                    <circle cx="5" cy="5" r="5"></circle>
+                </svg>
+                <div :style="{visibility: 'hidden'}">{{render}}</div>
+        </div>
     </div>
 </template>
 <script>
@@ -60,12 +62,16 @@
             }
         },
         mounted(){
+            document.addEventListener('mouseup', this.dragEnd)
             this.update();
             this.emitter.on('nodetranslate', ()=>!this.freez);
         }
     }
 </script>
 <style>
+    .container{
+        height: 20px;
+    }
     .d-flex{ display: flex; }
     .slider{
         position: relative;
