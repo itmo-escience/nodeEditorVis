@@ -39,6 +39,7 @@ body{ color: #d5d6d6; }
 .node.selected{ border-color: #e3c000 !important; }
 .connection .main-path { stroke: #d5d6d6 !important; }
 .socket{ border: 0 !important; }
+.control{ padding: 6px 18px; }
 
 .fg-1{ flex-grow: 1; }
 .w-173{ width: 173px; }

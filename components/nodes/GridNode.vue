@@ -12,7 +12,7 @@
             <Socket v-socket:output="output" type="output" :socket="output.socket"></Socket>
         </div>
 
-        <div v-for="(control, i) in controls()" :key="i" class="d-flex">
+        <div v-for="(control, i) in controls()" :key="i" class="d-flex control">
             <div class="fg-1 align-left">{{ control.key }}</div>
             <div class="w-173 align-left" v-control="control"></div>
         </div>

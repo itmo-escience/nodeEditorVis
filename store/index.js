@@ -19,6 +19,7 @@ import VueClosedColorControl from '~/components/controls/VueClosedColorControl'
 import VueShapeSelectControl from '~/components/controls/VueShapeSelectControl'
 import VueFileLoadControl from '~/components/controls/VueFileLoadControl'
 import VueRampControl from '~/components/controls/VueRampControl'
+import VueTwoColorControl from '~/components/controls/VueTwoColorControl'
 
 import ChartNode from '~/components/nodes/ChartNode'
 import FieldsNode from '~/components/nodes/FieldsNode'
@@ -84,6 +85,14 @@ const store = () => new Vuex.Store({
                 this.render = 'vue';
                 this.component = VueClosedColorControl;
                 this.props = { emitter, node, ikey: key};
+            }
+        }
+        class TwoColorControl extends Rete.Control{
+            constructor(emitter, key){
+                super(key)
+                this.render = 'vue';
+                this.component = VueTwoColorControl;
+                this.props = { emitter, ikey: key};
             }
         }
         class ShapeSelectControl extends Rete.Control{
@@ -203,7 +212,7 @@ const store = () => new Vuex.Store({
             async worker(node, inputs, outputs){
                 if(node.data.values){
                     const values = Object.values(inputs)[0][0];
-
+                    
                     if(JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])){
                         const component = this.editor.components.get('Color Category');
                         const colors = await component.createNode({ values: [...new Set( values )] });
@@ -861,22 +870,20 @@ const store = () => new Vuex.Store({
                     .addControl(new NumControl(this.editor, 'size', 'size'))
                     .addControl(new NumControl(this.editor, 'heightFrom', 'height from'))
                     .addControl(new NumControl(this.editor, 'heightTo', 'height to'))
-                    .addControl(new ClosedColorControl(this.editor, node, 'colorFrom'))
-                    .addControl(new ClosedColorControl(this.editor, node, 'colorTo'))
+                    .addControl(new TwoColorControl(this.editor, 'colors'))
                     .addControl(new SelectControl(this.editor, 'type', ['grid', 'hexagon']))
                     .addControl(new SelectControl(this.editor, 'method', ['max','min','sum','mean']))
                     .addInput(new Rete.Input('field', 'Field', numArrSocket))
                     .addOutput(new Rete.Output('grid', 'Grid', gridSocket));
             }
             worker(node, inputs, outputs){
-
                 outputs.grid = {
                     type: node.data.type,
                     method: node.data.method,
                     size: node.data.size,
                     field: inputs.field.length ? inputs.field[0] : [],
                     height: [node.data.heightFrom || 0, node.data.heightTo || 0],
-                    color: [node.data.colorFrom, node.data.colorTo]
+                    color: node.data.colors
                 }
             }
         }
