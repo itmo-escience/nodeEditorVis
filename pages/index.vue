@@ -10,6 +10,8 @@
     async mounted(){
       this.$store.commit('initRete');
       const state = this.$store.state;
+      // const ukcommute = await this.$axios.get('https://raw.githubusercontent.com/uber-web/kepler.gl-data/master/ukcommute/data.csv');
+      // state.data['ukcommute.csv'] = d3.csvParse(ukcommute.data);
       state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
       state.data['branches.json'] = await this.$axios.$get('/data/branches.json');
       const arcs = await this.$axios.$get('/data/arcs.json')
@@ -49,6 +51,6 @@
     width: 100%;
     height: 100% !important;
     z-index: 2;
-    background: #fff;
+    background: #292929;
   }
 </style>

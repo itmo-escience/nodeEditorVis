@@ -1,18 +1,18 @@
-.socket-output-number-array > path{ stroke: #aaff00 !important; }
-.socket-output-string-array > path{ stroke: #a002a0 !important; }
-.socket-output-number > path{ stroke: #9acd32 !important; }
-.socket-output-string > path{ stroke: #FF00FF !important; }
-.socket-output-layer > path { stroke: #0000FF !important; }
-.socket-output-bool > path{ stroke: #800000 !important; }
-.socket-output-any > path{ stroke: #6699ff !important; }
-.socket-output-flow > path{ stroke: #e6e6e6 !important; }
-.socket-output-size > path{ stroke: #091580 !important; }
-.socket-output-grid > path{ stroke: #04c0f0 !important; }
-.socket-output-color > path{ stroke: #ee0063 !important; }
-.socket-output-heatmap > path{ stroke: #f7de04 !important; }
-.socket-output-geometry > path{ stroke: #b3a103 !important; }
-.socket-output-point-shapes > path{ stroke: #b4a200 !important; }
-.socket-output-line-shapes > path{ stroke: #746800 !important; }
+.connection.socket-output-number-array > path{ stroke: #aaff00 !important; }
+.connection.socket-output-string-array > path{ stroke: #a002a0 !important; }
+.connection.socket-output-number > path{ stroke: #9acd32 !important; }
+.connection.socket-output-string > path{ stroke: #FF00FF !important; }
+.connection.socket-output-layer > path { stroke: #0000FF !important; }
+.connection.socket-output-bool > path{ stroke: #800000 !important; }
+.connection.socket-output-any > path{ stroke: #6699ff !important; }
+.connection.socket-output-flow > path{ stroke: #e6e6e6 !important; }
+.connection.socket-output-size > path{ stroke: #091580 !important; }
+.connection.socket-output-grid > path{ stroke: #04c0f0 !important; }
+.connection.socket-output-color > path{ stroke: #ee0063 !important; }
+.connection.socket-output-heatmap > path{ stroke: #f7de04 !important; }
+.connection.socket-output-geometry > path{ stroke: #b3a103 !important; }
+.connection.socket-output-point-shapes > path{ stroke: #b4a200 !important; }
+.connection.socket-output-line-shapes > path{ stroke: #746800 !important; }
 
 .socket.output.number-array, .socket.input.number-array { background: #aaff00; }
 .socket.output.string-array, .socket.input.string-array { background: #a002a0; }
@@ -30,7 +30,32 @@
 .socket.output.point-shapes, .socket.input.point-shapes { background: #b4a200; }
 .socket.output.line-shapes, .socket.input.line-shapes { background: #746800; }
 
+body{ color: #d5d6d6; }
+.node{
+    background: #353535 !important;
+    border: 1px solid #d5d6d6 !important;
+}
+.node.selected{ border-color: #e3c000 !important; }
+.connection .main-path { stroke: #d5d6d6 !important; }
 
 .fg-1{ flex-grow: 1; }
 .w-173{ width: 173px; }
-.align-left{ text-align: left; }
+.align-left{ text-align: left; } 
+
+.l7-ctrl-logo { visibility: hidden; }
+
+.context-menu[data-v-189764d4] {
+  padding: 10px;
+  width: 120px;
+  margin-top: -20px;
+  margin-left: -60px;
+}
+.item, .context-menu .search {
+  color: #d5d6d6 !important;
+  width: 150px !important;
+  padding: 10px !important;
+  border-bottom: 1px solid #d5d6d6 !important;
+  background-color: #353535 !important;
+}
+.item:last-child, .context-menu .search:last-child { border-bottom: 0px !important; }
+.item[data-v-189764d4]:hover, .context-menu .search[data-v-189764d4]:hover { background-color: #353535 !important; }
