@@ -1025,7 +1025,7 @@ const store = () => new Vuex.Store({
         const components = [
             new ColorComponent,
             new StrComponent, new NumComponent,
-            new DatasetComponent, new ChartComponent,
+            new DatasetComponent,// new ChartComponent,
             new FieldsComponent, new ParseComponent,
             new MapComponent,
             new PointLayerComponent, new LineLayerComponent,
