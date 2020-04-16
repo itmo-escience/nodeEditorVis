@@ -31,12 +31,14 @@
 .socket.output.line-shapes, .socket.input.line-shapes { background: #746800; }
 
 body{ color: #d5d6d6; }
+
 .node{
     background: #353535 !important;
     border: 1px solid #d5d6d6 !important;
 }
 .node.selected{ border-color: #e3c000 !important; }
 .connection .main-path { stroke: #d5d6d6 !important; }
+.socket{ border: 0 !important; }
 
 .fg-1{ flex-grow: 1; }
 .w-173{ width: 173px; }
