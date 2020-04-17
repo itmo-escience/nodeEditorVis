@@ -23,10 +23,7 @@
     import VueRenderPlugin from 'rete-vue-render-plugin'
     export default{
         mixins: [VueRenderPlugin.mixin],
-        components:{ Socket: VueRenderPlugin.Socket },
-        mounted(){
-            console.log(this.controls())
-        }
+        components:{ Socket: VueRenderPlugin.Socket }
     }
 </script>
 <style>

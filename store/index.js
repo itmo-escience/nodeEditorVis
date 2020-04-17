@@ -384,7 +384,6 @@ const store = () => new Vuex.Store({
             }
             async worker(node, inputs, outputs){
                 if(node.data.values){
-                    console.log(node.data.domain)
                     const domainFrom = node.data.domain[0];
                     const domainTo = node.data.domain[1];
                     const rangeFrom = node.data.domain[0];
@@ -394,7 +393,6 @@ const store = () => new Vuex.Store({
                         v = v < domainFrom ? domainFrom : v;
                         return (((v - domainFrom) * (rangeTo - rangeFrom)) / (domainTo - domainFrom)) + rangeFrom
                     });
-
                     if(JSON.stringify(node.data.values) != JSON.stringify(inputs.nums[0])){
                         node.data.values = null;
                     }
