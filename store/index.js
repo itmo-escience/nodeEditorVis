@@ -16,7 +16,6 @@ import VueStrControl from '~/components/controls/VueStrControl'
 import VueSelectControl from '~/components/controls/VueSelectControl'
 import VueColorControl from '~/components/controls/VueColorControl'
 import VueClosedColorControl from '~/components/controls/VueClosedColorControl'
-import VueShapeSelectControl from '~/components/controls/VueShapeSelectControl'
 import VueFileLoadControl from '~/components/controls/VueFileLoadControl'
 import VueRampControl from '~/components/controls/VueRampControl'
 import VueTwoColorControl from '~/components/controls/VueTwoColorControl'
@@ -94,17 +93,6 @@ const store = () => new Vuex.Store({
                 this.render = 'vue';
                 this.component = VueTwoColorControl;
                 this.props = { emitter, ikey: key};
-            }
-        }
-        class ShapeSelectControl extends Rete.Control{
-            constructor(emitter, node, key, options){
-                super(key)
-                this.render = 'vue';
-                this.component = VueShapeSelectControl;
-                this.props = { emitter, node, ikey: key, options: options};
-            }
-            setValue(val) {
-                this.vueContext.value = val;
             }
         }
         class TwoRangeControl extends Rete.Control{
@@ -194,7 +182,6 @@ const store = () => new Vuex.Store({
                 outputs['str'] = node.data.str;
             }
         }
-
         class ColorCategoryComponent extends Rete.Component {
             constructor(){
                 super('Color Category')
@@ -202,37 +189,30 @@ const store = () => new Vuex.Store({
                 this.path = ['Color']
             }
             build(node){
+                node
+                    .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
+                    .addInput(new Rete.Input('strings', 'Str Values', strArrSocket))
+                    .addOutput(new Rete.Output('colors', 'Colors', colorSocket)); 
                 if(node.data.values){
-                    if(typeof node.data.values[0] === 'number'){
-                        node.addInput(new Rete.Input('nums', 'Num Values', numArrSocket));
-                    }else{
-                        node.addInput(new Rete.Input('strings', 'Str Values', strArrSocket));
-                    }
-                    node.addOutput(new Rete.Output('colors', 'Colors', colorSocket)); 
                     node.data.values.forEach(v=>{
                         node.addControl(new ClosedColorControl(this.editor, node, 'field'+v));
                     });
-                }else{
-                   node
-                    .addInput(new Rete.Input('strings', 'Str Values', strArrSocket))
-                    .addInput(new Rete.Input('nums', 'Num Values', numArrSocket)); 
                 }
             }
             async worker(node, inputs, outputs){
+                const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
+                if( (!node.data.values && (inputs.strings.length || inputs.nums.length)) ||  (node.data.values && (JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])))){
+                    const component = this.editor.components.get('Color Category');
+                    const colors = await component.createNode({ values: [...new Set( values )] });
+                    colors.position = node.position;
+                    this.editor.addNode(colors);
+                    const key = inputs.strings.length ? 'strings' :  'nums';
+                    const conn = node.inputs[key].connections[0];
+                    const n = this.editor.nodes.find(n=> n.id === conn.node);
+                    this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( key ));
+                    this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                }
                 if(node.data.values){
-                    const values = Object.values(inputs)[0][0];
-                    
-                    if(JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])){
-                        const component = this.editor.components.get('Color Category');
-                        const colors = await component.createNode({ values: [...new Set( values )] });
-                        colors.position = node.position;
-                        this.editor.addNode(colors);
-                        const conn = node.inputs[Object.keys(inputs)[0]].connections[0];
-                        const n = this.editor.nodes.find(n=> n.id === conn.node);
-                        this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( Object.keys(inputs)[0] ));
-                        this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
-                    }
-
                     var data = Object.assign({}, node.data);
                     delete data.values;
 
@@ -240,20 +220,6 @@ const store = () => new Vuex.Store({
                         field: values,
                         colors: data
                     };
-                }
-                
-                if(!node.data.values && (inputs.strings.length || inputs.nums.length)){
-                    const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
-                    const connection = inputs.strings.length ? node.inputs.strings.connections[0] : node.inputs.nums.connections[0];
-                    
-                    const component = this.editor.components.get('Color Category');
-                    const colors = await component.createNode({ values: [...new Set( values )] });
-                    colors.position = node.position;
-                    this.editor.addNode(colors);
-                    const n = this.editor.nodes.find(n=> n.id === connection.node);
-                    const input = inputs.strings.length ? colors.inputs.get('strings') : colors.inputs.get('nums');
-                    this.editor.connect(n.outputs.get( connection.output ), input);
-                    this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
                 }
             }
         }
@@ -439,7 +405,6 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-        
         class LineShapeCategoryComponent extends Rete.Component {
             constructor(){
                 super('Line Shape Category')
@@ -447,61 +412,40 @@ const store = () => new Vuex.Store({
                 this.path = ['Shapes']
             }
             build(node){
-                if(node.data.values){
-                    if(typeof node.data.values[0] === 'number'){
-                        node.addInput(new Rete.Input('nums', 'Num Values', numArrSocket));
-                    }else{
-                        node.addInput(new Rete.Input('strings', 'Str Values', strArrSocket));
-                    }
-                    node.addOutput(new Rete.Output('shapes', 'Shapes', lineShapesSocket)); 
-                    node.data.shapes = {};
-                    node.data.values.forEach(v=>{
-                        node.addControl(new ShapeSelectControl(this.editor, node, 'field'+v, state.lineShapes))
-                        node.data.shapes['field'+v] = 'circle'; 
-                    });
-                }else{
-                   node
+                node
+                    .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
                     .addInput(new Rete.Input('strings', 'Str Values', strArrSocket))
-                    .addInput(new Rete.Input('nums', 'Num Values', numArrSocket)); 
+                    .addOutput(new Rete.Output('shapes', 'Shapes', lineShapesSocket)); 
+                if(node.data.values){
+                    node.data.values.forEach(v=>{
+                        node.addControl(new SelectControl(this.editor, 'field'+v, state.lineShapes))
+                    });
                 }
             }
             async worker(node, inputs, outputs){
-                if(node.data.values){
-                    const values = Object.values(inputs)[0][0];
-
-                    if(JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])){
-                        const component = this.editor.components.get('Line Shape Category');
-                        const colors = await component.createNode({ values: [...new Set( values )] });
-                        colors.position = node.position;
-                        this.editor.addNode(colors);
-                        const conn = node.inputs[Object.keys(inputs)[0]].connections[0];
-                        const n = this.editor.nodes.find(n=> n.id === conn.node);
-                        this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( Object.keys(inputs)[0] ));
-                        this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
-                    }
-
-                    outputs.shapes = {
-                        field: values,
-                        shapes: node.data.shapes
-                    };
-                }
-                
-                if(!node.data.values && (inputs.strings.length || inputs.nums.length)){
-                    const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
-                    const connection = inputs.strings.length ? node.inputs.strings.connections[0] : node.inputs.nums.connections[0];
-
+                const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
+                if( (!node.data.values && (inputs.strings.length || inputs.nums.length)) ||  (node.data.values && (JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])))){
                     const component = this.editor.components.get('Line Shape Category');
                     const colors = await component.createNode({ values: [...new Set( values )] });
                     colors.position = node.position;
                     this.editor.addNode(colors);
-                    const n = this.editor.nodes.find(n=> n.id === connection.node);
-                    const input = inputs.strings.length ? colors.inputs.get('strings') : colors.inputs.get('nums');
-                    this.editor.connect(n.outputs.get( connection.output ), input);
+                    const key = inputs.strings.length ? 'strings' :  'nums';
+                    const conn = node.inputs[key].connections[0];
+                    const n = this.editor.nodes.find(n=> n.id === conn.node);
+                    this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( key ));
                     this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                }
+                if(node.data.values){
+                    var data = Object.assign({}, node.data);
+                    delete data.values;
+
+                    outputs.shapes = {
+                        field: values,
+                        shapes: data
+                    };
                 }
             }
         }
-        
         class PointShapeCategoryComponent extends Rete.Component {
             constructor(){
                 super('Point Shape Category')
@@ -509,57 +453,37 @@ const store = () => new Vuex.Store({
                 this.path = ['Shapes']
             }
             build(node){
-                if(node.data.values){
-                    if(typeof node.data.values[0] === 'number'){
-                        node.addInput(new Rete.Input('nums', 'Num Values', numArrSocket));
-                    }else{
-                        node.addInput(new Rete.Input('strings', 'Str Values', strArrSocket));
-                    }
-                    node.addOutput(new Rete.Output('shapes', 'Shapes', pointShapesSocket)); 
-                    node.data.shapes = {};
-                    node.data.values.forEach(v=>{
-                        node.addControl(new ShapeSelectControl(this.editor, node, 'field'+v, state.shapes))
-                        node.data.shapes['field'+v] = 'circle'; 
-                    });
-                }else{
-                   node
+                node
+                    .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
                     .addInput(new Rete.Input('strings', 'Str Values', strArrSocket))
-                    .addInput(new Rete.Input('nums', 'Num Values', numArrSocket)); 
+                    .addOutput(new Rete.Output('shapes', 'Shapes', pointShapesSocket)); 
+                if(node.data.values){
+                    node.data.values.forEach(v=>{
+                        node.addControl(new SelectControl(this.editor, 'field'+v, state.shapes))
+                    });
                 }
             }
             async worker(node, inputs, outputs){
-                if(node.data.values){
-                    const values = Object.values(inputs)[0][0];
-
-                    if(JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])){
-                        const component = this.editor.components.get('Point Shape Category');
-                        const colors = await component.createNode({ values: [...new Set( values )] });
-                        colors.position = node.position;
-                        this.editor.addNode(colors);
-                        const conn = node.inputs[Object.keys(inputs)[0]].connections[0];
-                        const n = this.editor.nodes.find(n=> n.id === conn.node);
-                        this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( Object.keys(inputs)[0] ));
-                        this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
-                    }
-
-                    outputs.shapes = {
-                        field: values,
-                        shapes: node.data.shapes
-                    };
-                }
-                
-                if(!node.data.values && (inputs.strings.length || inputs.nums.length)){
-                    const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
-                    const connection = inputs.strings.length ? node.inputs.strings.connections[0] : node.inputs.nums.connections[0];
-
+                const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
+                if( (!node.data.values && (inputs.strings.length || inputs.nums.length)) ||  (node.data.values && (JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])))){
                     const component = this.editor.components.get('Point Shape Category');
                     const colors = await component.createNode({ values: [...new Set( values )] });
                     colors.position = node.position;
                     this.editor.addNode(colors);
-                    const n = this.editor.nodes.find(n=> n.id === connection.node);
-                    const input = inputs.strings.length ? colors.inputs.get('strings') : colors.inputs.get('nums');
-                    this.editor.connect(n.outputs.get( connection.output ), input);
+                    const key = inputs.strings.length ? 'strings' :  'nums';
+                    const conn = node.inputs[key].connections[0];
+                    const n = this.editor.nodes.find(n=> n.id === conn.node);
+                    this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( key ));
                     this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                }
+                if(node.data.values){
+                    var data = Object.assign({}, node.data);
+                    delete data.values;
+
+                    outputs.shapes = {
+                        field: values,
+                        shapes: data
+                    };
                 }
             }
         }

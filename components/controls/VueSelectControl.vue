@@ -28,7 +28,8 @@
           }
         },
         mounted() {
-          this.value = this.getData(this.ikey);
+          this.value = this.getData(this.ikey) || this.options[0];
+          this.update();
           this.emitter.on('nodetranslate', ()=> !this.freez);
         }
     }

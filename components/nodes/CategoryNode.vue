@@ -12,7 +12,7 @@
             <Socket v-socket:output="output" type="output" :socket="output.socket"></Socket>
         </div>
 
-        <div class="d-flex">
+        <div v-if="node.data.values" class="d-flex mrr-20 mrl-20">
             <div class="values">
                 <div class="value" v-for="(value, i) in node.data.values" v-if="opened || i < 10" :key="i">
                     {{ value ? (value.length > 15 ? value.toString().slice(0,15)+'...' : value.toString().slice(0,15)) : 'Null'  }}
