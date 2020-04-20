@@ -52,7 +52,6 @@
             },
             dragging(e){
                 if(this.drag){
-                    // console.log(this.value.colors[(this.value.colors.length) - this.index]);
                     const index = ((this.value.positions.slice(1).length) - this.index)+1;
                     if(index === this.value.positions.length){
                         this.index = 1;
@@ -65,6 +64,7 @@
                     if(position < right && position > left){
                         this.value.positions[index] = position;
                         this.render = !this.render;
+                        this.update();
                     }
                 }
             },
@@ -74,7 +74,7 @@
             change(color, index){
                 this.value.colors[index] = color.hex;
                 this.render = !this.render;
-                // this.update();
+                this.update();
             },
             update(){
                 this.putData(this.ikey, this.value)
@@ -88,6 +88,7 @@
         },
         mounted(){
             this.emitter.on('nodetranslate', ()=>!this.freez);
+            this.update();
         }
     }
 </script>
