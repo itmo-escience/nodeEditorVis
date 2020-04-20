@@ -896,29 +896,38 @@ const store = () => new Vuex.Store({
                 this.editor.nodes.find(n=>n.id===node.id).update();
             }
         }
-        class ChartComponent extends Rete.Component {
+        class ScatterComponent extends Rete.Component {
             constructor() {
-                super('Chart')
+                super('Scatter')
                 this.data.component = ChartNode;
                 this.path = [];
             }
             builder(node){
                 node
-                    .addControl(new SelectControl( this.editor, 'type', ['area', 'point', 'line'] ))
-                    .addInput(new Rete.Input('width', 'Width', numSocket))
-                    .addInput(new Rete.Input('height', 'Height', numSocket))
-                    .addInput(new Rete.Input('x', 'X', strSocket))
-                    .addInput(new Rete.Input('y', 'Y', strSocket))
+                    // .addControl(new SelectControl( this.editor, 'type', ['area', 'point', 'line'] ))
+                    // .addInput(new Rete.Input('width', 'Width', numSocket))
+                    // .addInput(new Rete.Input('height', 'Height', numSocket))
+                    .addInput(new Rete.Input('x', 'X', numArrSocket))
+                    .addInput(new Rete.Input('y', 'Y', numArrSocket))
+                    .addInput(new Rete.Input('strx', 'X', strArrSocket))
+                    .addInput(new Rete.Input('stry', 'Y', strArrSocket))
                     .addInput(new Rete.Input('color', 'Color', strSocket))
-                    .addInput(new Rete.Input('data', 'Data', objSocket));
+                    .addControl(new SelectControl(this.editor, 'shape', state.shapes));
+                    // .addInput(new Rete.Input('data', 'Data', objSocket));
             }
             worker(node, inputs, outputs){
-                node.data.width = inputs.width[0];
-                node.data.height = inputs.height[0];
-                node.data.x = inputs.x.length ? inputs.x[0] : node.data.x;
-                node.data.y = inputs.y.length ? inputs.y[0] : node.data.y;
-                node.data.color = inputs.color.length ? inputs.color[0] : node.data.color;
-                node.data.DATA = inputs.data[0];
+                node.data.type = 'point';
+                if((inputs.x.length || inputs.strx.length) && (inputs.y.length || inputs.stry.length)){
+
+                    node.data.DATA = inputs.x[0].map((x, i)=> ({
+                        x: inputs.x.length ? inputs.x[0][i] : inputs.strx[0][i],
+                        y: inputs.y.length ? inputs.y[0][i] : inputs.stry[0][i]
+                    }));
+                }
+                if(inputs.color.length){
+                    node.data.color = inputs.color[0];
+                }
+                this.editor.nodes.find(n=>n.id===node.id).update();
             }
         }
 
@@ -962,7 +971,8 @@ const store = () => new Vuex.Store({
             new LineShapeCategoryComponent,
             new LoadDataComponent,
             new HeatMapComponent, new GridComponent,
-            new ColorRangeComponent
+            new ColorRangeComponent,
+            new ScatterComponent
         ];
 
         components.map(c => {

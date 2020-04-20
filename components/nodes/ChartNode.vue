@@ -13,7 +13,7 @@
                     </div>
                 </div>
             </div>
-            <div id="container"></div>
+            <div ref="container" class="chart-container"></div>
         </div>
     </div>
 </template>
@@ -38,28 +38,29 @@ export default{
             };
 
             this.chart = new G2.Chart({
-                container: this.$el.querySelector('#container'),
-                width: data.width,
-                height: data.height
+                container: this.$refs.container,
+                width: 500, // data.width,
+                height: 500 //data.height
             });
-            this.chart.source(data.DATA);
-
-            let chart;
-            switch(data.type){
-                case 'area':
-                    chart = this.chart.area();
-                    break
-                case 'line':
-                    chart = this.chart.line();
-                    break
-                default:
-                    chart = this.chart.point();
-                    break
-            }
-            chart
-                .position(`${data.x}*${data.y}`);
-            if(data.color){
-                chart.color(data.color);
+            if(data.DATA){
+                this.chart.source(data.DATA);
+                let chart;
+                switch(data.type){
+                    case 'area':
+                        chart = this.chart.area();
+                        break
+                    case 'line':
+                        chart = this.chart.line();
+                        break
+                    default:
+                        chart = this.chart.point();
+                        break
+                }
+                chart.position(`x*y`).shape(data.shape);
+                
+                if(data.color){
+                    chart.color(data.color);
+                }
             }
 
             this.chart.render();
@@ -97,7 +98,7 @@ export default{
     .node-body{
         text-align: left;
     }
-    #container{
+    .chart-container{
         background: #fff;
         margin: 20px;
     }
