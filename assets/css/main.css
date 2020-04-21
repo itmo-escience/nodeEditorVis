@@ -49,6 +49,7 @@ body{ color: #d5d6d6; }
 .align-left{ text-align: left; } 
 
 .l7-ctrl-logo { visibility: hidden; }
+.l7-marker-container { height: 0 !important; }
 
 .context-menu[data-v-189764d4] {
   padding: 10px;
