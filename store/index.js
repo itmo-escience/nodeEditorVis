@@ -37,7 +37,7 @@ const store = () => new Vuex.Store({
     result: null,
     layouts: {},
     data: {},
-    options: ['', 'branches.json', 'cars.csv', 'arcs.json'],
+    options: ['', 'branches.json', 'cars.csv', 'arcs.json', 'COVID'],
     shapes: [
         'circle','square','triangle','hexagon', // 2D
         'cylinder', 'triangleColumn', 'hexagonColumn', 'squareColumn', // 3D
@@ -362,9 +362,7 @@ const store = () => new Vuex.Store({
             }
             build(node){
                 node.addInput(new Rete.Input('nums', 'Num Values', numArrSocket));
-                
                 if(node.data.values){
-                    console.log(node.data)
                     node
                         .addControl(new TwoRangeControl(this.editor, 'domain', [node.data.domainFrom, node.data.domainTo]))
                         .addControl(new TwoRangeControl(this.editor, 'range', [1, 30]))
@@ -375,8 +373,8 @@ const store = () => new Vuex.Store({
                 if(node.data.values){
                     const domainFrom = node.data.domain[0];
                     const domainTo = node.data.domain[1];
-                    const rangeFrom = node.data.domain[0];
-                    const rangeTo = node.data.domain[1];
+                    const rangeFrom = node.data.range[0];
+                    const rangeTo = node.data.range[1];
                     outputs['range'] = inputs.nums[0].map(v=>{
                         v = v > domainTo ? domainTo : v;
                         v = v < domainFrom ? domainFrom : v;
@@ -904,16 +902,12 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node
-                    // .addControl(new SelectControl( this.editor, 'type', ['area', 'point', 'line'] ))
-                    // .addInput(new Rete.Input('width', 'Width', numSocket))
-                    // .addInput(new Rete.Input('height', 'Height', numSocket))
                     .addInput(new Rete.Input('x', 'X', numArrSocket))
                     .addInput(new Rete.Input('y', 'Y', numArrSocket))
                     .addInput(new Rete.Input('strx', 'X', strArrSocket))
                     .addInput(new Rete.Input('stry', 'Y', strArrSocket))
                     .addInput(new Rete.Input('color', 'Color', strSocket))
                     .addControl(new SelectControl(this.editor, 'shape', state.shapes));
-                    // .addInput(new Rete.Input('data', 'Data', objSocket));
             }
             worker(node, inputs, outputs){
                 node.data.type = 'point';
