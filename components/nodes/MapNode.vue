@@ -68,7 +68,8 @@ export default{
         },
         updateMap(){
             if(this.node.data.update){
-               const layers = this.node.data.layers;
+                const layers = this.node.data.layers;
+                // console.log(layers)
                 if(layers && this.scene){
                     this.scene.getLayers().forEach(layer=>{
                         this.scene.removeLayer(layer);
@@ -76,7 +77,6 @@ export default{
                     layers.forEach(layer=>{
                         if(layer) this.scene.addLayer(layer);
                     });
-                    if(layers.length && layers[layers.length-1]) layers[layers.length-1].fitBounds();
                 }
                 this.node.data.update = false;
             }            

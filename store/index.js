@@ -531,7 +531,7 @@ const store = () => new Vuex.Store({
             worker(node, inputs, outputs){
                 if( (inputs.lat.length && inputs.lon.length) || inputs.geometry.length ){
                     let data = [];
-                    const layer = new PointLayer();
+                    const layer = new PointLayer({ autoFit: true });
                 
                     if( (inputs.lat.length && inputs.lon.length) && 
                         inputs.lat[0].length === inputs.lon[0].length )
@@ -624,7 +624,7 @@ const store = () => new Vuex.Store({
             worker(node, inputs, outputs){
                 if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) || inputs.geometry.length ){
                     let data = [];
-                    const layer = new LineLayer();
+                    const layer = new LineLayer({ autoFit: true });
 
                     if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) && 
                         (inputs.x[0].length === inputs.y[0].length) &&
@@ -715,7 +715,7 @@ const store = () => new Vuex.Store({
                         }))
                     }
                     console.log(data)
-                    const layer = new PolygonLayer({})
+                    const layer = new PolygonLayer({ autoFit: true })
                         .source(data)
                         .shape('extrude').size(200);
 
@@ -760,7 +760,7 @@ const store = () => new Vuex.Store({
                 if( ((inputs.lat.length && inputs.lon.length) || inputs.geometry.length) && (inputs.style.length || inputs.grid.length) ){
                     
                     let data = [];
-                    const layer = new HeatmapLayer();
+                    const layer = new HeatmapLayer({ autoFit: true });
 
                     if( (inputs.lat.length && inputs.lon.length) && 
                     inputs.lat[0].length === inputs.lon[0].length )
