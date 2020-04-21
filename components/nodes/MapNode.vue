@@ -23,8 +23,9 @@
 <script>
 import VueRenderPlugin from 'rete-vue-render-plugin'
 
-import { Scene, PointLayer } from '@antv/l7';
+import { Scene } from '@antv/l7';
 import { Mapbox } from '@antv/l7-maps';
+import { PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@antv/l7';
 
 export default{
     mixins: [VueRenderPlugin.mixin],
@@ -67,14 +68,24 @@ export default{
             this.editor.removeNode(this.node);
         },
         updateMap(){
+            const options = { autoFit: true };
             if(this.node.data.update){
                 const layers = this.node.data.layers;
                 if(layers && this.scene){
                     this.scene.getLayers().forEach(layer=>{
                         this.scene.removeLayer(layer);
                     });
-                    layers.forEach(layer=>{
-                        if(layer) this.scene.addLayer(layer);
+                    layers.forEach(l=>{
+                        if(l){
+                            const layer = l.type === 'point' ? new PointLayer(options) : l.type === 'line' ? new LineLayer(options) : l.type === 'polygon' ? new PointLayer(options) : new HeatmapLayer(options);
+                            layer.source(l.data, {...l.parse});
+                            if(l.color) layer.color(...l.color);
+                            if(l.shape) layer.shape(...l.shape);
+                            if(l.size) layer.size(...l.size);
+                            if(l.style) layer.size(...l.style);
+                            console.log(layer);
+                            this.scene.addLayer(layer)
+                        };
                     });
                 }
                 this.node.data.update = false;
