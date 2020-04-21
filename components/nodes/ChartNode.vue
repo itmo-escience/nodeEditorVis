@@ -39,8 +39,8 @@ export default{
 
             this.chart = new G2.Chart({
                 container: this.$refs.container,
-                width: 500, // data.width,
-                height: 500 //data.height
+                width: 500,
+                height: 500
             });
             if(data.DATA){
                 this.chart.source(data.DATA);
@@ -99,7 +99,7 @@ export default{
         text-align: left;
     }
     .chart-container{
-        background: #fff;
+        background: #353535;
         margin: 20px;
     }
 </style>
