@@ -111,7 +111,7 @@ export default{
         margin-left: 5px;
     }
     .add:after{
-        content: url(~static/plus.svg);
+        content: url(~assets/plus.svg);
         position: relative;
         top: 5px; left: 5px;
     }

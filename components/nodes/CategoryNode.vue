@@ -39,8 +39,8 @@
     }
 </script>
 <style>
-    .arrow.up:after{ content: url(/arrow-up.svg); }
-    .arrow.down:after{ content: url(/arrow-down.svg); }
+    .arrow.up:after{ content: url(~assets/arrow-up.svg); }
+    .arrow.down:after{ content: url(~assets/arrow-down.svg); }
     .node{
         background: rgba(110,136,255,0.8);
         border: 2px solid #4e58bf;
