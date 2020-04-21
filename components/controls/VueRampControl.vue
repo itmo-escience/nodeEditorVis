@@ -112,7 +112,7 @@
         top: -7px;
     }
     .plus:after{
-        content: url(/plus.svg);
+        content: url(~static/plus.svg);
     }
     .color{
         height: 10px;

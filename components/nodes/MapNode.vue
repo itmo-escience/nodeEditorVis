@@ -69,7 +69,6 @@ export default{
         updateMap(){
             if(this.node.data.update){
                 const layers = this.node.data.layers;
-                // console.log(layers)
                 if(layers && this.scene){
                     this.scene.getLayers().forEach(layer=>{
                         this.scene.removeLayer(layer);
@@ -112,7 +111,7 @@ export default{
         margin-left: 5px;
     }
     .add:after{
-        content: url(/plus.svg);
+        content: url(~static/plus.svg);
         position: relative;
         top: 5px; left: 5px;
     }

@@ -27,7 +27,6 @@
           recovered: r ? Object.values(r).slice(4).reduce((a, b) => +a + +b, 0) : null
         }
       });
-      console.log(COVID)
       state.data['COVID'] = COVID;
       state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
       state.data['branches.json'] = await this.$axios.$get('/data/branches.json');
