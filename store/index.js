@@ -34,6 +34,7 @@ const store = () => new Vuex.Store({
     result: null,
     layouts: {},
     data: {},
+    copiedNode: null,
     options: ['', 'branches.json', 'cars.csv', 'arcs.json', /*'COVID'*/],
     shapes: [
         'circle','square','triangle','hexagon', // 2D
@@ -885,14 +886,10 @@ const store = () => new Vuex.Store({
             rename(component) {
                 return component.name;
             },
-            nodeItems: node => {
-                if(node.name === 'Map'){
-                    return{
-                        'Clone': false
-                    }
-                }
-                return true
-            }
+            nodeItems: {
+                'Delete': false,
+                'Clone': false
+            },
         });
 
         var engine = new Rete.Engine('demo@0.1.0')
@@ -923,6 +920,22 @@ const store = () => new Vuex.Store({
         editor.on('process connectioncreated connectionremoved', async()=>{
             await engine.abort();
             await engine.process( editor.toJSON() )
+        });
+
+        document.addEventListener('keydown', async function (e){
+            const node = editor.selected.list[0];
+            if (e.key === "Delete"){
+                editor.removeNode( node );
+            }else if(e.ctrlKey && e.key.toLocaleLowerCase() === 'c'){
+                state.copiedNode = node;
+            }else if(e.ctrlKey && e.key.toLocaleLowerCase() === 'v'){
+                if(state.copiedNode){
+                    const component = editor.components.get( state.copiedNode.name );
+                    const copy = await component.createNode();
+                    copy.position = [state.copiedNode.position[0]+10, state.copiedNode.position[1]+10];
+                    editor.addNode(copy);
+                }
+            }
         });
 
         this.state.engine = engine;
