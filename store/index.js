@@ -7,9 +7,6 @@ import VueRenderPlugin from 'rete-vue-render-plugin'
 import ContextMenuPlugin from 'rete-context-menu-plugin';
 
 import G2 from '@antv/g2';
-import DataSet from '@antv/data-set';
-
-import { PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@antv/l7';
 
 import VueNumControl from '~/components/controls/VueNumControl'
 import VueStrControl from '~/components/controls/VueStrControl'
@@ -42,7 +39,8 @@ const store = () => new Vuex.Store({
         'circle','square','triangle','hexagon', // 2D
         'cylinder', 'triangleColumn', 'hexagonColumn', 'squareColumn', // 3D
         ],
-    lineShapes: ['line', 'arc', 'greatcircle', 'arc3d']
+    lineShapes: ['line', 'arc', 'greatcircle', 'arc3d'],
+    polygonShapes: ['extrude', 'fill', 'line'],
   },
   mutations: {
     initRete(state){
@@ -577,97 +575,6 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-        // class PointLayerComponent extends Rete.Component {
-        //     constructor(){
-        //         super('Point Layer')
-        //         this.path = ['Layers']
-        //     }
-        //     build(node){
-        //         node.data.shape = state.shapes[0];
-
-        //         node
-        //             .addInput(new Rete.Input('lat','Lat', numArrSocket))
-        //             .addInput(new Rete.Input('lon','Lon', numArrSocket))
-        //             .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
-        //             .addControl(new SelectControl(this.editor, 'shape', state.shapes))
-        //             .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
-        //             .addInput(new Rete.Input('color','Color', strSocket))
-        //             .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
-        //             .addInput(new Rete.Input('colorRange', 'Color Range', colorRangeSocket))
-        //             .addInput(new Rete.Input('size','Size', sizeSocket))
-        //             .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
-        //     }
-        //     worker(node, inputs, outputs){
-        //         if( (inputs.lat.length && inputs.lon.length) || inputs.geometry.length ){
-        //             let data = [];
-        //             const layer = new PointLayer({ autoFit: true });
-        //             if( (inputs.lat.length && inputs.lon.length) && 
-        //                 inputs.lat[0].length === inputs.lon[0].length )
-        //             {
-        //                 for(let i=0; i<inputs.lat[0].length; i++){
-        //                     let obj = {
-        //                         x: inputs.lon[0][i], 
-        //                         y: inputs.lat[0][i],
-        //                         ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-        //                         ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}),
-        //                         ...(inputs.colorRange.length ? {colors: inputs.colorRange[0].field[i]} : {}),
-        //                         ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
-        //                     }
-        //                     data.push(obj);
-        //                 }
-        //                 layer.source(data, {
-        //                         parser: {
-        //                             type: 'json',
-        //                             x: 'x',
-        //                             y: 'y'
-        //                         }
-        //                     });
-        //             }else if(inputs.geometry.length){
-        //                 data = {
-        //                     type: "FeatureCollection",
-        //                     features: inputs.geometry[0].map((g, i)=>({ 
-        //                         type: "Feature",
-        //                         properties: {
-        //                             ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-        //                             ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}),
-        //                             ...(inputs.colorRange.length ? {colors: inputs.colorRange[0].field[i]} : {}),
-        //                             ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
-        //                         },
-        //                         geometry: g 
-        //                     }))
-        //                 }
-                        
-        //                 layer.source(data);
-        //             }
-
-        //             if(inputs.color.length){
-        //                 layer.color(inputs.color[0]);
-        //             }else if(inputs.colors.length){
-        //                 layer.color('color', c=>{
-        //                     return inputs.colors[0].colors['field'+c]
-        //                 });
-        //             }else if(inputs.colorRange.length){
-        //                 layer.color('colors', inputs.colorRange[0].colors);
-        //             }
-                    
-        //             if(inputs.shapes.length){
-        //                 layer.shape('shape', s=>{
-        //                     return inputs.shapes[0].shapes['field'+s]
-        //                 });
-        //             }else{
-        //                 layer.shape(node.data.shape);
-        //             }
-
-        //             if(inputs.size.length){
-        //                 layer.size('size', s=>{
-        //                     return [ s.x, s.y, s.z ];
-        //                 });
-        //             }
-        //             outputs['layer'] = layer;
-                    
-        //         }
-        //     }
-        // }
         class LineLayerComponent extends Rete.Component {
             constructor(){
                 super('Line Layer')
@@ -686,13 +593,12 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     .addInput(new Rete.Input('colorRange', 'Color Range', colorRangeSocket))
-                    .addInput(new Rete.Input('size','Size', numSocket))
+                    // .addInput(new Rete.Input('size','Size', numSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
                 if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) || inputs.geometry.length ){
                     let data = [];
-                    const layer = new LineLayer({ autoFit: true });
 
                     if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) && 
                         (inputs.x[0].length === inputs.y[0].length) &&
@@ -711,15 +617,6 @@ const store = () => new Vuex.Store({
                             data.push(obj);
                         }
                         
-                        layer.source(data, {
-                                parser: {
-                                    type: 'json',
-                                    x: 'x',
-                                    x1: 'x1',
-                                    y: 'y',
-                                    y1: 'y1'
-                                }
-                        });
                     }else if(inputs.geometry.length){
                         data = {
                             type: "FeatureCollection",
@@ -732,24 +629,20 @@ const store = () => new Vuex.Store({
                                 geometry: g 
                             }))
                         }
-                        
-                        layer.source(data);
                     }
-                        
-                    if(inputs.colors.length){
-                        layer.color('color', c=>{
-                            return inputs.colors[0].colors['field'+c]
-                        });
-                    }else if(inputs.color.length){
-                        layer.color(inputs.color[0]);
-                    }else if(inputs.colorRange.length){
-                        layer.color('colors', inputs.colorRange[0].colors);
-                    }
-
-                    layer.shape(node.data.shape);
     
-                    outputs['layer'] = layer;
-                    
+                    outputs['layer'] = {
+                        type: 'line',
+                        data: data,
+                        parse: inputs.geometry.length ? {} : { parser: {
+                                type: 'json',
+                                x: 'x', x1: 'x1',
+                                y: 'y', y1: 'y1'
+                            } 
+                        },
+                        color: inputs.color.length ? [inputs.color[0]] : inputs.colors.length ? ['color', c=>{return inputs.colors[0].colors['field'+c] }] : inputs.colorRange.length ? ['colors', inputs.colorRange[0].colors] : null,
+                        shape: [node.data.shape],
+                    };                    
                 }
             }
         }
@@ -760,6 +653,7 @@ const store = () => new Vuex.Store({
             }
             build(node){
                 node
+                    .addControl(new SelectControl(this.editor, 'shape', state.polygonShapes))
                     .addInput(new Rete.Input('color','Color', strSocket))
                     .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
                     .addInput(new Rete.Input('colorRange', 'Color Range', colorRangeSocket))
@@ -782,29 +676,15 @@ const store = () => new Vuex.Store({
                             geometry: g 
                         }))
                     }
-                    console.log(data)
-                    const layer = new PolygonLayer({ autoFit: true })
-                        .source(data)
-                        .shape('extrude').size(200);
 
-                    if(inputs.color.length){
-                        layer.color(inputs.color[0]);
-                    }else if(inputs.colors.length){
-                        layer.color('color', c=>{
-                            return inputs.colors[0].colors['field'+c]
-                        });
-                    }else if(inputs.colorRange.length){
-                        layer.color('colors', inputs.colorRange[0].colors);
-                    }
-                    
-
-                    if(inputs.size.length){
-                        layer.size(inputs.size[0]);
-                    }else if(inputs.sizes.length){
-                        layer.size('size');
-                    }
-            
-                    outputs['layer'] = layer;
+                    outputs['layer'] = {
+                        type: 'polygon',
+                        data: data,
+                        parse: {},
+                        color: inputs.color.length ? [inputs.color[0]] : inputs.colors.length ? ['color', c=>{return inputs.colors[0].colors['field'+c] }] : inputs.colorRange.length ? ['colors', inputs.colorRange[0].colors] : null,
+                        shape: [node.data.shape],
+                        size: inputs.size.length ? [inputs.size[0]] : inputs.sizes.length ? ['size'] : [200]
+                    };
                 }
             }
         }
@@ -829,7 +709,6 @@ const store = () => new Vuex.Store({
                     
                     let data = [];
                     let parse;
-                    // const layer = new HeatmapLayer({ autoFit: true });
 
                     if( (inputs.lat.length && inputs.lon.length) && 
                     inputs.lat[0].length === inputs.lon[0].length )
@@ -842,7 +721,6 @@ const store = () => new Vuex.Store({
                             }
                             data.push(obj);
                         }
-                    // layer.source(data, 
                         parse = {
                                 parser: {
                                     type: 'json',
@@ -868,7 +746,6 @@ const store = () => new Vuex.Store({
                                 geometry: g 
                             }))
                         }
-                        // layer.source(data, 
                         parse = inputs.grid.length ? {transforms: [{
                                 type: inputs.grid[0].type,
                                 size: inputs.grid[0].size,
@@ -876,17 +753,6 @@ const store = () => new Vuex.Store({
                                 method: inputs.grid[0].method
                             }]} : {};
                     }
-
-                    // if(inputs.grid.length){
-                    //     node.data.shape = node.data.shape === 'heatmap' ? state.shapes[0] : node.data.shape;
-                    //     layer
-                    //         .size(inputs.grid[0].method, inputs.grid[0].height)
-                    //         .color(inputs.grid[0].method, inputs.grid[0].color);
-                    // }else if(inputs.style.length){
-                    //     layer.style(inputs.style[0]);
-                    // }
-
-                    // layer.shape(node.data.shape);
 
                     outputs['layer'] = {
                         type: 'heatmap',
@@ -897,90 +763,9 @@ const store = () => new Vuex.Store({
                         shape: inputs.grid.length ? node.data.shape === 'heatmap' ? [state.shapes[0]] : [node.data.shape] : [node.data.shape],
                         size: inputs.grid.length ? [inputs.grid[0].method, inputs.grid[0].height] : null
                     };
-                    // outputs['layer'] = layer;
                 }
             }
         }
-        // class HeatMapLayerComponent extends Rete.Component {
-        //     constructor(){
-        //         super('HeatMap Layer')
-        //         this.path = ['Layers']
-        //     }
-        //     build(node){
-        //         node.data.shape = 'circle';
-        //         node
-        //             .addInput(new Rete.Input('lat','Lat', numArrSocket))
-        //             .addInput(new Rete.Input('lon','Lon', numArrSocket))
-        //             .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
-        //             .addControl(new SelectControl(this.editor, 'shape', state.shapes.concat(['heatmap'])))
-        //             .addInput(new Rete.Input('grid', 'Grid', gridSocket))
-        //             .addInput(new Rete.Input('style', 'Heatmap', heatMapSocket))
-        //             .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
-        //     }
-        //     worker(node, inputs, outputs){
-        //         if( ((inputs.lat.length && inputs.lon.length) || inputs.geometry.length) && (inputs.style.length || inputs.grid.length) ){
-                    
-        //             let data = [];
-        //             const layer = new HeatmapLayer({ autoFit: true });
-
-        //             if( (inputs.lat.length && inputs.lon.length) && 
-        //             inputs.lat[0].length === inputs.lon[0].length )
-        //             {
-        //                 for(let i=0; i<inputs.lat[0].length; i++){
-        //                     let obj = {
-        //                         x: inputs.lon[0][i], 
-        //                         y: inputs.lat[0][i],
-        //                         ...(inputs.grid.length ? {transform: inputs.grid[0].field[i]} : {}), 
-        //                     }
-        //                     data.push(obj);
-        //                 }
-        //             layer.source(data, {
-        //                         parser: {
-        //                             type: 'json',
-        //                             x: 'x',
-        //                             y: 'y'
-        //                         },
-        //                         ...(inputs.grid.length ? {transforms: [{
-        //                             type: inputs.grid[0].type,
-        //                             size: inputs.grid[0].size,
-        //                             field: 'transform',
-        //                             method: inputs.grid[0].method
-        //                         }]} : {})
-        //                     });
-
-        //             }else if(inputs.geometry.length){
-        //                 data = {
-        //                     type: "FeatureCollection",
-        //                     features: inputs.geometry[0].map((g, i)=>({ 
-        //                         type: "Feature",
-        //                         properties: {
-        //                             ...(inputs.grid.length ? {transform: inputs.grid[0].field[i]} : {}), 
-        //                         },
-        //                         geometry: g 
-        //                     }))
-        //                 }
-        //                 layer.source(data, (inputs.grid.length ? {transforms: [{
-        //                         type: inputs.grid[0].type,
-        //                         size: inputs.grid[0].size,
-        //                         field: 'transform',
-        //                         method: inputs.grid[0].method
-        //                     }]} : {}));
-        //             }
-
-        //             if(inputs.grid.length){
-        //                 node.data.shape = node.data.shape === 'heatmap' ? state.shapes[0] : node.data.shape;
-        //                 layer
-        //                     .size(inputs.grid[0].method, inputs.grid[0].height)
-        //                     .color(inputs.grid[0].method, inputs.grid[0].color);
-        //             }else if(inputs.style.length){
-        //                 layer.style(inputs.style[0]);
-        //             }
-
-        //             layer.shape(node.data.shape);
-        //             outputs['layer'] = layer;
-        //         }
-        //     }
-        // }
         class GridComponent extends Rete.Component {
             constructor(){
                 super('Grid')

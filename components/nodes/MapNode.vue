@@ -77,13 +77,12 @@ export default{
                     });
                     layers.forEach(l=>{
                         if(l){
-                            const layer = l.type === 'point' ? new PointLayer(options) : l.type === 'line' ? new LineLayer(options) : l.type === 'polygon' ? new PointLayer(options) : new HeatmapLayer(options);
+                            const layer = l.type === 'point' ? new PointLayer(options) : l.type === 'line' ? new LineLayer(options) : l.type === 'polygon' ? new PolygonLayer(options) : new HeatmapLayer(options);
                             layer.source(l.data, {...l.parse});
                             if(l.color) layer.color(...l.color);
                             if(l.shape) layer.shape(...l.shape);
                             if(l.size) layer.size(...l.size);
-                            if(l.style) layer.size(...l.style);
-                            console.log(layer);
+                            if(l.style) layer.style(...l.style);
                             this.scene.addLayer(layer)
                         };
                     });
