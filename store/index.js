@@ -34,7 +34,7 @@ const store = () => new Vuex.Store({
     result: null,
     layouts: {},
     data: {},
-    options: ['', 'branches.json', 'cars.csv', 'arcs.json', 'COVID'],
+    options: ['', 'branches.json', 'cars.csv', 'arcs.json', /*'COVID'*/],
     shapes: [
         'circle','square','triangle','hexagon', // 2D
         'cylinder', 'triangleColumn', 'hexagonColumn', 'squareColumn', // 3D
