@@ -77,11 +77,11 @@ const store = () => new Vuex.Store({
             }
         }
         class ClosedColorControl extends Rete.Control{
-            constructor(emitter, node, key){
+            constructor(emitter, key){
                 super(key)
                 this.render = 'vue';
                 this.component = VueClosedColorControl;
-                this.props = { emitter, node, ikey: key};
+                this.props = { emitter, ikey: key};
             }
         }
         class TwoColorControl extends Rete.Control{
@@ -191,7 +191,7 @@ const store = () => new Vuex.Store({
                     .addOutput(new Rete.Output('colors', 'Colors', colorSocket)); 
                 if(node.data.values){
                     node.data.values.forEach(v=>{
-                        node.addControl(new ClosedColorControl(this.editor, node, 'field'+v));
+                        node.addControl(new ClosedColorControl(this.editor, 'field'+v));
                     });
                 }
             }
@@ -570,7 +570,7 @@ const store = () => new Vuex.Store({
                         }},
                         color: inputs.color.length ? [inputs.color[0]] : inputs.colors.length ? ['color', c=>{return inputs.colors[0].colors['field'+c] }] : inputs.colorRange.length ? ['colors', inputs.colorRange[0].colors] : null,
                         shape: inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
-                        size: inputs.size.length ? [s=>{ return [ s.x, s.y, s.z ]; }] : null
+                        size: inputs.size.length ? ['size', s=>{ return [ s.x, s.y, s.z ]; }] : null
                     };
                     
                 }
