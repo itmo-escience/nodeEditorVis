@@ -36,6 +36,9 @@ export default{
       this.emitter.trigger('process');
     }
   },
+  updated(){
+    this.color = this.getData(this.ikey);
+  },
   mounted(){
       this.putData(this.ikey, this.color);
       this.emitter.trigger('process');

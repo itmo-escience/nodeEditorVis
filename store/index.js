@@ -188,6 +188,8 @@ const store = () => new Vuex.Store({
                 node
                     .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
                     .addInput(new Rete.Input('strings', 'Str Values', strArrSocket))
+
+                    .addInput(new Rete.Input('color', 'Colors', colorSocket))
                     .addOutput(new Rete.Output('colors', 'Colors', colorSocket)); 
                 if(node.data.values){
                     node.data.values.forEach(v=>{
@@ -206,12 +208,29 @@ const store = () => new Vuex.Store({
                     const conn = node.inputs[key].connections[0];
                     const n = this.editor.nodes.find(n=> n.id === conn.node);
                     this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( key ));
+
+                    const colorConn = node.inputs['color'].connections[0];
+                    if(colorConn){
+                        const colorNode = this.editor.nodes.find(n=> n.id === colorConn.node);
+                        this.editor.connect(colorNode.outputs.get( colorConn.output ), colors.inputs.get( 'color' )); 
+                    }
+
                     this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
                 }
                 if(node.data.values){
+                    if(inputs.color.length){
+                        const n = this.editor.nodes.find(n=>n.id===node.id);
+                        Object.keys(node.data).forEach(k=>{
+                            if(inputs.color[0].colors[k]){
+                                node.data[k] = inputs.color[0].colors[k];
+                                n.controls.get(k).update();
+                            }
+                        });
+                    }
+
                     var data = Object.assign({}, node.data);
                     delete data.values;
-
+                    
                     outputs.colors = {
                         field: values,
                         colors: data
