@@ -1,16 +1,16 @@
 <template>
     <div>
         <svg width="200" height="200" viewBox="0 0 2 2" ref="slider" @mouseleave="dragEnd" @mousemove="dragging($event)">
-            <circle v-for="(p, index) in value.positions.slice(1).concat([1.]).reverse()" :key="index" 
-                cx="1" cy="1" :r="p" :fill="value.colors[value.colors.length - index] || '#353535'"
+            <circle v-for="(p, index) in value.positions" :key="index" 
+                cx="1" cy="1" :r="1 - p" :fill="value.colors[index] || '#353535'"
                 @mousedown="dragStart(index)" @mouseup="dragEnd"
-                @click="togglePallet" @dblclick="dblclick(realIndex)" />
+                @click="togglePallet" @dblclick="remove"/>
         </svg>
         <div style="visibility: hidden; height: 0;">{{render}}</div>
         <div class="pallet" v-if="opened">
             <Chrome 
-                :value="value.colors[realIndex]"
-                @input="change($event, realIndex)"/>
+                :value="value.colors[index]"
+                @input="change($event, index)"/>
         </div>
     </div>
 </template>
@@ -29,22 +29,25 @@
             opened: false,
             value: {
                 colors: ['#2E8AE6', '#a3377b'],
-                positions: [ 0, .2, .7 ]
+                positions: [ 0, .2, 1. ]
             }
           }
         },
         methods: {
-            dblclick(index){
-                this.value.colors.splice(index, 1);
-                this.value.positions.splice(index+1, 1);
+            remove(){
+                if(this.index){
+                    this.value.colors.splice(this.index, 1);
+                    this.value.positions.splice(this.index, 1);
+                    this.render = !this.render;
+                }
             },
             togglePallet(){
                 this.opened = !this.opened;
             },
             dragStart(index){
                 this.index = index;
-                this.freezEditor(true);
                 this.drag = true;
+                this.freezEditor(true);      
             },
             dragEnd(){
                 this.freezEditor(false);
@@ -52,17 +55,17 @@
             },
             dragging(e){
                 if(this.drag){
-                    const index = ((this.value.positions.slice(1).length) - this.index)+1;
-                    if(index === this.value.positions.length){
-                        this.index = 1;
-                        this.value.colors.push('#aee772');
-                    };
                     const offset = this.$refs.slider.getBoundingClientRect();
-                    const position =  Math.abs((e.clientX - offset.left)-100) / 100;
-                    const right = this.value.positions[index+1] || 1;
-                    const left = this.value.positions[index-1] || 0;
+                    const position =  1. - (Math.abs((e.clientX - offset.left)-100) / 100);
+                    const right = this.value.positions[this.index+1] || 1;
+                    const left = this.value.positions[this.index-1] || 0;
                     if(position < right && position > left){
-                        this.value.positions[index] = position;
+                        if(!this.index){
+                            this.value.positions.splice(1,0,position);
+                            this.value.colors.splice(0,0,'#aee772');
+                            this.index = 1;
+                        };
+                        this.value.positions[this.index] = position;
                         this.render = !this.render;
                         this.update();
                     }
@@ -79,11 +82,6 @@
             update(){
                 this.putData(this.ikey, this.value)
                 this.emitter.trigger('process');
-            }
-        },
-        computed: {
-            realIndex() {
-                return (this.value.colors.length) - this.index;
             }
         },
         mounted(){
