@@ -111,9 +111,6 @@
     .plus:after{
         content: url(~assets/plus.svg);
     }
-    .color{
-        height: 10px;
-    }
     .circle{
         position: absolute;
         top: -5px;

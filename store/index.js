@@ -242,6 +242,7 @@ const store = () => new Vuex.Store({
         class ColorComponent extends Rete.Component {
             constructor(){
                 super('Color')
+                this.data.component = BlankNode;
                 this.path = ['Color'];
             }
             builder(node){

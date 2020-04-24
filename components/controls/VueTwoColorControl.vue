@@ -51,5 +51,8 @@ export default{
 }
 </script>
 <style>
-  .pallet{ position: absolute; }
+  .pallet{ 
+    position: absolute;
+    z-index: 1;
+  }
 </style>

@@ -1,8 +1,11 @@
 <template>
-  <div @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
+  <div class="color-control" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
     <Chrome 
-      value="#000"
+      v-if="opened"
+      :value="color"
       @input="updateValue"/>
+    <div v-if="!opened" class="toggle-color" @click="toggle" :style="{background: color}"></div>
+    <div class="arrow" @click="toggle" :class="{up: opened, down: !opened}"></div>
   </div>
 </template>
 <script>
@@ -12,14 +15,20 @@ export default{
   props: ['emitter', 'ikey', 'getData', 'putData'],
   data(){
     return{
-      freez: false
+      freez: false,
+      opened: true,
+      color: "#000"
     }
   },
   methods: {
+    toggle(){
+      this.opened = !this.opened;
+    },
     freezEditor(freez){
       this.freez = freez;
     },
     updateValue(color){
+      this.color = color.hex;
       this.putData(this.ikey, color.hex)
       this.emitter.trigger('process');
     }
@@ -29,3 +38,11 @@ export default{
   }
 }
 </script>
+<style>
+  .color-control{ margin: 0 10px; }
+  .toggle-color{  
+    width: 225px;
+    height: 40px;
+    border-radius: 2px;
+  }
+</style>

@@ -41,13 +41,17 @@ body{ color: #d5d6d6; }
     text-align: center;
     padding: 10px 0;
 }
+
+.arrow.up:after{ content: url(~assets/arrow-up.svg); }
+.arrow.down:after{ content: url(~assets/arrow-down.svg); }
+
 .node.selected{ border-color: #e3c000 !important; }
 .connection .main-path { stroke: #d5d6d6 !important; }
 .socket{ border: 0 !important; }
 .control{ padding: 6px 18px; }
 
 .fg-1{ flex-grow: 1; }
-.w-173{ width: 173px; }
+.w-173{ width: 250px; }
 .mrr-20{ margin-right: 20px; }
 .mrl-20{ margin-left: 20px; }
 .mrv-10{ margin: 10px 0; }

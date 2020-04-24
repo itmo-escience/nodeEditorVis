@@ -42,9 +42,6 @@
     }
 </script>
 <style>
-    .arrow.up:after{ content: url(~assets/arrow-up.svg); }
-    .arrow.down:after{ content: url(~assets/arrow-down.svg); }
-    
     .input-title{
         position: relative;
         top: 7px;
