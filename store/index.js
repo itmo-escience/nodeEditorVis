@@ -23,6 +23,7 @@ import FieldsNode from '~/components/nodes/FieldsNode'
 import MapNode from '~/components/nodes/MapNode'
 import CategoryNode from '~/components/nodes/CategoryNode'
 import GridNode from '~/components/nodes/GridNode'
+import BlankNode from '~/components/nodes/BlankNode'
 
 Vue.use(Vuex)
 
@@ -330,6 +331,7 @@ const store = () => new Vuex.Store({
         class LoadDataComponent extends Rete.Component {
             constructor(){
                 super('Load Data')
+                this.data.component = BlankNode;
                 this.path = ['Data']
             }
             builder(node){
