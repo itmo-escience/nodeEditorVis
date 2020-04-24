@@ -77,3 +77,6 @@ input{
     padding: 5px;
     background: #353535;
 }
+input:focus{
+  outline: none;
+}
