@@ -56,11 +56,10 @@ export default{
                         chart = this.chart.point();
                         break
                 }
-                chart.position(`x*y`).shape(data.shape);
+                chart.position(`x*y`).shape(...[data.shape]);
                 
-                if(data.color){
-                    chart.color(data.color);
-                }
+                if(data.color) chart.color(...[data.color]);
+                if(data.size) chart.size(...[data.size]);
             }
 
             this.chart.render();
@@ -88,7 +87,7 @@ export default{
         text-align: left;
     }
     .chart-container{
-        background: #353535;
+        background: #d5d6d6;
         margin: 20px;
     }
 </style>

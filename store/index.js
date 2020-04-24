@@ -876,20 +876,29 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('strx', 'X', strArrSocket))
                     .addInput(new Rete.Input('stry', 'Y', strArrSocket))
                     .addInput(new Rete.Input('color', 'Color', strSocket))
+                    .addInput(new Rete.Input('colorRange', 'Color Range', colorRangeSocket))
+                    .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
+                    .addInput(new Rete.Input('size','Size', numArrSocket))
+                    // .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
                     .addControl(new SelectControl(this.editor, 'shape', state.shapes));
             }
             worker(node, inputs, outputs){
                 node.data.type = 'point';
                 if((inputs.x.length || inputs.strx.length) && (inputs.y.length || inputs.stry.length)){
 
-                    node.data.DATA = inputs.x[0].map((x, i)=> ({
+                    node.data.DATA = (inputs.x[0] || inputs.strx[0]).map((x, i)=> ({
                         x: inputs.x.length ? inputs.x[0][i] : inputs.strx[0][i],
-                        y: inputs.y.length ? inputs.y[0][i] : inputs.stry[0][i]
+                        y: inputs.y.length ? inputs.y[0][i] : inputs.stry[0][i],
+                        ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}),
+                        ...(inputs.colorRange.length ? {colors: inputs.colorRange[0].field[i]} : {}),
+                        ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                        // ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                     }));
                 }
-                if(inputs.color.length){
-                    node.data.color = inputs.color[0];
-                }
+                node.data.color = inputs.color.length ? [inputs.color[0]] : inputs.colors.length ? ['color', c=>{return inputs.colors[0].colors['field'+c] }] : inputs.colorRange.length ? ['colors', inputs.colorRange[0].colors] : null;
+                node.data.size = inputs.size.length ? ['size', d=>{ return d }] : null;
+                // node.data.shape = inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
+                
                 this.editor.nodes.find(n=>n.id===node.id).update();
             }
         }
