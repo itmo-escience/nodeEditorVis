@@ -27,12 +27,6 @@
     }
 </script>
 <style>
-    .node{
-        background: rgba(110,136,255,0.8);
-        border: 2px solid #4e58bf;
-        min-width: 180px;
-        height: auto;
-    }
     .input-title{
         position: relative;
         top: 7px;

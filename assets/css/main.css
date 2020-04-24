@@ -35,7 +35,11 @@ body{ color: #d5d6d6; }
 .node{
     background: #353535 !important;
     border: 1px solid #d5d6d6 !important;
-    padding-bottom: 10px;
+    border-radius: 10px;
+    height: auto;
+    min-width: 180px;
+    text-align: center;
+    padding: 10px 0;
 }
 .node.selected{ border-color: #e3c000 !important; }
 .connection .main-path { stroke: #d5d6d6 !important; }

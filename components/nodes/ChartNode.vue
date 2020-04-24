@@ -75,14 +75,6 @@ export default{
 }
 </script>
 <style>
-    .node{
-        background: rgba(110,136,255,0.8);
-        border: 2px solid #4e58bf;
-        border-radius: 10px;
-        min-width: 180px;
-        height: auto;
-        text-align: center;
-    }
     .input-title{
         position: relative;
         top: 7px;
