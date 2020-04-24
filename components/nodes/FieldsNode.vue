@@ -64,9 +64,6 @@
         position: relative;
         top: 7px;
     }
-    .d-flex{
-        display: flex;
-    }
     .field-menu{
         visibility: hidden;
         position: absolute; 

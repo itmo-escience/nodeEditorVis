@@ -42,5 +42,4 @@
         position: relative;
         top: 7px;
     }
-    .d-flex{ display: flex; }
 </style>

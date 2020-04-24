@@ -95,7 +95,6 @@
         stroke: #fff;
         stroke-width: .01px;
     }
-    .d-flex{ display: flex; }
     .slider{
         position: relative;
         width: 200px;

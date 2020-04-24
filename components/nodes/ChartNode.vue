@@ -92,9 +92,6 @@ export default{
         color: #fff;
         margin: 20px;
     }
-    .d-flex{
-        display: flex;
-    }
     .node-body{
         text-align: left;
     }

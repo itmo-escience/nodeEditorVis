@@ -47,6 +47,9 @@ body{ color: #d5d6d6; }
 .mrr-20{ margin-right: 20px; }
 .mrl-20{ margin-left: 20px; }
 .align-left{ text-align: left; } 
+.space-between{ justify-content: space-between; }
+.align-center{ align-items: center; }
+.d-flex{ display: flex; }
 
 .l7-ctrl-logo { visibility: hidden; }
 .l7-marker-container { height: 0 !important; }

@@ -75,7 +75,6 @@
     .container{
         height: 20px;
     }
-    .d-flex{ display: flex; }
     .slider{
         position: relative;
         top: 10px;
