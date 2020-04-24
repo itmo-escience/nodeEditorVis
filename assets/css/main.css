@@ -46,6 +46,7 @@ body{ color: #d5d6d6; }
 .w-173{ width: 173px; }
 .mrr-20{ margin-right: 20px; }
 .mrl-20{ margin-left: 20px; }
+.mrv-10{ margin: 10px 0; }
 .align-left{ text-align: left; } 
 .space-between{ justify-content: space-between; }
 .align-center{ align-items: center; }
@@ -70,10 +71,9 @@ body{ color: #d5d6d6; }
 .item:last-child, .context-menu .search:last-child { border-bottom: 0px !important; }
 .item[data-v-189764d4]:hover, .context-menu .search[data-v-189764d4]:hover { background-color: #353535 !important; }
 
-select, option, input{
+input{
     color: #d5d6d6;
     border: 1px solid #d5d6d6;
     padding: 5px;
     background: #353535;
 }
-select:focus, input:focus{ outline: none; }
