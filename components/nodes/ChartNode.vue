@@ -58,8 +58,8 @@ export default{
                 }
                 chart.position(`x*y`).shape(...[data.shape]);
                 
-                if(data.color) chart.color(...[data.color]);
-                if(data.size) chart.size(...[data.size]);
+                if(data.color) chart.color(...data.color);
+                if(data.size) chart.size(...data.size);
             }
 
             this.chart.render();

@@ -237,7 +237,7 @@ const store = () => new Vuex.Store({
 
                     outputs.colors = {
                         data: values.map(v=> data['field'+v]), 
-                        params: ['color']
+                        params: ['color', (val)=> val ]
                     }
                 }
             }
@@ -932,12 +932,12 @@ const store = () => new Vuex.Store({
                         x: inputs.x.length ? +inputs.x[0][i] : inputs.strx[0][i],
                         y: inputs.y.length ? +inputs.y[0][i] : inputs.stry[0][i],
                         ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
-                        ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                        ...(inputs.size.length ? {size: +inputs.size[0][i]} : {}),
                         // ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                     }));
                 }
                 node.data.color = inputs.colors.length ? inputs.colors[0].params : null,
-                node.data.size = inputs.size.length ? ['size', d=>{ return d }] : null;
+                node.data.size = inputs.size.length ? ['size'] : null;
                 // node.data.shape = inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
                 
                 this.editor.nodes.find(n=>n.id===node.id).update();
