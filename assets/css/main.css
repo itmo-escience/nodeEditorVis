@@ -10,7 +10,7 @@
 .connection.socket-output-grid > path{ stroke: #04c0f0 !important; }
 .connection.socket-output-color > path{ stroke: #ee0063 !important; }
 .connection.socket-output-heatmap > path{ stroke: #f7de04 !important; }
-.connection.socket-output-geometry > path{ stroke: #b3a103 !important; }
+.connection.socket-output-geometry > path{ stroke: #afaea6 !important; }
 .connection.socket-output-point-shapes > path{ stroke: #b4a200 !important; }
 .connection.socket-output-line-shapes > path{ stroke: #746800 !important; }
 
@@ -26,7 +26,7 @@
 .socket.output.grid, .socket.input.grid { background: #04c0f0; }
 .socket.output.color, .socket.input.color { background: #ee0063; }
 .socket.output.heatmap, .socket.input.heatmap { background: #f7de04; }
-.socket.output.geometry, .socket.input.geometry { background: #b3a103; }
+.socket.output.geometry, .socket.input.geometry { background: #afaea6; }
 .socket.output.point-shapes, .socket.input.point-shapes { background: #b4a200; }
 .socket.output.line-shapes, .socket.input.line-shapes { background: #746800; }
 
