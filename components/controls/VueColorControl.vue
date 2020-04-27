@@ -34,6 +34,7 @@ export default{
     }
   },
   mounted(){
+    this.putData(this.ikey, this.color)
     this.emitter.on('nodetranslate', ()=> !this.freez)
   }
 }

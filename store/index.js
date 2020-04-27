@@ -48,11 +48,11 @@ const store = () => new Vuex.Store({
     initRete(state){
         const numSocket = new Rete.Socket('Number');
         const objSocket = new Rete.Socket('Object');
-        const colorRangeSocket = new Rete.Socket('Color Range');
+        const colorSocket = new Rete.Socket('Color');
+        const colorMapSocket = new Rete.Socket('Color Map');
         const strSocket = new Rete.Socket('String');
         const sizeSocket = new Rete.Socket('Size');
         const layerSocket = new Rete.Socket('Layer');
-        const colorSocket = new Rete.Socket('Color');
         const strArrSocket = new Rete.Socket('String Array');
         const numArrSocket = new Rete.Socket('Number Array');
         const lineShapesSocket = new Rete.Socket('Line Shapes');
@@ -189,9 +189,10 @@ const store = () => new Vuex.Store({
                 node
                     .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
                     .addInput(new Rete.Input('strings', 'Str Values', strArrSocket))
-
-                    .addInput(new Rete.Input('color', 'Colors', colorSocket))
-                    .addOutput(new Rete.Output('colors', 'Colors', colorSocket)); 
+                    .addInput(new Rete.Input('color', 'Color Map', colorMapSocket))
+                    
+                    .addOutput(new Rete.Output('colors', 'Colors', colorSocket))
+                    .addOutput(new Rete.Output('colorMap', 'Color Map', colorMapSocket)); 
                 if(node.data.values){
                     node.data.values.forEach(v=>{
                         node.addControl(new ClosedColorControl(this.editor, 'field'+v));
@@ -222,8 +223,8 @@ const store = () => new Vuex.Store({
                     if(inputs.color.length){
                         const n = this.editor.nodes.find(n=>n.id===node.id);
                         Object.keys(node.data).forEach(k=>{
-                            if(inputs.color[0].colors[k]){
-                                node.data[k] = inputs.color[0].colors[k];
+                            if(inputs.color[0][k]){
+                                node.data[k] = inputs.color[0][k];
                                 n.controls.get(k).update();
                             }
                         });
@@ -231,11 +232,13 @@ const store = () => new Vuex.Store({
 
                     var data = Object.assign({}, node.data);
                     delete data.values;
-                    
+
+                    outputs.colorMap = data;
+
                     outputs.colors = {
-                        field: values,
-                        colors: data
-                    };
+                        data: values.map(v=> data['field'+v]), 
+                        params: ['color']
+                    }
                 }
             }
         }
@@ -248,11 +251,11 @@ const store = () => new Vuex.Store({
             builder(node){
                 node
                     .addControl(new ColorControl(this.editor, 'color'))
-                    .addOutput(new Rete.Output('color', 'Color', strSocket));
+                    .addOutput(new Rete.Output('color', 'Color', colorSocket));
             }
             worker(node, inputs, outputs){
                 if(node.data.color){
-                   outputs['color'] = node.data.color; 
+                   outputs['color'] = {data: null, params: [node.data.color]}; 
                 }
             }
         }
@@ -360,7 +363,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
                     .addControl(new TwoColorControl(this.editor, 'colors'))
                     .addControl(new TwoRangeControl(this.editor, 'range', [0, 1]))
-                    .addOutput(new Rete.Output('range', 'Range', colorRangeSocket));
+                    .addOutput(new Rete.Output('color', 'Color', colorSocket));
             }
             async worker(node, inputs, outputs){
                 const range = node.data.range;
@@ -368,9 +371,9 @@ const store = () => new Vuex.Store({
                 const diff = Math.max(...nums) - Math.min(...nums);
                 const min = Math.min(...nums) + (diff*range[0]);
                 const max = Math.min(...nums) + (diff*range[1]);
-                outputs.range = {
-                    field: nums.map(d=> d > max ? max : d < min ? min : d ),
-                    colors: node.data.colors
+                outputs.color = {
+                    data: nums.map(d=> d > max ? max : d < min ? min : d ), 
+                    params: ['color', node.data.colors]
                 }
             }
         }
@@ -542,9 +545,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
                     .addControl(new SelectControl(this.editor, 'shape', state.shapes))
                     .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
-                    .addInput(new Rete.Input('color','Color', strSocket))
-                    .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
-                    .addInput(new Rete.Input('colorRange', 'Color Range', colorRangeSocket))
+                    .addInput(new Rete.Input('colors', 'Color', colorSocket))
                     .addInput(new Rete.Input('size','Size', sizeSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
@@ -559,8 +560,7 @@ const store = () => new Vuex.Store({
                                 x: inputs.lon[0][i], 
                                 y: inputs.lat[0][i],
                                 ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-                                ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}),
-                                ...(inputs.colorRange.length ? {colors: inputs.colorRange[0].field[i]} : {}),
+                                ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                                 ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                             }
                             data.push(obj);
@@ -572,15 +572,14 @@ const store = () => new Vuex.Store({
                                 type: "Feature",
                                 properties: {
                                     ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
-                                    ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}),
-                                    ...(inputs.colorRange.length ? {colors: inputs.colorRange[0].field[i]} : {}),
+                                    ...(inputs.colors.length  ? inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {} : {}),
                                     ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                                 },
                                 geometry: g 
                             }))
                         }
                     }
-
+                    
                     outputs['layer'] = {
                         type: 'point',
                         data: data,
@@ -590,7 +589,7 @@ const store = () => new Vuex.Store({
                             x: 'x',
                             y: 'y'
                         }},
-                        color: inputs.color.length ? [inputs.color[0]] : inputs.colors.length ? ['color', c=>{return inputs.colors[0].colors['field'+c] }] : inputs.colorRange.length ? ['colors', inputs.colorRange[0].colors] : null,
+                        color: inputs.colors.length ? inputs.colors[0].params : null,
                         shape: inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
                         size: inputs.size.length ? ['size', s=>{ return [ s.x, s.y, s.z ]; }] : null
                     };
@@ -613,10 +612,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('y1','Y1', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
                     .addControl(new SelectControl(this.editor, 'shape', state.lineShapes))
-                    .addInput(new Rete.Input('color','Color', strSocket))
-                    .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
-                    .addInput(new Rete.Input('colorRange', 'Color Range', colorRangeSocket))
-                    // .addInput(new Rete.Input('size','Size', numSocket))
+                    .addInput(new Rete.Input('colors', 'Color', colorSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
@@ -634,8 +630,7 @@ const store = () => new Vuex.Store({
                                 x1: inputs.x1[0][i], 
                                 y: inputs.y[0][i],
                                 y1: inputs.y1[0][i],
-                                ...(inputs.colorRange.length ? {colors: inputs.colorRange[0].field[i]} : {}),
-                                ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {})
+                                ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                             }
                             data.push(obj);
                         }
@@ -646,8 +641,7 @@ const store = () => new Vuex.Store({
                             features: inputs.geometry[0].map((g, i)=>({ 
                                 type: "Feature",
                                 properties: {
-                                    ...(inputs.colorRange.length ? {colors: inputs.colorRange[0].field[i]} : {}),
-                                    ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}),
+                                    ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                                 },
                                 geometry: g 
                             }))
@@ -663,7 +657,7 @@ const store = () => new Vuex.Store({
                                 y: 'y', y1: 'y1'
                             } 
                         },
-                        color: inputs.color.length ? [inputs.color[0]] : inputs.colors.length ? ['color', c=>{return inputs.colors[0].colors['field'+c] }] : inputs.colorRange.length ? ['colors', inputs.colorRange[0].colors] : null,
+                        color: inputs.colors.length ? inputs.colors[0].params : null,
                         shape: [node.data.shape],
                     };                    
                 }
@@ -677,9 +671,7 @@ const store = () => new Vuex.Store({
             build(node){
                 node
                     .addControl(new SelectControl(this.editor, 'shape', state.polygonShapes))
-                    .addInput(new Rete.Input('color','Color', strSocket))
-                    .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
-                    .addInput(new Rete.Input('colorRange', 'Color Range', colorRangeSocket))
+                    .addInput(new Rete.Input('colors', 'Colors', colorSocket))
                     .addInput(new Rete.Input('size','Size', numSocket))
                     .addInput(new Rete.Input('sizes','Sizes', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
@@ -692,8 +684,7 @@ const store = () => new Vuex.Store({
                         features: inputs.geometry[0].map((g, i)=>({ 
                             type: "Feature",
                             properties: { 
-                                ...(inputs.colorRange.length ? {colors: inputs.colorRange[0].field[i]} : {}),
-                                ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}), 
+                                ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                                 ...(inputs.sizes.length ? {size: inputs.sizes[0][i]} : {}), 
                             },
                             geometry: g 
@@ -704,7 +695,7 @@ const store = () => new Vuex.Store({
                         type: 'polygon',
                         data: data,
                         parse: {},
-                        color: inputs.color.length ? [inputs.color[0]] : inputs.colors.length ? ['color', c=>{return inputs.colors[0].colors['field'+c] }] : inputs.colorRange.length ? ['colors', inputs.colorRange[0].colors] : null,
+                        color: inputs.colors.length ? inputs.colors[0].params : null,
                         shape: [node.data.shape],
                         size: inputs.size.length ? [inputs.size[0]] : inputs.sizes.length ? ['size'] : [200]
                     };
@@ -875,9 +866,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('y', 'Y', numArrSocket))
                     .addInput(new Rete.Input('strx', 'X', strArrSocket))
                     .addInput(new Rete.Input('stry', 'Y', strArrSocket))
-                    .addInput(new Rete.Input('color', 'Color', strSocket))
-                    .addInput(new Rete.Input('colorRange', 'Color Range', colorRangeSocket))
-                    .addInput(new Rete.Input('colors', 'Color by Cat', colorSocket))
+                    .addInput(new Rete.Input('colors', 'Colors', colorSocket))
                     .addInput(new Rete.Input('size','Size', numArrSocket))
                     // .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
                     .addControl(new SelectControl(this.editor, 'shape', state.shapes));
@@ -889,13 +878,12 @@ const store = () => new Vuex.Store({
                     node.data.DATA = (inputs.x[0] || inputs.strx[0]).map((x, i)=> ({
                         x: inputs.x.length ? inputs.x[0][i] : inputs.strx[0][i],
                         y: inputs.y.length ? inputs.y[0][i] : inputs.stry[0][i],
-                        ...(inputs.colors.length ? {color: inputs.colors[0].field[i]} : {}),
-                        ...(inputs.colorRange.length ? {colors: inputs.colorRange[0].field[i]} : {}),
+                        ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                         ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
                         // ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                     }));
                 }
-                node.data.color = inputs.color.length ? [inputs.color[0]] : inputs.colors.length ? ['color', c=>{return inputs.colors[0].colors['field'+c] }] : inputs.colorRange.length ? ['colors', inputs.colorRange[0].colors] : null;
+                node.data.color = inputs.colors.length ? inputs.colors[0].params : null,
                 node.data.size = inputs.size.length ? ['size', d=>{ return d }] : null;
                 // node.data.shape = inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
                 

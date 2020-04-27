@@ -3,7 +3,7 @@
 .connection.socket-output-number > path{ stroke: #9acd32 !important; }
 .connection.socket-output-string > path{ stroke: #FF00FF !important; }
 .connection.socket-output-layer > path { stroke: #0000FF !important; }
-.connection.socket-output-color-range > path{ stroke: #800000 !important; }
+.connection.socket-output-color-map > path{ stroke: #800000 !important; }
 .connection.socket-output-any > path{ stroke: #6699ff !important; }
 .connection.socket-output-flow > path{ stroke: #e6e6e6 !important; }
 .connection.socket-output-size > path{ stroke: #091580 !important; }
@@ -19,7 +19,7 @@
 .socket.output.number, .socket.input.number { background: #9acd32; }
 .socket.output.string, .socket.input.string { background: #FF00FF; }
 .socket.output.layer, .socket.input.layer { background: #0000FF; }
-.socket.output.color-range, .socket.input.color-range { background: #800000; }
+.socket.output.color-map, .socket.input.color-map { background: #800000; }
 .socket.output.any, .socket.input.any { background: #6699ff; }
 .socket.output.flow, .socket.input.flow { background: #e6e6e6; }
 .socket.output.size, .socket.input.size { background: #091580; }

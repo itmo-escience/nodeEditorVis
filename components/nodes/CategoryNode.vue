@@ -33,7 +33,7 @@
     export default{
         mixins: [VueRenderPlugin.mixin],
         components:{ Socket: VueRenderPlugin.Socket },
-        data(){ return { opened: false } },
+        data(){ return { opened: true } },
         methods: {
             toggle(){
                 this.opened = !this.opened;
