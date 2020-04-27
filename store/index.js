@@ -929,8 +929,8 @@ const store = () => new Vuex.Store({
                 if((inputs.x.length || inputs.strx.length) && (inputs.y.length || inputs.stry.length)){
 
                     node.data.DATA = (inputs.x[0] || inputs.strx[0]).map((x, i)=> ({
-                        x: inputs.x.length ? inputs.x[0][i] : inputs.strx[0][i],
-                        y: inputs.y.length ? inputs.y[0][i] : inputs.stry[0][i],
+                        x: inputs.x.length ? +inputs.x[0][i] : inputs.strx[0][i],
+                        y: inputs.y.length ? +inputs.y[0][i] : inputs.stry[0][i],
                         ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                         ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
                         // ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
