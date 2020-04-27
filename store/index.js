@@ -702,9 +702,9 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-        class HeatMapLayerComponent extends Rete.Component {
+        class GridMapLayerComponent extends Rete.Component {
             constructor(){
-                super('HeatMap Layer')
+                super('GridMap Layer')
                 this.path = ['Layers']
             }
             build(node){
@@ -713,16 +713,15 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
-                    .addControl(new SelectControl(this.editor, 'shape', state.shapes.concat(['heatmap'])))
+                    .addControl(new SelectControl(this.editor, 'shape', state.shapes))
                     .addInput(new Rete.Input('grid', 'Grid', gridSocket))
-                    .addInput(new Rete.Input('style', 'Heatmap', heatMapSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
-                if( ((inputs.lat.length && inputs.lon.length) || inputs.geometry.length) && (inputs.style.length || inputs.grid.length) ){
+                if( ((inputs.lat.length && inputs.lon.length) || inputs.geometry.length) &&  inputs.grid.length ){
                     
                     let data = [];
-                    let parse;
+                    let parse = {};
 
                     if( (inputs.lat.length && inputs.lon.length) && 
                     inputs.lat[0].length === inputs.lon[0].length )
@@ -740,13 +739,7 @@ const store = () => new Vuex.Store({
                                     type: 'json',
                                     x: 'x',
                                     y: 'y'
-                                },
-                                ...(inputs.grid.length ? {transforms: [{
-                                    type: inputs.grid[0].type,
-                                    size: inputs.grid[0].size,
-                                    field: 'transform',
-                                    method: inputs.grid[0].method
-                                }]} : {})
+                                }
                             };
 
                     }else if(inputs.geometry.length){
@@ -760,22 +753,82 @@ const store = () => new Vuex.Store({
                                 geometry: g 
                             }))
                         }
-                        parse = inputs.grid.length ? {transforms: [{
-                                type: inputs.grid[0].type,
-                                size: inputs.grid[0].size,
-                                field: 'transform',
-                                method: inputs.grid[0].method
-                            }]} : {};
+                    }
+                    parse = {...parse, ...{ transforms: [{
+                                        type: inputs.grid[0].type,
+                                        size: inputs.grid[0].size,
+                                        field: 'transform',
+                                        method: inputs.grid[0].method
+                                    }] 
+                                }};
+                    outputs['layer'] = {
+                        type: 'heatmap',
+                        data: data,
+                        parse: parse,
+                        color: [inputs.grid[0].method, inputs.grid[0].color],
+                        shape: [node.data.shape],
+                        size: [inputs.grid[0].method, inputs.grid[0].height]
+                    };
+                }
+            }
+        }
+        class HeatMapLayerComponent extends Rete.Component {
+            constructor(){
+                super('HeatMap Layer')
+                this.path = ['Layers']
+            }
+            build(node){
+                node.data.shape = 'circle';
+                node
+                    .addInput(new Rete.Input('lat','Lat', numArrSocket))
+                    .addInput(new Rete.Input('lon','Lon', numArrSocket))
+                    .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
+                    .addInput(new Rete.Input('style', 'Heatmap', heatMapSocket))
+                    .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
+            }
+            worker(node, inputs, outputs){
+                if( ((inputs.lat.length && inputs.lon.length) || inputs.geometry.length) && inputs.style.length ){
+                    
+                    let data = [];
+                    let parse = {};
+
+                    if( (inputs.lat.length && inputs.lon.length) && 
+                    inputs.lat[0].length === inputs.lon[0].length )
+                    {
+                        for(let i=0; i<inputs.lat[0].length; i++){
+                            let obj = {
+                                x: inputs.lon[0][i], 
+                                y: inputs.lat[0][i],
+                            }
+                            data.push(obj);
+                        }
+                        parse = {
+                                parser: {
+                                    type: 'json',
+                                    x: 'x',
+                                    y: 'y'
+                                }
+                            };
+
+                    }else if(inputs.geometry.length){
+                        data = {
+                            type: "FeatureCollection",
+                            features: inputs.geometry[0].map((g, i)=>({ 
+                                type: "Feature",
+                                properties: {
+                                    ...(inputs.grid.length ? {transform: inputs.grid[0].field[i]} : {}), 
+                                },
+                                geometry: g 
+                            }))
+                        }
                     }
 
                     outputs['layer'] = {
                         type: 'heatmap',
                         data: data,
                         parse: parse,
-                        style: inputs.style.length ? [inputs.style[0]] : null,
-                        color: inputs.grid.length ? [inputs.grid[0].method, inputs.grid[0].color] : null,
-                        shape: inputs.grid.length ? node.data.shape === 'heatmap' ? [state.shapes[0]] : [node.data.shape] : [node.data.shape],
-                        size: inputs.grid.length ? [inputs.grid[0].method, inputs.grid[0].height] : null
+                        shape: ['heatmap'],
+                        style: [inputs.style[0]]
                     };
                 }
             }
@@ -916,11 +969,12 @@ const store = () => new Vuex.Store({
         const components = [
             new ColorComponent,
             new StrComponent, new NumComponent,
-            new DatasetComponent,// new ChartComponent,
+            new DatasetComponent,
             new FieldsComponent, new ParseComponent,
             new MapComponent,
             new PointLayerComponent, new LineLayerComponent,
             new PolygonLayerComponent, new HeatMapLayerComponent,
+            new GridMapLayerComponent,
             new RangeComponent, new SizeComponent, 
             new ColorCategoryComponent,
             new PointShapeCategoryComponent,
