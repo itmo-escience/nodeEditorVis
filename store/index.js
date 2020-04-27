@@ -34,6 +34,8 @@ const store = () => new Vuex.Store({
     engine: null,
     result: null,
     layouts: {},
+    layers: [],
+    preview: false,
     data: {},
     copiedNode: null,
     options: ['', 'branches.json', 'cars.csv', 'arcs.json', /*'COVID'*/],
@@ -903,6 +905,10 @@ const store = () => new Vuex.Store({
             }
             worker(node, inputs, outputs){
                 node.data.layers = Object.values(inputs).map(input=>input[0]);
+                
+                state.layers = node.data.layers;
+                state.preview = node.data.preview;
+
                 node.data.update = true;
                 this.editor.nodes.find(n=>n.id===node.id).update();
             }
@@ -994,6 +1000,9 @@ const store = () => new Vuex.Store({
             await engine.abort();
             await engine.process( editor.toJSON() )
         });
+        editor.on('noderemove',(node)=>{
+            if(node.data.preview) state.preview = false;
+        })
 
         document.addEventListener('keydown', async function (e){
             const node = editor.selected.list[0];

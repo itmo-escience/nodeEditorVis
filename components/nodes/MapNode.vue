@@ -17,6 +17,7 @@
 
             </div>
             <div class="map-container" ref="map" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)"></div>
+            <div class="preview btn" :class="{ active: node.data.preview }" @click="preview">Preview</div>
         </div>
     </div>
 </template>
@@ -37,6 +38,10 @@ export default{
         }
     },
     methods: {
+        preview(){
+            this.node.data.preview = !this.node.data.preview,
+            this.editor.trigger('process');
+        },
         freezEditor(freez){
             this.freez = freez;
         },
@@ -55,7 +60,7 @@ export default{
         async addLayer(){
             const component = this.editor.components.get('Map');
             const inputs = this.inputs();
-            const mapNode = await component.createNode( { inputs: inputs } );
+            const mapNode = await component.createNode( { inputs: inputs, preview: this.node.data.preview } );
             mapNode.position = this.node.position;
             this.editor.addNode(mapNode);
             inputs.forEach((input, i)=>{
@@ -107,15 +112,19 @@ export default{
 }
 </script>
 <style>
+    .preview{
+        position: absolute;
+        right: 25px; top: 25px;
+    }
+    .preview.active{
+        color:#e3c000;
+        border-color: #e3c000 !important;
+    }
     .map-container {
         width: 500px;
         height: 500px;
         margin: 15px;
         position: relative;
-    }
-    .l7-scene canvas {
-        width: 500px !important;
-        height: 500px !important;
     }
     .add{
         margin-left: 5px;

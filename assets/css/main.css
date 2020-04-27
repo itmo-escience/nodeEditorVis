@@ -62,8 +62,18 @@ body{ color: #d5d6d6; }
 .cursor-pointer{ cursor: pointer; }
 .d-flex{ display: flex; }
 
+.btn{
+  padding: 10px;
+  border: 1px solid #d5d6d6;
+  border-radius: 4px;
+}
+
 .l7-ctrl-logo { visibility: hidden; }
 .l7-marker-container { height: 0 !important; }
+
+#preview-map:focus, .mapboxgl-canvas-container, .mapboxgl-canvas{
+  outline: none;
+}
 
 .context-menu[data-v-189764d4] {
   padding: 10px;

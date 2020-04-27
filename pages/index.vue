@@ -1,14 +1,76 @@
 <template>
   <div>
     <div id='editor'></div>
+    <div id='preview' :class="{hidden: !preview || !$store.state.layers[0]}">
+      <div id="preview-map" ref="preview-map"></div>
+    </div>
     <div class="logo"></div>
   </div>
 </template>
 <script>
   import * as d3 from "d3";
 
+  import { Scene } from '@antv/l7';
+  import { Mapbox } from '@antv/l7-maps';
+  import { PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@antv/l7';
+
   export default {
+    data(){
+      return {
+        scene: null
+      }
+    },
+    computed: {
+      preview(){
+        return this.$store.state.preview
+      },
+      layers(){
+        return this.$store.state.layers
+      }
+    },
+    watch: {
+      layers(){
+        this.drawMap();
+      },
+      preview() {
+        this.drawMap();
+      }
+    },
+    methods:{
+      drawMap(){
+        const options = { autoFit: true };
+        const layers = this.$store.state.layers;
+        if(layers && this.scene){
+          this.scene.getLayers().forEach(layer=>{
+              this.scene.removeLayer(layer);
+          });
+          layers.forEach(l=>{
+              if(l){
+                  const layer = l.type === 'point' ? new PointLayer(options) : l.type === 'line' ? new LineLayer(options) : l.type === 'polygon' ? new PolygonLayer(options) : new HeatmapLayer(options);
+                  layer.source(l.data, {...l.parse});
+                  if(l.color) layer.color(...l.color);
+                  if(l.shape) layer.shape(...l.shape);
+                  if(l.size) layer.size(...l.size);
+                  if(l.style) layer.style(...l.style);
+                  this.scene.addLayer(layer)
+              };
+          });
+        }
+      }
+    },
     async mounted(){
+      this.$nextTick(()=>{
+        this.scene = new Scene({
+            id: this.$refs['preview-map'],
+            map: new Mapbox({
+                style: 'dark',
+                pitch: 3,
+                center: [30.29, 59.92],
+                zoom: 9,
+            }),
+        });
+      });
+
       this.$store.commit('initRete');
       const state = this.$store.state;
 
@@ -70,6 +132,18 @@
     z-index: 2;
     background: #292929;
   }
+  #preview{
+    position: fixed;
+    right: 0; bottom: 0;
+    z-index: 2;
+    width: 900px;
+    height: 500px;
+  }
+  #preview-map{
+    width: 100%;
+    height: 100%;
+  }
+  #preview.hidden{ visibility: hidden; }
   .logo{
     position: fixed;
     left: 0; bottom: 0;
