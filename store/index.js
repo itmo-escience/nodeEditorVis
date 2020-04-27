@@ -236,8 +236,8 @@ const store = () => new Vuex.Store({
                     outputs.colorMap = data;
 
                     outputs.colors = {
-                        data: values.map(v=> data['field'+v]), 
-                        params: ['color', (val)=> val ]
+                        data: values, 
+                        params: ['color', (val)=> data['field'+val] ]
                     }
                 }
             }
@@ -921,7 +921,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('stry', 'Y', strArrSocket))
                     .addInput(new Rete.Input('colors', 'Colors', colorSocket))
                     .addInput(new Rete.Input('size','Size', numArrSocket))
-                    // .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
+                    .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
                     .addControl(new SelectControl(this.editor, 'shape', state.shapes));
             }
             worker(node, inputs, outputs){
@@ -933,12 +933,12 @@ const store = () => new Vuex.Store({
                         y: inputs.y.length ? +inputs.y[0][i] : inputs.stry[0][i],
                         ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                         ...(inputs.size.length ? {size: +inputs.size[0][i]} : {}),
-                        // ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
+                        ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                     }));
                 }
                 node.data.color = inputs.colors.length ? inputs.colors[0].params : null,
                 node.data.size = inputs.size.length ? ['size'] : null;
-                // node.data.shape = inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
+                node.data.shape = inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
                 
                 this.editor.nodes.find(n=>n.id===node.id).update();
             }

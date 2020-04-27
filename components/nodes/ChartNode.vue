@@ -56,7 +56,7 @@ export default{
                         chart = this.chart.point();
                         break
                 }
-                chart.position(`x*y`).shape(...[data.shape]);
+                chart.position(`x*y`).shape(...data.shape);
                 
                 if(data.color) chart.color(...data.color);
                 if(data.size) chart.size(...data.size);
