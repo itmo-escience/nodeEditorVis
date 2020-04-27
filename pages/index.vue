@@ -1,6 +1,7 @@
 <template>
   <div>
     <div id='editor'></div>
+    <div class="logo"></div>
   </div>
 </template>
 <script>
@@ -68,5 +69,13 @@
     height: 100% !important;
     z-index: 2;
     background: #292929;
+  }
+  .logo{
+    position: fixed;
+    left: 0; bottom: 0;
+    z-index: 2;
+  }
+  .logo:after{
+    content: url(~assets/logo.svg);
   }
 </style>
