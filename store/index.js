@@ -24,6 +24,7 @@ import MapNode from '~/components/nodes/MapNode'
 import CategoryNode from '~/components/nodes/CategoryNode'
 import GridNode from '~/components/nodes/GridNode'
 import BlankNode from '~/components/nodes/BlankNode'
+import SizeNode from '~/components/nodes/SizeNode'
 
 Vue.use(Vuex)
 
@@ -442,22 +443,33 @@ const store = () => new Vuex.Store({
         class SizeComponent extends Rete.Component{
             constructor(){
                 super('Size')
+                this.data.component = SizeNode;
                 this.path = [];
             }
             builder(node){
+                node.data.x = 5;
+                node.data.y = 5;
+                node.data.z = 0;
+
+                const inX = new Rete.Input('x', 'X', numArrSocket);
+                const inY = new Rete.Input('y', 'Y', numArrSocket);
+                const inZ = new Rete.Input('z', 'Z', numArrSocket);
+
+                inX.addControl(new NumControl(this.editor, 'x'))
+                inY.addControl(new NumControl(this.editor, 'y'))
+                inZ.addControl(new NumControl(this.editor, 'z'))
+                
                 node
-                    .addInput(new Rete.Input('x', 'X range', numArrSocket))
-                    .addInput(new Rete.Input('y', 'Y range', numArrSocket))
-                    .addInput(new Rete.Input('z', 'Z range', numArrSocket))
+                    .addInput(inX).addInput(inY).addInput(inZ)
                     .addOutput(new Rete.Output('size', 'Size', sizeSocket));
             }
             worker(node, inputs, outputs){
                 outputs['size'] = [];
                 for(let i=0; i < (inputs.x[0].length || inputs.y[0].length || inputs.z[0].length); i++){
                    outputs['size'].push({
-                        x: inputs.x.length ? inputs.x[0][i] : 5,
-                        y: inputs.y.length ? inputs.y[0][i] : 5,
-                        z: inputs.z.length ? inputs.z[0][i] : 0,  
+                        x: inputs.x.length ? inputs.x[0][i] : node.data.x,
+                        y: inputs.y.length ? inputs.y[0][i] : node.data.y,
+                        z: inputs.z.length ? inputs.z[0][i] : node.data.z,  
                     }) 
                 }
             }
@@ -565,10 +577,10 @@ const store = () => new Vuex.Store({
                 node.data.shape = state.shapes[0];
 
                 node
+                    .addControl(new SelectControl(this.editor, 'shape', state.shapes))
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
-                    .addControl(new SelectControl(this.editor, 'shape', state.shapes))
                     .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
                     .addInput(new Rete.Input('colors', 'Color', colorSocket))
                     .addInput(new Rete.Input('size','Size', sizeSocket))
