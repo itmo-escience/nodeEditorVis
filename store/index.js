@@ -148,7 +148,6 @@ const store = () => new Vuex.Store({
             }
         }
 
-        // CONST
         class NumComponent extends Rete.Component {
             constructor(){
                 super("Number");
@@ -210,6 +209,7 @@ const store = () => new Vuex.Store({
                     this.editor.addNode(colors);
                     const key = inputs.strings.length ? 'strings' :  'nums';
                     const conn = node.inputs[key].connections[0];
+
                     const n = this.editor.nodes.find(n=> n.id === conn.node);
                     this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( key ));
 
@@ -220,6 +220,17 @@ const store = () => new Vuex.Store({
                     }
 
                     this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+
+                    const outColorConn = node.outputs['colors'].connections[0];
+                    if(outColorConn){
+                        const n = this.editor.nodes.find(n=> n.id === outColorConn.node);
+                        this.editor.connect(colors.outputs.get( 'colors' ), n.inputs.get( outColorConn.input ));
+                    }
+                    const outColorMapConn = node.outputs['colorMap'].connections[0];
+                    if(outColorMapConn){
+                        const n = this.editor.nodes.find(n=> n.id === outColorMapConn.node);
+                        this.editor.connect(colors.outputs.get( 'colorMap' ), n.inputs.get( outColorMapConn.input ));
+                    }
                 }
                 if(node.data.values){
                     if(inputs.color.length){
@@ -480,6 +491,12 @@ const store = () => new Vuex.Store({
                     const n = this.editor.nodes.find(n=> n.id === conn.node);
                     this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( key ));
                     this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+
+                    const outShapesConn = node.outputs['shapes'].connections[0];
+                    if(outShapesConn){
+                        const n = this.editor.nodes.find(n=> n.id === outShapesConn.node);
+                        this.editor.connect(colors.outputs.get( 'shapes' ), n.inputs.get( outShapesConn.input ));
+                    }
                 }
                 if(node.data.values){
                     var data = Object.assign({}, node.data);
@@ -521,6 +538,12 @@ const store = () => new Vuex.Store({
                     const n = this.editor.nodes.find(n=> n.id === conn.node);
                     this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( key ));
                     this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+
+                    const outShapesConn = node.outputs['shapes'].connections[0];
+                    if(outShapesConn){
+                        const n = this.editor.nodes.find(n=> n.id === outShapesConn.node);
+                        this.editor.connect(colors.outputs.get( 'shapes' ), n.inputs.get( outShapesConn.input ));
+                    }
                 }
                 if(node.data.values){
                     var data = Object.assign({}, node.data);
