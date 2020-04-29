@@ -6,7 +6,7 @@ import ConnectionPlugin from 'rete-connection-plugin'
 import VueRenderPlugin from 'rete-vue-render-plugin'
 import ContextMenuPlugin from 'rete-context-menu-plugin';
 
-import G2 from '@antv/g2';
+import * as d3 from "d3";
 
 import VueNumControl from '~/components/controls/VueNumControl'
 import VueStrControl from '~/components/controls/VueStrControl'
@@ -366,6 +366,30 @@ const store = () => new Vuex.Store({
                 }
             }
         }
+        class URLDataComponent extends Rete.Component {
+            constructor(){
+                super('Load from URL')
+                this.path = ['Data']
+            }
+            builder(node){
+                node.addControl(new StrControl(this.editor, 'url', 'data url'));
+            }
+            async worker(node){
+                if(node.data.url){
+                    const url = node.data.url;
+                    const result = await d3.text(url);
+                    const data = url.endsWith('.csv') ? await d3.csvParse(result) : JSON.parse(result);
+                    const name = url.split('/').pop();
+
+                    const component = new ParseComponent;
+                    const parse = await component.createNode( {name: name, data: data} );
+                    parse.position = node.position;
+                    editor.addNode(parse);
+                    this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+                }
+            }
+        }
+
         class ColorRangeComponent extends Rete.Component {
             constructor(){
                 super('Color Range')
@@ -1040,7 +1064,8 @@ const store = () => new Vuex.Store({
             new LoadDataComponent,
             new HeatMapComponent, new GridComponent,
             new ColorRangeComponent,
-            new ScatterComponent
+            new ScatterComponent,
+            new URLDataComponent
         ];
 
         components.map(c => {
