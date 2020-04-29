@@ -39,9 +39,10 @@ export default{
 
             this.chart = new G2.Chart({
                 container: this.$refs.container,
-                width: 500,
+                autoFit: true,
                 height: 500
             });
+            this.chart.legend('size', false);
             if(data.DATA){
                 this.chart.source(data.DATA);
                 let chart;
@@ -87,7 +88,6 @@ export default{
         text-align: left;
     }
     .chart-container{
-        background: #d5d6d6;
         margin: 20px;
     }
 </style>
