@@ -706,11 +706,13 @@ const store = () => new Vuex.Store({
                 this.path = ['Layers']
             }
             build(node){
+                const sizeInput = new Rete.Input('sizes','Height', numArrSocket);
+                sizeInput.addControl(new NumControl(this.editor, 'size', 'height'))
+
                 node
                     .addControl(new SelectControl(this.editor, 'shape', state.polygonShapes))
                     .addInput(new Rete.Input('colors', 'Colors', colorSocket))
-                    .addInput(new Rete.Input('size','Size', numSocket))
-                    .addInput(new Rete.Input('sizes','Sizes', numArrSocket))
+                    .addInput(sizeInput)
                     .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
@@ -734,7 +736,7 @@ const store = () => new Vuex.Store({
                         parse: {},
                         color: inputs.colors.length ? inputs.colors[0].params : null,
                         shape: [node.data.shape],
-                        size: inputs.size.length ? [inputs.size[0]] : inputs.sizes.length ? ['size'] : [200]
+                        size: inputs.sizes.length ? ['size'] : node.data.size ? [node.data.size] : null
                     };
                 }
             }
@@ -968,13 +970,15 @@ const store = () => new Vuex.Store({
                 this.path = [];
             }
             builder(node){
+                const sizeInput = new Rete.Input('size','Size', numArrSocket);
+                sizeInput.addControl(new NumControl(this.editor, 'size', 'size'))
                 node
                     .addInput(new Rete.Input('x', 'X', numArrSocket))
                     .addInput(new Rete.Input('y', 'Y', numArrSocket))
                     .addInput(new Rete.Input('strx', 'X', strArrSocket))
                     .addInput(new Rete.Input('stry', 'Y', strArrSocket))
                     .addInput(new Rete.Input('colors', 'Colors', colorSocket))
-                    .addInput(new Rete.Input('size','Size', numArrSocket))
+                    .addInput(sizeInput)
                     .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
                     .addControl(new SelectControl(this.editor, 'shape', state.shapes));
             }
@@ -991,7 +995,7 @@ const store = () => new Vuex.Store({
                     }));
                 }
                 node.data.color = inputs.colors.length ? inputs.colors[0].params : null,
-                node.data.size = inputs.size.length ? ['size'] : null;
+                node.data.size = inputs.size.length ? ['size'] : node.data.size ? [node.data.size] : null;
                 node.data.shape = inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
                 
                 this.editor.nodes.find(n=>n.id===node.id).update();
