@@ -1,7 +1,10 @@
 <template>
   <div>
     <div id='editor'></div>
-    <div id='preview' :class="{hidden: !preview || !$store.state.layers[0]}">
+    <div id='preview' :class="{hidden: preview.length === 0 }">
+      <div class="d-flex">
+        <div v-for="(p, index) in preview" :key="index" class="preview-item fg-1" :class="{selected: index === selectedId}" @click="select(index)">{{ p.name }}</div>
+      </div>
       <div id="preview-map" ref="preview-map"></div>
     </div>
     <div class="logo"></div>
@@ -17,29 +20,31 @@
   export default {
     data(){
       return {
-        scene: null
+        scene: null,
+        selectedId: 0
       }
     },
     computed: {
       preview(){
         return this.$store.state.preview
-      },
-      layers(){
-        return this.$store.state.layers
       }
     },
-    watch: {
-      layers(){
-        this.drawMap();
-      },
-      preview() {
-        this.drawMap();
+    watch:{
+      preview: {
+        deep: true,
+        handler(){
+          this.drawMap()
+        }
       }
     },
     methods:{
+      select(index){
+        this.selectedId = index;
+        this.drawMap();
+      },
       drawMap(){
+        const layers = this.$store.state.preview[this.selectedId].layers;
         const options = { autoFit: true };
-        const layers = this.$store.state.layers;
         if(layers && this.scene){
           this.scene.getLayers().forEach(layer=>{
               this.scene.removeLayer(layer);
@@ -137,11 +142,24 @@
     right: 0; bottom: 0;
     z-index: 2;
     width: 900px;
-    height: 500px;
+    height: 100%;
   }
+  .preview-item{
+    border: 1px solid #d5d6d6;
+    color: #d5d6d6;
+    border-radius: 4px 4px 0 0;
+    background: #353535;
+    padding: 10px;
+  }
+  .preview-item.selected{
+    border-color: #e3c000;
+    color: #e3c000;
+  }
+
   #preview-map{
     width: 100%;
     height: 100%;
+    position: relative;
   }
   #preview.hidden{ visibility: hidden; }
   .logo{

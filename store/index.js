@@ -32,10 +32,10 @@ const store = () => new Vuex.Store({
   state: {
     editor: null,
     engine: null,
-    result: null,
-    layouts: {},
-    layers: [],
-    preview: false,
+    preview: [],
+    ids: {
+        maps: 0
+    },
     data: {},
     copiedNode: null,
     options: ['', 'branches.json', 'cars.csv', 'arcs.json', /*'COVID'*/],
@@ -904,10 +904,23 @@ const store = () => new Vuex.Store({
                 node.addInput(new Rete.Input('layer'+index, 'Layer'+index, layerSocket));
             }
             worker(node, inputs, outputs){
-                node.data.layers = Object.values(inputs).map(input=>input[0]);
+                if(!node.data.id){
+                    state.ids.maps++;
+                    node.data.id = state.ids.maps
+                }
+                node.data.layers = Object.values(inputs).map(input=>input[0]).filter(d=> d);
                 
-                state.layers = node.data.layers;
-                state.preview = node.data.preview;
+                const item = state.preview.find(d=>d.id === node.data.id);
+                if(node.data.preview){
+                    if(!item){
+                        state.preview.push({id: node.data.id, name: node.data.name, layers: node.data.layers})
+                    }else{
+                        item.name = node.data.name;
+                        item.layers = node.data.layers;
+                    }
+                }else{
+                    if(item) state.preview.splice(state.preview.indexOf(item), 1);
+                }
 
                 node.data.update = true;
                 this.editor.nodes.find(n=>n.id===node.id).update();
@@ -996,7 +1009,7 @@ const store = () => new Vuex.Store({
             engine.register(c);
         });
 
-        editor.on('process connectioncreated connectionremoved', async()=>{
+        editor.on('process connectioncreated connectionremoved nodecreated', async()=>{
             await engine.abort();
             await engine.process( editor.toJSON() )
         });

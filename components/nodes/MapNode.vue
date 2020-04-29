@@ -1,6 +1,9 @@
 <template>
     <div class="node map-node" :class="[selected(), node.name] | kebab">
-        <div class="title">{{node.name}}</div>
+        <div class="d-flex align-center justify-center">
+            <div class="title fg-9"><input type="textarea" v-model="name"/> ({{node.name}})</div>
+            <div class="preview btn" :class="{ active: node.data.preview }" @click="preview">Preview</div>
+        </div>
         <!-- Inputs-->
         <div class="node-body d-flex">
             <div class="inputs">
@@ -12,12 +15,9 @@
                         <div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
                     </div>
                 </div>
-                
                 <div class="add" @click="addLayer">Add</div>   
-
             </div>
-            <div class="map-container" ref="map" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)"></div>
-            <div class="preview btn" :class="{ active: node.data.preview }" @click="preview">Preview</div>
+            <div class="map-container" :class="{hidden: node.data.preview}" ref="map" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)"></div>
         </div>
     </div>
 </template>
@@ -34,7 +34,14 @@ export default{
     data(){
         return {
             scene: null,
-            freez: false
+            freez: false,
+            name: this.node.data.name || (this.node.name + this.node.data.id)
+        }
+    },
+    watch:{
+        name(val){
+            this.node.data.name = val;
+            this.editor.trigger('process');
         }
     },
     methods: {
@@ -60,7 +67,7 @@ export default{
         async addLayer(){
             const component = this.editor.components.get('Map');
             const inputs = this.inputs();
-            const mapNode = await component.createNode( { inputs: inputs, preview: this.node.data.preview } );
+            const mapNode = await component.createNode( { inputs: inputs, preview: this.node.data.preview, id: this.node.data.id, name: this.node.data.name } );
             mapNode.position = this.node.position;
             this.editor.addNode(mapNode);
             inputs.forEach((input, i)=>{
@@ -81,15 +88,13 @@ export default{
                         this.scene.removeLayer(layer);
                     });
                     layers.forEach(l=>{
-                        if(l){
-                            const layer = l.type === 'point' ? new PointLayer(options) : l.type === 'line' ? new LineLayer(options) : l.type === 'polygon' ? new PolygonLayer(options) : new HeatmapLayer(options);
-                            layer.source(l.data, {...l.parse});
-                            if(l.color) layer.color(...l.color);
-                            if(l.shape) layer.shape(...l.shape);
-                            if(l.size) layer.size(...l.size);
-                            if(l.style) layer.style(...l.style);
-                            this.scene.addLayer(layer)
-                        };
+                        const layer = l.type === 'point' ? new PointLayer(options) : l.type === 'line' ? new LineLayer(options) : l.type === 'polygon' ? new PolygonLayer(options) : new HeatmapLayer(options);
+                        layer.source(l.data, {...l.parse});
+                        if(l.color) layer.color(...l.color);
+                        if(l.shape) layer.shape(...l.shape);
+                        if(l.size) layer.size(...l.size);
+                        if(l.style) layer.style(...l.style);
+                        this.scene.addLayer(layer)
                     });
                 }
                 this.node.data.update = false;
@@ -97,28 +102,29 @@ export default{
         }
     },
     mounted(){
-        setTimeout(()=>{ 
+        this.$nextTick(()=>{
             this.initScene();
             this.node.data.update = true;
             this.updateMap(); 
-        }, 500);
+        });
         this.editor.on('zoom nodetranslate', ()=>{
             return !this.freez
         });
     },
     updated(){
+        if(this.name.endsWith('undefined')) this.name = this.node.name + this.node.data.id;
         this.updateMap();
     }
 }
 </script>
 <style>
-    .preview{
-        position: absolute;
-        right: 25px; top: 25px;
-    }
     .preview.active{
         color:#e3c000;
         border-color: #e3c000 !important;
+    }
+    .node-body .map-container .l7-scene canvas{
+        width: 500px !important;
+        height: 500px !important;
     }
     .map-container {
         width: 500px;
@@ -126,6 +132,11 @@ export default{
         margin: 15px;
         position: relative;
     }
+    .map-container.hidden{ 
+        visibility: hidden;
+        height: 50px;
+    }
+
     .add{
         margin-left: 5px;
     }
