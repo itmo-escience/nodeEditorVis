@@ -476,7 +476,7 @@ const store = () => new Vuex.Store({
                 node.data.x = 5;
                 node.data.y = 5;
                 node.data.z = 0;
-
+                
                 const inX = new Rete.Input('x', 'X', numArrSocket);
                 const inY = new Rete.Input('y', 'Y', numArrSocket);
                 const inZ = new Rete.Input('z', 'Z', numArrSocket);
@@ -605,7 +605,7 @@ const store = () => new Vuex.Store({
             }
             build(node){
                 node.data.shape = state.shapes[0];
-
+                
                 node
                     .addControl(new SelectControl(this.editor, 'shape', state.shapes))
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
@@ -963,12 +963,15 @@ const store = () => new Vuex.Store({
                 this.path = [];
             }
             builder(node){
-                const inputs = node.data.inputs; 
-                if(inputs){
-                    inputs.forEach(input=> node.addInput(new Rete.Input(input.key, input.name, layerSocket)));
-                }
-                const index = inputs ? inputs.length : 0;
-                node.addInput(new Rete.Input('layer'+index, 'Layer'+index, layerSocket));
+                // const inputs = node.data.inputs; 
+                // if(inputs){
+                //     inputs.forEach(input=> node.addInput(new Rete.Input(input.key, input.name, layerSocket)));
+                // }
+                // const index = inputs ? inputs.length : 0;
+                // node.addInput(new Rete.Input('layer'+index, 'Layer'+index, layerSocket));
+                node.addInput(new Rete.Input('layer0', 'layer', layerSocket));
+                const inputs = node.data.inputs;
+                if(inputs) inputs.forEach(input=>node.addInput(new Rete.Input(input, input, layerSocket)))
             }
             worker(node, inputs, outputs){
                 if(!node.data.id){
@@ -1082,6 +1085,7 @@ const store = () => new Vuex.Store({
         editor.on('process connectioncreated connectionremoved nodecreated', async()=>{
             await engine.abort();
             await engine.process( editor.toJSON() )
+            
         });
         editor.on('noderemove',(node)=>{
             if(node.data.preview) state.preview = false;

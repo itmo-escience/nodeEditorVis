@@ -53,11 +53,6 @@ export default{
 }
 </script>
 <style>
-  .file-input { 
-    visibility: hidden; 
-    height: 0; 
-    padding: 0; 
-  }
   .files{ 
     margin: 10px 10px 0 10px;
     padding: 20px 0;

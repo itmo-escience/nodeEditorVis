@@ -67,7 +67,9 @@ export default{
         async addLayer(){
             const component = this.editor.components.get('Map');
             const inputs = this.inputs();
-            const mapNode = await component.createNode( { inputs: inputs, preview: this.node.data.preview, id: this.node.data.id, name: this.node.data.name } );
+            const ins = this.inputs().map(input=>input.key).slice(1).concat(['layer'+this.inputs().length])
+            const mapNode = await component.createNode( { inputs: ins, preview: this.node.data.preview, id: this.node.data.id, name: this.node.data.name } );
+
             mapNode.position = this.node.position;
             this.editor.addNode(mapNode);
             inputs.forEach((input, i)=>{

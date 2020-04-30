@@ -1,5 +1,10 @@
 <template>
   <div>
+    <!--<div id="load" class="d-flex">
+      <label for="upload" class="btn mrr-20">Загрузить скрипт</label>
+      <input id="upload" class="file-input" type="file" accept="application/json" @change="load($event)"/>
+      <a class="btn mrr-20" :href="href" :download="download">Сохранить скрипт</a>
+    </div>-->
     <div id='editor'></div>
     <div id='preview' :class="{hidden: preview.length === 0 }">
       <div class="d-flex">
@@ -21,7 +26,10 @@
     data(){
       return {
         scene: null,
-        selectedId: 0
+        selectedId: 0,
+        href: '',
+        download: 'export.json',
+        state: this.$store.state
       }
     },
     computed: {
@@ -38,6 +46,18 @@
       }
     },
     methods:{
+      load(e){
+        let file = e.target.files[0];
+        if(file){
+          let fr = new FileReader();
+          fr.readAsText(file);
+          fr.onload = async ()=> {
+              const data = JSON.parse(fr.result);
+              console.log(data)
+              await this.state.editor.fromJSON(data);
+          }
+        }
+      },
       select(index){
         this.selectedId = index;
         this.drawMap();
@@ -77,7 +97,6 @@
       });
 
       this.$store.commit('initRete');
-      const state = this.$store.state;
 
       // const confirmed = d3.csvParse(await this.$axios.$get('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'));
       // const deaths = d3.csvParse(await this.$axios.$get('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'));
@@ -96,10 +115,10 @@
       //   }
       // });
       // state.data['COVID'] = COVID;
-      state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
-      state.data['branches.json'] = await this.$axios.$get('/data/branches.json');
+      this.state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
+      this.state.data['branches.json'] = await this.$axios.$get('/data/branches.json');
       const arcs = await this.$axios.$get('/data/arcs.json')
-      state.data['arcs.json'] = arcs.map(d=>({
+      this.state.data['arcs.json'] = arcs.map(d=>({
             id: d.id,
             clients_count: d.clients_count,
             x: d.source[0],
@@ -107,7 +126,7 @@
             x1: d.target[0],
             y1: d.target[1]
           }));
-      state.editor.fromJSON({
+      this.state.editor.fromJSON({
           "id": "demo@0.1.0",
           "nodes": {
               "1": {
@@ -118,17 +137,27 @@
               },
               "2": {
                   "id": 2,
-                  "data": {
-                  },
+                  "data": {},
                   "position": [500, 200],
                   "name": "Map"
               }
           }
       });
+      this.state.editor.on('connectioncreated connectionremoved nodecreated noderemoved nodetranslated', async ()=>{
+        const data = JSON.stringify(await this.state.editor.toJSON(), null, ' ');
+        const file = new Blob([data], {type: 'application/json'});
+        this.href = URL.createObjectURL(file);
+      });
     }
   }
 </script>
 <style>
+  #load{
+    position: fixed;
+    top: 0; left: 0;
+    margin: 10px;
+    z-index: 3;
+  }
   #editor{
     position: fixed;
     left: 0; bottom: 0;
