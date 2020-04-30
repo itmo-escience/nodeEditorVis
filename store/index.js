@@ -203,7 +203,9 @@ const store = () => new Vuex.Store({
             }
             async worker(node, inputs, outputs){
                 const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
-                if( (!node.data.values && (inputs.strings.length || inputs.nums.length)) ||  (node.data.values && (JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])))){
+                if(!values){
+                    node.data.values = null;
+                }else if( !node.data.values ||  (node.data.values && (JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])))){
                     const component = this.editor.components.get('Color Category');
                     const colors = await component.createNode({ values: [...new Set( values )] });
                     colors.position = node.position;
@@ -517,7 +519,9 @@ const store = () => new Vuex.Store({
             }
             async worker(node, inputs, outputs){
                 const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
-                if( (!node.data.values && (inputs.strings.length || inputs.nums.length)) ||  (node.data.values && (JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])))){
+                if(!values){
+                    node.data.values = null;
+                }else if( !node.data.values ||  (node.data.values && (JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])))){
                     const component = this.editor.components.get('Line Shape Category');
                     const colors = await component.createNode({ values: [...new Set( values )] });
                     colors.position = node.position;
@@ -564,7 +568,9 @@ const store = () => new Vuex.Store({
             }
             async worker(node, inputs, outputs){
                 const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
-                if( (!node.data.values && (inputs.strings.length || inputs.nums.length)) ||  (node.data.values && (JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])))){
+                if(!values){
+                    node.data.values = null;
+                }else if( !node.data.values ||  (node.data.values && (JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])))){
                     const component = this.editor.components.get('Point Shape Category');
                     const colors = await component.createNode({ values: [...new Set( values )] });
                     colors.position = node.position;
