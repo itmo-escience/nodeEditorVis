@@ -18,8 +18,14 @@
           }
         },
         methods: {
-          plus(){ this.value++ },
-          minus(){ this.value-- },
+          plus(){ 
+            this.value++
+            this.update();
+          },
+          minus(){ 
+            this.value--
+            this.update();
+          },
           freezEditor(f){
             this.freez = f;
           },

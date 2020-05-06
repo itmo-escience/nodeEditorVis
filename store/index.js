@@ -152,7 +152,6 @@ const store = () => new Vuex.Store({
                 this.vueContext.value = val;
             }
         }
-
         class NumComponent extends Rete.Component {
             constructor(){
                 super("Number");
@@ -494,13 +493,22 @@ const store = () => new Vuex.Store({
                     .addOutput(new Rete.Output('size', 'Size', sizeSocket));
             }
             worker(node, inputs, outputs){
-                outputs['size'] = [];
-                for(let i=0; i < (inputs.x[0].length || inputs.y[0].length || inputs.z[0].length); i++){
-                   outputs['size'].push({
-                        x: inputs.x.length ? inputs.x[0][i] : node.data.x,
-                        y: inputs.y.length ? inputs.y[0][i] : node.data.y,
-                        z: inputs.z.length ? inputs.z[0][i] : node.data.z,  
-                    }) 
+                outputs['size'] = {
+                    values: [],
+                    params: null
+                };
+                const nums = inputs.x[0] || inputs.y[0] || inputs.z[0];
+                if(nums){
+                    outputs['size'].params = ['size', s=>{ return [ s.x, s.y, s.z ]; }]
+                    for(let i=0; i < nums.length; i++){
+                        outputs['size'].values.push({
+                             x: inputs.x.length ? inputs.x[0][i] : node.data.x,
+                             y: inputs.y.length ? inputs.y[0][i] : node.data.y,
+                             z: inputs.z.length ? inputs.z[0][i] : node.data.z,  
+                         }); 
+                     }
+                }else{
+                    outputs['size'].params = [[node.data.x, node.data.y, node.data.z]]
                 }
             }
         }
@@ -630,7 +638,7 @@ const store = () => new Vuex.Store({
                             let obj = {
                                 x: inputs.lon[0][i], 
                                 y: inputs.lat[0][i],
-                                ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                                ...(inputs.size.length ? inputs.size[0].values.length ? {size: inputs.size[0].values[i]} : {} : {}),
                                 ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                                 ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                             }
@@ -642,7 +650,7 @@ const store = () => new Vuex.Store({
                             features: inputs.geometry[0].map((g, i)=>({ 
                                 type: "Feature",
                                 properties: {
-                                    ...(inputs.size.length ? {size: inputs.size[0][i]} : {}),
+                                    ...(inputs.size.length ? inputs.size[0].values.length ? {size: inputs.size[0].values[i]} : {} : {}),
                                     ...(inputs.colors.length  ? inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {} : {}),
                                     ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
                                 },
@@ -662,9 +670,8 @@ const store = () => new Vuex.Store({
                         }},
                         color: inputs.colors.length ? inputs.colors[0].params : null,
                         shape: inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
-                        size: inputs.size.length ? ['size', s=>{ return [ s.x, s.y, s.z ]; }] : null
+                        size: inputs.size.length ? inputs.size[0].params : null
                     };
-                    
                 }
             }
         }
