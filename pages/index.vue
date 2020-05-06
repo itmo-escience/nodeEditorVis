@@ -45,8 +45,8 @@
     watch:{
       preview: {
         deep: true,
-        handler(){
-          this.drawMap()
+        handler(val){
+          if(val.length) this.drawMap();
         }
       }
     },

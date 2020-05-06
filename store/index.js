@@ -974,12 +974,6 @@ const store = () => new Vuex.Store({
                 this.path = [];
             }
             builder(node){
-                // const inputs = node.data.inputs; 
-                // if(inputs){
-                //     inputs.forEach(input=> node.addInput(new Rete.Input(input.key, input.name, layerSocket)));
-                // }
-                // const index = inputs ? inputs.length : 0;
-                // node.addInput(new Rete.Input('layer'+index, 'Layer'+index, layerSocket));
                 node.addInput(new Rete.Input('layer0', 'layer', layerSocket));
                 const inputs = node.data.inputs;
                 if(inputs) inputs.forEach(input=>node.addInput(new Rete.Input(input, input, layerSocket)))
@@ -1098,8 +1092,13 @@ const store = () => new Vuex.Store({
                 await engine.abort();
                 await engine.process( editor.toJSON() )
         });
-        editor.on('noderemove',(node)=>{
-            if(state.process) if(node.data.preview) state.preview = false;
+        editor.on('noderemove', (node)=>{
+            if(state.process && node){
+                if(node.data.preview){
+                    const item = state.preview.find(d=>d.id === node.data.id);
+                    state.preview.splice(state.preview.indexOf(item), 1);
+                }
+            }
         })
 
         document.addEventListener('keydown', async function (e){
