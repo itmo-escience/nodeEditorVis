@@ -12,7 +12,7 @@
 import { Chrome } from "vue-color";
 export default{
   components: {Chrome},
-  props: ['emitter', 'ikey', 'getData', 'putData'],
+  props: ['emitter', 'ikey', 'node', 'getData', 'putData'],
   data(){
     return{
       freez: false,
@@ -36,6 +36,9 @@ export default{
   mounted(){
     this.putData(this.ikey, this.color)
     this.emitter.on('nodetranslate', ()=> !this.freez)
+    this.emitter.on('noderemove', node=>{
+      if(node.id === this.node.id) this.freez = false;
+    });
   }
 }
 </script>

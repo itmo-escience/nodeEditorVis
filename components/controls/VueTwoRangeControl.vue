@@ -17,7 +17,7 @@
     import { Chrome } from "vue-color";
 
     export default { 
-        props: ['emitter', 'ikey', 'range', 'getData', 'putData'],
+        props: ['emitter', 'ikey', 'range', 'node', 'getData', 'putData'],
         components: { Chrome },
         data() {
           return {
@@ -67,6 +67,9 @@
         mounted(){
             document.addEventListener('mouseup', this.dragEnd)
             this.update();
+            this.emitter.on('noderemove', node=>{
+                if(node.id === this.node.id) this.freez = false;
+            });
             this.emitter.on('nodetranslate', ()=>!this.freez);
         }
     }

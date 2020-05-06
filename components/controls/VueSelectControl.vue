@@ -15,14 +15,10 @@
         data() {
           return {
             opened: false,
-            value: null,
-            freez: false
+            value: null
           }
         },
         methods: {
-          freezEditor(freez){
-            this.freez = freez;
-          },
           close(){
             this.opened = false;
           },

@@ -15,7 +15,7 @@
 import { Chrome } from "vue-color";
 export default{
   components: {Chrome},
-  props: ['emitter', 'ikey', 'getData', 'putData'],
+  props: ['emitter', 'ikey', 'node', 'getData', 'putData'],
   data(){
     return {
       color: "#"+((1<<24)*Math.random()|0).toString(16),
@@ -23,7 +23,7 @@ export default{
       freez: false
     }
   },
-  methods: {
+  methods:{
     togglePallet(){
       this.opened = !this.opened;
     },
@@ -44,6 +44,9 @@ export default{
     this.putData(this.ikey, this.color);
     this.emitter.trigger('process');
     this.emitter.on('nodetranslate', ()=>!this.freez);
+    this.emitter.on('noderemove', node=>{
+      if(node.id === this.node.id) this.freez = false;
+    });
   }
 }
 </script>

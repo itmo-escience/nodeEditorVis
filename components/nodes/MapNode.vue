@@ -109,9 +109,11 @@ export default{
             this.node.data.update = true;
             this.updateMap(); 
         });
-        this.editor.on('zoom nodetranslate', ()=>{
-            return !this.freez
+
+        this.editor.on('noderemove', node=>{
+            if(node.id === this.node.id) this.freez = false;
         });
+        this.editor.on('zoom nodetranslate', ()=> !this.freez );
     },
     updated(){
         if(this.name.endsWith('undefined')) this.name = this.node.name + this.node.data.id;

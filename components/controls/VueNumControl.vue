@@ -10,7 +10,7 @@
 </template>
 <script>
     export default { 
-        props: ['placeholder', 'emitter', 'ikey', 'getData', 'putData'],
+        props: ['placeholder', 'emitter', 'node', 'ikey', 'getData', 'putData'],
         data() {
           return {
             value: 0,
@@ -37,6 +37,9 @@
         mounted(){
           this.value = this.getData(this.ikey);
           this.emitter.on('zoom', ()=> !this.freez );
+          this.emitter.on('noderemove', node=>{
+            if(node.id === this.node.id) this.freez = false;
+          });
         }
     }
 </script>

@@ -77,35 +77,35 @@ const store = () => new Vuex.Store({
             }
         }
         class ColorControl extends Rete.Control {
-            constructor(emitter, key){
+            constructor(emitter, key, node){
                 super(key);
                 this.render = 'vue';
                 this.component = VueColorControl;
-                this.props = { emitter, ikey: key};
+                this.props = { emitter, ikey: key, node};
             }
         }
         class ClosedColorControl extends Rete.Control{
-            constructor(emitter, key){
+            constructor(emitter, key, node){
                 super(key)
                 this.render = 'vue';
                 this.component = VueClosedColorControl;
-                this.props = { emitter, ikey: key};
+                this.props = { emitter, ikey: key, node};
             }
         }
         class TwoColorControl extends Rete.Control{
-            constructor(emitter, key){
+            constructor(emitter, key, node){
                 super(key)
                 this.render = 'vue';
                 this.component = VueTwoColorControl;
-                this.props = { emitter, ikey: key};
+                this.props = { emitter, ikey: key, node};
             }
         }
         class TwoRangeControl extends Rete.Control{
-            constructor(emitter, key, range){
+            constructor(emitter, key, range, node){
                 super(key)
                 this.render = 'vue';
                 this.component = VueTwoRangeControl;
-                this.props = { emitter, ikey: key, range};
+                this.props = { emitter, ikey: key, range, node};
             }
         }
         class RampControl extends Rete.Control{
@@ -117,11 +117,11 @@ const store = () => new Vuex.Store({
             }
         }
         class NumControl extends Rete.Control {
-            constructor(emitter, key, placeholder) {
+            constructor(emitter, key, node, placeholder) {
                 super(key);
                 this.render = 'vue';
                 this.component = VueNumControl;
-                this.props = { emitter, ikey: key, placeholder };
+                this.props = { emitter, ikey: key, node, placeholder };
             }
 
             setValue(val) {
@@ -161,7 +161,7 @@ const store = () => new Vuex.Store({
 
             builder(node) {
                 var out1 = new Rete.Output('num', "Number", numSocket);
-                node.addControl(new NumControl(this.editor, 'num'))
+                node.addControl(new NumControl(this.editor, 'num', node))
                     .addOutput(out1);
             }
 
@@ -201,7 +201,7 @@ const store = () => new Vuex.Store({
                     .addOutput(new Rete.Output('colorMap', 'Color Map', colorMapSocket)); 
                 if(node.data.values){
                     node.data.values.forEach(v=>{
-                        node.addControl(new ClosedColorControl(this.editor, 'field'+v));
+                        node.addControl(new ClosedColorControl(this.editor, 'field'+v, node));
                     });
                 }
             }
@@ -270,7 +270,7 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node
-                    .addControl(new ColorControl(this.editor, 'color'))
+                    .addControl(new ColorControl(this.editor, 'color', node))
                     .addOutput(new Rete.Output('color', 'Color', colorSocket));
             }
             worker(node, inputs, outputs){
@@ -405,8 +405,8 @@ const store = () => new Vuex.Store({
             build(node){
                 node
                     .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
-                    .addControl(new TwoColorControl(this.editor, 'colors'))
-                    .addControl(new TwoRangeControl(this.editor, 'range', [0, 1]))
+                    .addControl(new TwoColorControl(this.editor, 'colors', node))
+                    .addControl(new TwoRangeControl(this.editor, 'range', [0, 1], node))
                     .addOutput(new Rete.Output('color', 'Color', colorSocket));
             }
             async worker(node, inputs, outputs){
@@ -431,8 +431,8 @@ const store = () => new Vuex.Store({
                 node.addInput(new Rete.Input('nums', 'Num Values', numArrSocket));
                 if(node.data.values){
                     node
-                        .addControl(new TwoRangeControl(this.editor, 'domain', [node.data.domainFrom, node.data.domainTo]))
-                        .addControl(new TwoRangeControl(this.editor, 'range', [1, 30]))
+                        .addControl(new TwoRangeControl(this.editor, 'domain', [node.data.domainFrom, node.data.domainTo], node))
+                        .addControl(new TwoRangeControl(this.editor, 'range', [1, 30], node))
                         .addOutput(new Rete.Output('range', 'Range', numArrSocket));
                 }
             }
@@ -451,7 +451,7 @@ const store = () => new Vuex.Store({
                         node.data.values = null;
                     }
                 }
-
+                
                 if(!node.data.values && inputs.nums.length){
                     const values = inputs.nums[0];
                     const connection = node.inputs.nums.connections[0];
@@ -485,9 +485,9 @@ const store = () => new Vuex.Store({
                 const inY = new Rete.Input('y', 'Y', numArrSocket);
                 const inZ = new Rete.Input('z', 'Z', numArrSocket);
 
-                inX.addControl(new NumControl(this.editor, 'x'))
-                inY.addControl(new NumControl(this.editor, 'y'))
-                inZ.addControl(new NumControl(this.editor, 'z'))
+                inX.addControl(new NumControl(this.editor, 'x', node))
+                inY.addControl(new NumControl(this.editor, 'y', node))
+                inZ.addControl(new NumControl(this.editor, 'z', node))
                 
                 node
                     .addInput(inX).addInput(inY).addInput(inZ)
@@ -741,7 +741,7 @@ const store = () => new Vuex.Store({
             }
             build(node){
                 const sizeInput = new Rete.Input('sizes','Height', numArrSocket);
-                sizeInput.addControl(new NumControl(this.editor, 'size', 'height'))
+                sizeInput.addControl(new NumControl(this.editor, 'size', node, 'height'))
 
                 node
                     .addControl(new SelectControl(this.editor, 'shape', state.polygonShapes))
@@ -918,9 +918,9 @@ const store = () => new Vuex.Store({
                 node.data.size = 1000;
 
                 node
-                    .addControl(new NumControl(this.editor, 'size', 'size'))
-                    .addControl(new TwoRangeControl(this.editor, 'height', [0, 100000]))
-                    .addControl(new TwoColorControl(this.editor, 'colors'))
+                    .addControl(new NumControl(this.editor, 'size', node, 'size'))
+                    .addControl(new TwoRangeControl(this.editor, 'height', [0, 100000], node))
+                    .addControl(new TwoColorControl(this.editor, 'colors', node))
                     .addControl(new SelectControl(this.editor, 'type', ['grid', 'hexagon']))
                     .addControl(new SelectControl(this.editor, 'method', ['max','min','sum','mean']))
                     .addInput(new Rete.Input('field', 'Field', numArrSocket))
@@ -944,9 +944,9 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node
-                    .addControl(new NumControl(this.editor, 'intensity', 'intensity'))
-                    .addControl(new NumControl(this.editor, 'radius', 'radius'))
-                    .addControl(new NumControl(this.editor, 'opacity', 'opacity'))
+                    .addControl(new NumControl(this.editor, 'intensity', node, 'intensity'))
+                    .addControl(new NumControl(this.editor, 'radius', node, 'radius'))
+                    .addControl(new NumControl(this.editor, 'opacity', node, 'opacity'))
                     .addControl(new RampControl(this.editor, 'ramp'))
                     .addOutput(new Rete.Output('heatmap', 'HeapMap', heatMapSocket));
             }
@@ -1008,7 +1008,7 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 const sizeInput = new Rete.Input('size','Size', numArrSocket);
-                sizeInput.addControl(new NumControl(this.editor, 'size', 'size'))
+                sizeInput.addControl(new NumControl(this.editor, 'size', node, 'size'))
                 node
                     .addInput(new Rete.Input('x', 'X', numArrSocket))
                     .addInput(new Rete.Input('y', 'Y', numArrSocket))
