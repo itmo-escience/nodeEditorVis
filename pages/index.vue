@@ -1,10 +1,13 @@
 <template>
   <div>
-    <!--<div id="load" class="d-flex">
-      <label for="upload" class="btn mrr-20">Загрузить скрипт</label>
+    <div id="save" :class="{'active': msg, 'red': errorMsg}">{{ msg }}</div>
+
+    <div id="load" class="d-flex">
+      <div class="btn mrr-20 save cursor-pointer" @click="saveEditor"></div>
+      <label for="upload" class="btn mrr-20 upload cursor-pointer"></label>
       <input id="upload" class="file-input" type="file" accept="application/json" @change="load($event)"/>
-      <a class="btn mrr-20" :href="href" :download="download">Сохранить скрипт</a>
-    </div>-->
+      <a class="btn mrr-20 download cursor-pointer" :href="href" :download="download"></a>
+    </div>
     <div id='editor'></div>
     <div id='preview' :class="{hidden: preview.length === 0 }">
       <div class="d-flex">
@@ -29,7 +32,9 @@
         selectedId: 0,
         href: '',
         download: 'export.json',
-        state: this.$store.state
+        state: this.$store.state,
+        errorMsg: false,
+        msg: null
       }
     },
     computed: {
@@ -53,14 +58,57 @@
           fr.readAsText(file);
           fr.onload = async ()=> {
               const data = JSON.parse(fr.result);
-              console.log(data)
-              await this.state.editor.fromJSON(data);
+
+              await this.state.engine.abort();
+              this.$store.commit('toggleProcess', false);
+
+              const nodes = this.state.editor.nodes;
+              const len = nodes.length;
+              for(let i=0; i < len; i++){
+                this.state.editor.removeNode(nodes[0]);
+              }
+
+              const NODES = Object.values(data.nodes);
+            
+              for(let i=0; i < NODES.length; i++){
+                const node = NODES[i];
+                const component = this.state.editor.components.get( node.name );
+                const n = await component.createNode( node.data );
+                n.id = node.id;
+                n.position = node.position;
+                this.state.editor.addNode(n);
+              }
+
+              for(let i=0; i < NODES.length; i++){
+                const node = NODES[i];
+                const node1 = this.state.editor.nodes.find(n=> n.id === node.id);
+                Object.entries(node.inputs).forEach(([key, val])=>{
+                  if(val.connections.length){
+                    const conn = val.connections[0];
+                    const node2 = this.state.editor.nodes.find(n=> n.id === conn.node);
+                    this.state.editor.connect(node2.outputs.get( conn.output ), node1.inputs.get( key ));
+                  }
+                });
+              }
+
+              this.$store.commit('toggleProcess', true);
+              this.state.editor.trigger('process');
           }
         }
       },
       select(index){
         this.selectedId = index;
         this.drawMap();
+      },
+      async saveEditor(noMsg){
+        const json = await this.state.editor.toJSON();
+        const data = JSON.stringify(json, null, ' ');
+        const file = new Blob([data], {type: 'application/json'});
+        this.href = URL.createObjectURL(file);
+        
+        if(!noMsg || noMsg instanceof MouseEvent)
+          this.msg = 'Content saved!';
+          setTimeout(()=>{ this.msg = null }, 1000);
       },
       drawMap(){
         const layers = this.$store.state.preview[this.selectedId].layers;
@@ -98,23 +146,6 @@
 
       this.$store.commit('initRete');
 
-      // const confirmed = d3.csvParse(await this.$axios.$get('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'));
-      // const deaths = d3.csvParse(await this.$axios.$get('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv'));
-      // const recovered = d3.csvParse(await this.$axios.$get('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv'));
-      // const COVID = confirmed.map(c=>{
-      //   const name = `${c['Country/Region']}, ${c['Province/State']}`
-      //   const d = deaths.find(item=> `${item['Country/Region']}, ${item['Province/State']}` === name);
-      //   const r = recovered.find(item=> `${item['Country/Region']}, ${item['Province/State']}` === name);
-      //   return {
-      //     name: name,
-      //     lat: +c.Lat,
-      //     lon: +c.Long,
-      //     confirmed: Object.values(c).slice(4).reduce((a, b) => +a + +b, 0),
-      //     deaths: d ? Object.values(d).slice(4).reduce((a, b) => +a + +b, 0) : null,
-      //     recovered: r ? Object.values(r).slice(4).reduce((a, b) => +a + +b, 0) : null
-      //   }
-      // });
-      // state.data['COVID'] = COVID;
       this.state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
       this.state.data['branches.json'] = await this.$axios.$get('/data/branches.json');
       const arcs = await this.$axios.$get('/data/arcs.json')
@@ -143,15 +174,27 @@
               }
           }
       });
-      this.state.editor.on('connectioncreated connectionremoved nodecreated noderemoved nodetranslated', async ()=>{
-        const data = JSON.stringify(await this.state.editor.toJSON(), null, ' ');
-        const file = new Blob([data], {type: 'application/json'});
-        this.href = URL.createObjectURL(file);
+      this.saveEditor(true);
+
+      document.addEventListener('keydown', async (e)=>{
+        if(e.ctrlKey && e.key.toLocaleLowerCase() === 's' && this){
+          e.preventDefault();
+          this.saveEditor();
+        }
       });
     }
   }
 </script>
 <style>
+  .download:after{
+    content: url(~assets/download.svg);
+  }
+  .save:after{
+    content: url(~assets/save.svg);
+  }
+  .upload:after{
+    content: url(~assets/upload.svg);
+  }
   #load{
     position: fixed;
     top: 0; left: 0;

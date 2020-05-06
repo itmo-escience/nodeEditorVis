@@ -110,3 +110,26 @@ a{
   text-decoration: none;
   color: #d5d6d6;
 }
+
+#save{
+  position: fixed;
+  top: -50px; left: calc(50% - 100px);
+  background: rgba(19, 164, 142, 0.58);
+  border-radius: 4px;
+  padding: 10px 68px;
+  color: #fff;
+  z-index: 100;
+  display: block;
+}
+#save.red{
+  background: rgba(240, 52, 52, 1);
+}
+#save.active{
+    animation: one 6s;
+}
+@keyframes one {
+    0% { top: 0px; }   
+    10% { top: 10px; }
+    90% { top: 10px; }
+    100% { top: -50px; }
+}

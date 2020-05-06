@@ -40,9 +40,10 @@ export default{
     this.color = this.getData(this.ikey);
   },
   mounted(){
-      this.putData(this.ikey, this.color);
-      this.emitter.trigger('process');
-      this.emitter.on('nodetranslate', ()=>!this.freez);
+    this.color = this.getData(this.ikey) || this.color;
+    this.putData(this.ikey, this.color);
+    this.emitter.trigger('process');
+    this.emitter.on('nodetranslate', ()=>!this.freez);
   }
 }
 </script>

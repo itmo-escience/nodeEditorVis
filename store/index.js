@@ -37,6 +37,7 @@ const store = () => new Vuex.Store({
     ids: {
         maps: 0
     },
+    process: true,
     data: {},
     copiedNode: null,
     options: ['', 'branches.json', 'cars.csv', 'arcs.json', /*'COVID'*/],
@@ -48,6 +49,9 @@ const store = () => new Vuex.Store({
     polygonShapes: ['extrude', 'fill', 'line'],
   },
   mutations: {
+    toggleProcess(state, process){
+        state.process = process;
+    },
     initRete(state){
         const numSocket = new Rete.Socket('Number');
         const objSocket = new Rete.Socket('Object');
@@ -1083,12 +1087,12 @@ const store = () => new Vuex.Store({
         });
 
         editor.on('process connectioncreated connectionremoved nodecreated', async()=>{
-            await engine.abort();
-            await engine.process( editor.toJSON() )
-            
+            if(state.process)
+                await engine.abort();
+                await engine.process( editor.toJSON() )
         });
         editor.on('noderemove',(node)=>{
-            if(node.data.preview) state.preview = false;
+            if(state.process) if(node.data.preview) state.preview = false;
         })
 
         document.addEventListener('keydown', async function (e){
