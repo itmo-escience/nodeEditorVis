@@ -1045,20 +1045,20 @@ const store = () => new Vuex.Store({
 
         editor.use(VueRenderPlugin)
         editor.use(ConnectionPlugin)
-        editor.use(ContextMenuPlugin,{
-            searchBar: true,
-            delay: 100,
-            allocate(component) {
-                return component.path;
-            },
-            rename(component) {
-                return component.name;
-            },
-            nodeItems: {
-                'Delete': false,
-                'Clone': false
-            },
-        });
+        // editor.use(ContextMenuPlugin,{
+        //     searchBar: true,
+        //     delay: 100,
+        //     allocate(component) {
+        //         return component.path;
+        //     },
+        //     rename(component) {
+        //         return component.name;
+        //     },
+        //     nodeItems: {
+        //         'Delete': false,
+        //         'Clone': false
+        //     },
+        // });
 
         var engine = new Rete.Engine('demo@0.1.0')
 

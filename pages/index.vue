@@ -1,7 +1,10 @@
 <template>
   <div>
     <div id="save" :class="{'active': msg, 'red': errorMsg}">{{ msg }}</div>
-
+    <div v-if="showMenu" class="context-menu" :style="{left: menu[0]+'px', top: menu[1]+'px'}">
+      <!--<input type="textarea" @keyup="search"/>-->
+      <div v-for="(component, index) in components" :key="index" class="context-menu-item" :class="{'has-children': component.children}" @click="createNode(component)">{{ component.name }}</div>
+    </div>
     <div id="load" class="d-flex">
       <div class="btn mrr-20 save cursor-pointer" @click="saveEditor"></div>
       <label for="upload" class="btn mrr-20 upload cursor-pointer"></label>
@@ -34,12 +37,32 @@
         download: 'export.json',
         state: this.$store.state,
         errorMsg: false,
-        msg: null
+        msg: null,
+        showMenu: false,
+        menu: [0,0]
       }
     },
     computed: {
       preview(){
         return this.$store.state.preview
+      },
+      components(){
+        const menu = [];
+        const components = [...this.$store.state.editor.components.values()];
+        components.forEach(comp=>{
+          if(!comp.path) return
+          if(!comp.path.length){
+            menu.push({name: comp.name});
+          }else{
+            const item = menu.find(d=>d.name === comp.path[0]);
+            if(item){
+              item.children.push({name: comp.name})
+            }else{
+              menu.push({name: comp.path[0], children: []})
+            }
+          }
+        });
+        return menu
       }
     },
     watch:{
@@ -51,6 +74,18 @@
       }
     },
     methods:{
+      async createNode(comp){
+        if(!comp.children){
+          const component = this.state.editor.components.get( comp.name );
+          const node = await component.createNode();
+          node.position = this.menu;
+          this.state.editor.addNode(node);
+          this.showMenu = false;
+        }
+      },
+      search(e){
+        console.log(e.target.value)
+      },
       load(e){
         let file = e.target.files[0];
         if(file){
@@ -182,6 +217,17 @@
           this.saveEditor();
         }
       });
+      this.state.editor.on('contextmenu',({ e, view, node })=>{
+        e.preventDefault();
+        // console.log(e, view, node)
+        if(!node){
+          this.showMenu = true;
+          this.menu = [e.clientX, e.clientY];
+        }
+      });
+      this.state.editor.on('click',()=>{
+        this.showMenu = false;
+      });
     }
   }
 </script>
@@ -242,4 +288,11 @@
   .logo:after{
     content: url(~assets/logo.svg);
   }
+  /*.context-menu{
+    position: fixed;
+    z-index: 3;
+    background: #292929;
+    padding: 10px;
+    width: 120px;
+  }*/
 </style>
