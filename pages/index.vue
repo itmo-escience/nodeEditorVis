@@ -1,10 +1,18 @@
 <template>
   <div>
     <div id="save" :class="{'active': msg, 'red': errorMsg}">{{ msg }}</div>
+
     <div v-if="showMenu" class="context-menu" :style="{left: menu[0]+'px', top: menu[1]+'px'}">
-      <!--<input type="textarea" @keyup="search"/>-->
-      <div v-for="(component, index) in components" :key="index" class="context-menu-item" :class="{'has-children': component.children}" @click="createNode(component)">{{ component.name }}</div>
+      <input type="textarea" ref="search" class="search" v-model="searched"/>
+      <div v-for="(component, index) in components" :key="index" class="context-menu-item" :class="{'has-children': component.children}" 
+        @click="createNode(component)" @mouseover="openSideMenu(component, true)" @mouseout="openSideMenu(component, false)">
+        <div v-if="component.children" class="context-menu child" :class="{hidden: hoveredComp != component.name}">
+          <div v-for="child in component.children" :key="child.name" class="context-menu-item" @click="createNode(child)">{{ child.name }}</div>
+        </div>
+        {{ component.name }}
+      </div>
     </div>
+
     <div id="load" class="d-flex">
       <div class="btn mrr-20 save cursor-pointer" @click="saveEditor"></div>
       <label for="upload" class="btn mrr-20 upload cursor-pointer"></label>
@@ -39,7 +47,9 @@
         errorMsg: false,
         msg: null,
         showMenu: false,
-        menu: [0,0]
+        menu: [0,0],
+        hoveredComp: null,
+        searched: null
       }
     },
     computed: {
@@ -49,19 +59,25 @@
       components(){
         const menu = [];
         const components = [...this.$store.state.editor.components.values()];
-        components.forEach(comp=>{
-          if(!comp.path) return
-          if(!comp.path.length){
-            menu.push({name: comp.name});
-          }else{
-            const item = menu.find(d=>d.name === comp.path[0]);
-            if(item){
-              item.children.push({name: comp.name})
+        
+          components.forEach(comp=>{
+            if(!comp.path) return
+            if(!this.searched){
+              if(!comp.path.length){
+                menu.push({name: comp.name});
+              }else{
+                const item = menu.find(d=>d.name === comp.path[0]);
+                if(item){
+                  item.children.push({name: comp.name})
+                }else{
+                  menu.push({name: comp.path[0], children: []})
+                }
+              }
             }else{
-              menu.push({name: comp.path[0], children: []})
+              if(comp.name.toLowerCase().includes( this.searched.toLowerCase() )) menu.push({ name: comp.name });
             }
-          }
-        });
+          });
+
         return menu
       }
     },
@@ -74,6 +90,10 @@
       }
     },
     methods:{
+      openSideMenu(component, open){
+        if(component.children && open) this.hoveredComp = component.name;
+        if(!open) this.hoveredComp = null;
+      },
       async createNode(comp){
         if(!comp.children){
           const component = this.state.editor.components.get( comp.name );
@@ -82,9 +102,6 @@
           this.state.editor.addNode(node);
           this.showMenu = false;
         }
-      },
-      search(e){
-        console.log(e.target.value)
       },
       load(e){
         let file = e.target.files[0];
@@ -223,6 +240,8 @@
         if(!node){
           this.showMenu = true;
           this.menu = [e.clientX, e.clientY];
+          this.searched = null;
+          this.$nextTick(()=> this.$refs.search.focus() )
         }
       });
       this.state.editor.on('click',()=>{
