@@ -63,6 +63,9 @@ export default{
                 id: this.$refs.map,
                 map: map,
             });
+
+            this.node.data.update = true;
+            this.updateMap();
         },
         async addLayer(){
             const component = this.editor.components.get('Map');
@@ -106,14 +109,12 @@ export default{
     mounted(){
         this.$nextTick(()=>{
             this.initScene();
-            this.node.data.update = true;
-            this.updateMap(); 
         });
 
         this.editor.on('noderemove', node=>{
             if(node.id === this.node.id) this.freez = false;
         });
-        this.editor.on('zoom nodetranslate', ()=> !this.freez );
+        this.editor.on('zoom nodetranslate', ()=> !this.freez );        
     },
     updated(){
         if(this.name.endsWith('undefined')) this.name = this.node.name + this.node.data.id;
@@ -138,7 +139,6 @@ export default{
     }
     .map-container.hidden{ 
         visibility: hidden;
-        height: 50px;
     }
 
     .add{
