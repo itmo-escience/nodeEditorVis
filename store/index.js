@@ -327,7 +327,7 @@ const store = () => new Vuex.Store({
                     outputs.geom = node.data.data.features.map(f=> f.geometry);
                 }else{
                    for(let key in node.data.data[0]){
-                        outputs[key] = node.data.data.map(d=>d[key]);
+                        outputs[key] = node.data.data.map(d=> !isNaN(+d[key]) ? +d[key] : d[key] );
                     } 
                 }
             }
