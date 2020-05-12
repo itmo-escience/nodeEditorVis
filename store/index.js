@@ -17,6 +17,7 @@ import VueFileLoadControl from '~/components/controls/VueFileLoadControl'
 import VueRampControl from '~/components/controls/VueRampControl'
 import VueTwoColorControl from '~/components/controls/VueTwoColorControl'
 import VueTwoRangeControl from '~/components/controls/VueTwoRangeControl'
+import VueLoadControl from '~/components/controls/VueLoadControl.vue'
 
 import ChartNode from '~/components/nodes/ChartNode'
 import FieldsNode from '~/components/nodes/FieldsNode'
@@ -135,9 +136,13 @@ const store = () => new Vuex.Store({
                 this.component = VueStrControl;
                 this.props = { emitter, ikey: key, placeholder };
             }
-
-            setValue(val) {
-                this.vueContext.value = val;
+        }
+        class LoadControl extends Rete.Control {
+            constructor(emitter, key, placeholder) {
+                super(key);
+                this.render = 'vue';
+                this.component = VueLoadControl;
+                this.props = { emitter, ikey: key, placeholder };
             }
         }
         class SelectControl extends Rete.Control {
@@ -377,11 +382,13 @@ const store = () => new Vuex.Store({
                 this.path = ['Data']
             }
             builder(node){
-                node.addControl(new StrControl(this.editor, 'url', 'data url'));
+                node.addControl(new LoadControl(this.editor, 'url', 'data url'));
             }
             async worker(node){
                 if(node.data.url){
-                    const url = node.data.url;
+                    let url = node.data.url;
+                    if(!(url.endsWith('.csv') || url.endsWith('.json') || url.endsWith('.geojson'))) return;
+                    url = url.startsWith('https') ? url : 'https://' + url;
                     const result = await d3.text(url);
                     const data = url.endsWith('.csv') ? await d3.csvParse(result) : JSON.parse(result);
                     const name = url.split('/').pop();
@@ -610,7 +617,7 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-        class PointLayerComponent extends Rete.Component {
+        class PointLayerComponent extends Rete.Component {  
             constructor(){
                 super('Point Layer')
                 this.path = ['Layers']
