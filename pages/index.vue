@@ -70,7 +70,7 @@
                 if(item){
                   item.children.push({name: comp.name})
                 }else{
-                  menu.push({name: comp.path[0], children: []})
+                  menu.push({name: comp.path[0], children: [{name: comp.name}]})
                 }
               }
             }else{
@@ -236,7 +236,6 @@
       });
       this.state.editor.on('contextmenu',({ e, view, node })=>{
         e.preventDefault();
-        // console.log(e, view, node)
         if(!node){
           this.showMenu = true;
           this.menu = [e.clientX, e.clientY];
