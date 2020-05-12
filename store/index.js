@@ -65,9 +65,12 @@ const store = () => new Vuex.Store({
         const numArrSocket = new Rete.Socket('Number Array');
         const lineShapesSocket = new Rete.Socket('Line Shapes');
         const pointShapesSocket = new Rete.Socket('Point Shapes');
-        const geometrySocket = new Rete.Socket('Geometry');
         const heatMapSocket = new Rete.Socket('HeatMap');
-        const gridSocket = new Rete.Socket('Grid')
+        const gridSocket = new Rete.Socket('Grid');
+
+        const pointGeometrySocket = new Rete.Socket('Point Geometry');
+        const lineGeometrySocket = new Rete.Socket('Line Geometry');
+        const polygonGeometrySocket = new Rete.Socket('Polygon Geometry');
 
         class FileLoadControl extends Rete.Control {
             constructor(emitter, key, name){
@@ -310,12 +313,14 @@ const store = () => new Vuex.Store({
             builder(node){
                 if(node.data.data.type === 'FeatureCollection'){
                     const props = node.data.data.features[0].properties;
-                    const geometry = node.data.data.features[0].geometry;
+                    let socket;
                     for(let key in props){
-                        let socket = isNaN(+ props[key]) ? strArrSocket : numArrSocket;
+                        socket = isNaN(+ props[key]) ? strArrSocket : numArrSocket;
                         node.addOutput(new Rete.Output(key, key, socket));
                     }
-                    node.addOutput(new Rete.Output('geom', 'Geometry', geometrySocket));
+                    const geometry = node.data.data.features[0].geometry.type;
+                    socket = geometry === 'Point' ? pointGeometrySocket : geometry === 'LineString' ? lineGeometrySocket : polygonGeometrySocket;
+                    node.addOutput(new Rete.Output('geom', 'Geometry', socket));
                 }else{
                     for(let key in node.data.data[0]){
                         let socket = isNaN(+ node.data.data[0][key]) ? strArrSocket : numArrSocket;
@@ -401,7 +406,6 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-
         class ColorRangeComponent extends Rete.Component {
             constructor(){
                 super('Color Range')
@@ -629,7 +633,7 @@ const store = () => new Vuex.Store({
                     .addControl(new SelectControl(this.editor, 'shape', state.shapes))
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
-                    .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
+                    .addInput(new Rete.Input('geometry', 'Geometry', pointGeometrySocket))
                     .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
                     .addInput(new Rete.Input('colors', 'Color', colorSocket))
                     .addInput(new Rete.Input('size','Size', sizeSocket))
@@ -695,7 +699,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('x1','X1', numArrSocket))
                     .addInput(new Rete.Input('y','Y', numArrSocket))
                     .addInput(new Rete.Input('y1','Y1', numArrSocket))
-                    .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
+                    .addInput(new Rete.Input('geometry', 'Geometry', lineGeometrySocket))
                     .addControl(new SelectControl(this.editor, 'shape', state.lineShapes))
                     .addInput(new Rete.Input('colors', 'Color', colorSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
@@ -761,7 +765,7 @@ const store = () => new Vuex.Store({
                     .addControl(new SelectControl(this.editor, 'shape', state.polygonShapes))
                     .addInput(new Rete.Input('colors', 'Colors', colorSocket))
                     .addInput(sizeInput)
-                    .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
+                    .addInput(new Rete.Input('geometry', 'Geometry', polygonGeometrySocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
             worker(node, inputs, outputs){
@@ -799,7 +803,7 @@ const store = () => new Vuex.Store({
                 node
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
-                    .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
+                    .addInput(new Rete.Input('geometry', 'Geometry', pointGeometrySocket))
                     .addControl(new SelectControl(this.editor, 'shape', state.shapes))
                     .addInput(new Rete.Input('grid', 'Grid', gridSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
@@ -869,7 +873,7 @@ const store = () => new Vuex.Store({
                 node
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
-                    .addInput(new Rete.Input('geometry', 'Geometry', geometrySocket))
+                    .addInput(new Rete.Input('geometry', 'Geometry', pointGeometrySocket))
                     .addInput(new Rete.Input('style', 'Heatmap', heatMapSocket))
                     .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
             }
