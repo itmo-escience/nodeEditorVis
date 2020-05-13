@@ -17,23 +17,41 @@
                 </div>
                 <div class="add" @click="addLayer">Add</div>   
             </div>
-            <div class="map-container" :class="{hidden: node.data.preview}" ref="map" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)"></div>
+            <div class="map-container" :class="{hidden: node.data.preview}" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
+                <div class="mapbox" ref="map"></div>
+                <canvas class="deck-canvas" ref="canvas"></canvas>
+            </div> 
+            <!-- <div class="map-container" ></div>-->
         </div>
     </div>
 </template>
 <script>
 import VueRenderPlugin from 'rete-vue-render-plugin'
 
-import { Scene } from '@antv/l7';
-import { Mapbox } from '@antv/l7-maps';
-import { PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@antv/l7';
+// import { Scene } from '@antv/l7';
+// import { Mapbox } from '@antv/l7-maps';
+// import { PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@antv/l7';
+
+import { Deck } from "@deck.gl/core";
+import mapboxgl from "mapbox-gl";
+import {GeoJsonLayer} from '@deck.gl/layers';
+
+import {scaleLinear, min, max} from "d3"
 
 export default{
     mixins: [VueRenderPlugin.mixin],
     components:{ Socket: VueRenderPlugin.Socket },
     data(){
         return {
-            scene: null,
+            deck: null,
+            viewState: {
+                latitude: 59.92,
+                longitude: 30.29,
+                zoom: 8,
+                pitch: 0,
+                bearing: 0
+            },
+            // scene: null,
             freez: false,
             name: this.node.data.name || (this.node.name + this.node.data.id)
         }
@@ -52,21 +70,6 @@ export default{
         freezEditor(freez){
             this.freez = freez;
         },
-        initScene(){
-            const map = new Mapbox({
-                style: 'dark',
-                pitch: 3,
-                center: [30.29, 59.92],
-                zoom: 9,
-            });
-            this.scene = new Scene({
-                id: this.$refs.map,
-                map: map,
-            });
-
-            this.node.data.update = true;
-            this.updateMap();
-        },
         async addLayer(){
             const component = this.editor.components.get('Map');
             const inputs = this.inputs();
@@ -84,31 +87,88 @@ export default{
             });
             this.editor.removeNode(this.node);
         },
+        strToRGBA(rgba){
+            return rgba.replace(')','').split('(').slice(1)[0].split(',').map((d,i)=>i===3?+d*250:+d);
+        },
         updateMap(){
-            const options = { autoFit: true };
             if(this.node.data.update){
                 const layers = this.node.data.layers;
-                if(layers && this.scene){
-                    this.scene.getLayers().forEach(layer=>{
-                        this.scene.removeLayer(layer);
-                    });
+                if(layers){
+                    const ls = [];
                     layers.forEach(l=>{
-                        const layer = l.type === 'point' ? new PointLayer(options) : l.type === 'line' ? new LineLayer(options) : l.type === 'polygon' ? new PolygonLayer(options) : new HeatmapLayer(options);
-                        layer.source(l.data, {...l.parse});
-                        if(l.color) layer.color(...l.color);
-                        if(l.shape) layer.shape(...l.shape);
-                        if(l.size) layer.size(...l.size);
-                        if(l.style) layer.style(...l.style);
-                        this.scene.addLayer(layer)
+                        const colors = l.data.features.map(d=>d.properties.color);
+                        const color = l.color.length ? l.color[1] ? l.color[1].length ? scaleLinear([min(colors), max(colors)], l.color[1]) : null : null : null
+                        // const getColor = d => l.color.length ? l.color[1] ? typeof l.color[1] != 'function' ? this.strToRGBA( color(d.properties.color) ) : this.strToRGBA((l.color[1])(d.properties.color)) : this.strToRGBA(...l.color) : [160, 160, 180, 250];
+                        const getColor = d => {
+                            if(l.color.length){
+                                if(l.color[1]){
+                                    if(typeof l.color[1] != 'function'){
+                                        return this.strToRGBA( color(d.properties.color) )
+                                    }else{
+                                        return this.strToRGBA((l.color[1])(d.properties.color))
+                                    } 
+                                }else{
+                                    return this.strToRGBA(...l.color)
+                                }
+                            }
+                            return [160, 160, 180, 250]};
+                        
+                        const layer = new GeoJsonLayer({
+                            id: 'scatterplot-layer',
+                            data: l.data,
+                            pickable: true,
+                            stroked: false,
+                            filled: true,
+                            extruded: true,
+                            lineWidthScale: 20,
+                            lineWidthMinPixels: 2,
+                            getFillColor: getColor,
+                            getLineColor: getColor,
+                            getRadius: 100,
+                            getLineWidth: 1,
+                            getElevation: 30,
+                        });
+                        
+                        ls.push(layer);
                     });
+                    
+                    this.deck.setProps({ layers: ls });
                 }
                 this.node.data.update = false;
-            }            
+            } 
+
         }
     },
     mounted(){
         this.$nextTick(()=>{
-            this.initScene();
+            const map = new mapboxgl.Map({
+                accessToken: 'pk.eyJ1Ijoia2FwYzNkIiwiYSI6ImNpbGpodG82czAwMmlubmtxamdsOHF0a3AifQ.xCbMUsy_a_0A9cd4GvjXKQ',
+                container: this.$refs.map,
+                interactive: false,
+                style: 'mapbox://styles/mapbox/dark-v9',
+                center: [this.viewState.longitude, this.viewState.latitude],
+                zoom: this.viewState.zoom,
+                pitch: this.viewState.pitch,
+                bearing: this.viewState.bearing,
+            });
+            this.deck = new Deck({
+                canvas: this.$refs.canvas,
+                width: 500,
+                height: 500,
+                initialViewState: this.viewState,
+                controller: true,
+                onViewStateChange: ({ viewState }) => {
+                    map.jumpTo({
+                        center: [viewState.longitude, viewState.latitude],
+                        zoom: viewState.zoom,
+                        bearing: viewState.bearing,
+                        pitch: viewState.pitch,
+                    });
+                }
+            });
+
+            this.node.data.update = true;
+            this.updateMap();
         });
 
         this.editor.on('noderemove', node=>{
@@ -127,15 +187,11 @@ export default{
         color:#e3c000;
         border-color: #e3c000 !important;
     }
-    .node-body .map-container .l7-scene canvas{
-        width: 500px !important;
-        height: 500px !important;
-    }
     .map-container {
+        position: relative;
         width: 500px;
         height: 500px;
         margin: 15px;
-        position: relative;
     }
     .map-container.hidden{ 
         visibility: hidden;

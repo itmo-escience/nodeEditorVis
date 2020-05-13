@@ -24,7 +24,11 @@
       <div class="d-flex">
         <div v-for="(p, index) in preview" :key="index" class="preview-item fg-1" :class="{selected: index === selectedId}" @click="select(index)">{{ p.name }}</div>
       </div>
-      <div id="preview-map" ref="preview-map"></div>
+      <!-- <div id="preview-map" ref="preview-map"></div>-->
+      <div class="container-preview">
+          <div class="mapbox" ref="map"></div>
+          <canvas class="deck-canvas" ref="canvas"></canvas>
+      </div> 
     </div>
     <div class="logo"></div>
   </div>
@@ -32,14 +36,26 @@
 <script>
   import * as d3 from "d3";
 
-  import { Scene } from '@antv/l7';
-  import { Mapbox } from '@antv/l7-maps';
-  import { PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@antv/l7';
+  // import { Scene } from '@antv/l7';
+  // import { Mapbox } from '@antv/l7-maps';
+  // import { PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@antv/l7';
+
+  import { Deck } from "@deck.gl/core";
+  import mapboxgl from "mapbox-gl";
+  import {GeoJsonLayer} from '@deck.gl/layers';
 
   export default {
     data(){
       return {
-        scene: null,
+        deck: null,
+        viewState: {
+            latitude: 59.92,
+            longitude: 30.29,
+            zoom: 9,
+            pitch: 0,
+            bearing: 0
+        },
+        // scene: null,
         selectedId: 0,
         href: '',
         download: 'export.json',
@@ -164,36 +180,87 @@
       },
       drawMap(){
         const layers = this.$store.state.preview[this.selectedId].layers;
-        const options = { autoFit: true };
-        if(layers && this.scene){
-          this.scene.getLayers().forEach(layer=>{
-              this.scene.removeLayer(layer);
-          });
-          layers.forEach(l=>{
-              if(l){
-                  const layer = l.type === 'point' ? new PointLayer(options) : l.type === 'line' ? new LineLayer(options) : l.type === 'polygon' ? new PolygonLayer(options) : new HeatmapLayer(options);
-                  layer.source(l.data, {...l.parse});
-                  if(l.color) layer.color(...l.color);
-                  if(l.shape) layer.shape(...l.shape);
-                  if(l.size) layer.size(...l.size);
-                  if(l.style) layer.style(...l.style);
-                  this.scene.addLayer(layer)
-              };
-          });
+        if(layers){
+            const ls = [];
+            layers.forEach(l=>{
+                const layer = new GeoJsonLayer({
+                    id: 'scatterplot-layer',
+                    data: l.data,
+                    pickable: true,
+                    stroked: false,
+                    filled: true,
+                    extruded: true,
+                    lineWidthScale: 20,
+                    lineWidthMinPixels: 2,
+                    getFillColor: [160, 160, 180, 200],
+                    getLineColor: [160, 160, 180, 200],
+                    getRadius: 100,
+                    getLineWidth: 1,
+                    getElevation: 30,
+                });
+
+                ls.push(layer);
+            });
+            
+            this.deck.setProps({ ls });
+            console.log( this.deck )
         }
+        
+        // const options = { autoFit: true };
+        // if(layers && this.scene){
+        //   this.scene.getLayers().forEach(layer=>{
+        //       this.scene.removeLayer(layer);
+        //   });
+        //   layers.forEach(l=>{
+        //       if(l){
+        //           const layer = l.type === 'point' ? new PointLayer(options) : l.type === 'line' ? new LineLayer(options) : l.type === 'polygon' ? new PolygonLayer(options) : new HeatmapLayer(options);
+        //           layer.source(l.data, {...l.parse});
+        //           if(l.color) layer.color(...l.color);
+        //           if(l.shape) layer.shape(...l.shape);
+        //           if(l.size) layer.size(...l.size);
+        //           if(l.style) layer.style(...l.style);
+        //           this.scene.addLayer(layer)
+        //       };
+        //   });
+        // }
       }
     },
     async mounted(){
       this.$nextTick(()=>{
-        this.scene = new Scene({
-            id: this.$refs['preview-map'],
-            map: new Mapbox({
-                style: 'dark',
-                pitch: 3,
-                center: [30.29, 59.92],
-                zoom: 9,
-            }),
-        });
+        // this.scene = new Scene({
+        //     id: this.$refs['preview-map'],
+        //     map: new Mapbox({
+        //         style: 'dark',
+        //         pitch: 3,
+        //         center: [30.29, 59.92],
+        //         zoom: 9,
+        //     }),
+        // });
+        const map = new mapboxgl.Map({
+              accessToken: 'pk.eyJ1Ijoia2FwYzNkIiwiYSI6ImNpbGpodG82czAwMmlubmtxamdsOHF0a3AifQ.xCbMUsy_a_0A9cd4GvjXKQ',
+              container: this.$refs.map,
+              interactive: false,
+              style: 'mapbox://styles/mapbox/dark-v9',
+              center: [this.viewState.longitude, this.viewState.latitude],
+              zoom: this.viewState.zoom,
+              pitch: this.viewState.pitch,
+              bearing: this.viewState.bearing,
+          });
+          this.deck = new Deck({
+              canvas: this.$refs.canvas,
+              width: '100%',
+              height: '100%',
+              initialViewState: this.viewState,
+              controller: true,
+              onViewStateChange: ({ viewState }) => {
+                  map.jumpTo({
+                      center: [viewState.longitude, viewState.latitude],
+                      zoom: viewState.zoom,
+                      bearing: viewState.bearing,
+                      pitch: viewState.pitch,
+                  });
+              }
+          });
       });
 
       this.$store.commit('initRete');
@@ -292,11 +359,28 @@
     color: #e3c000;
   }
 
-  #preview-map{
+  .container-preview{
     width: 100%;
     height: 100%;
     position: relative;
   }
+  .map-preview {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #e5e9ec;
+      overflow: hidden;
+  }
+  .deck-preview {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+  }
+
   #preview.hidden{ visibility: hidden; }
   .logo{
     position: fixed;

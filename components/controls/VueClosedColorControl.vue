@@ -18,7 +18,8 @@ export default{
   props: ['emitter', 'ikey', 'node', 'getData', 'putData'],
   data(){
     return {
-      color: "#"+((1<<24)*Math.random()|0).toString(16),
+      color: `rgba(${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},1)`,
+      // color: "#"+((1<<24)*Math.random()|0).toString(16),
       opened: false,
       freez: false
     }
@@ -31,8 +32,8 @@ export default{
       this.freez=freez;
     },
     updateValue(color){
-      this.color = color.hex;
-      this.putData(this.ikey, color.hex)
+      this.color = `rgba(${Object.values(color.rgba).toString()})`;
+      this.putData(this.ikey, this.color)
       this.emitter.trigger('process');
     }
   },

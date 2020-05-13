@@ -17,7 +17,7 @@ export default{
     return{
       freez: false,
       opened: true,
-      color: "#000"
+      color: "rgba(0,0,0,250)"
     }
   },
   methods: {
@@ -28,8 +28,8 @@ export default{
       this.freez = freez;
     },
     updateValue(color){
-      this.color = color.hex;
-      this.putData(this.ikey, color.hex)
+      this.color = `rgba(${Object.values(color.rgba).toString()})`;
+      this.putData(this.ikey, this.color)
       this.emitter.trigger('process');
     }
   },

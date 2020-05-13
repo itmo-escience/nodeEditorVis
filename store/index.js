@@ -192,6 +192,23 @@ const store = () => new Vuex.Store({
                 outputs['str'] = node.data.str;
             }
         }
+        class ColorComponent extends Rete.Component {
+            constructor(){
+                super('Color')
+                this.data.component = BlankNode;
+                this.path = ['Color'];
+            }
+            builder(node){
+                node
+                    .addControl(new ColorControl(this.editor, 'color', node))
+                    .addOutput(new Rete.Output('color', 'Color', colorSocket));
+            }
+            worker(node, inputs, outputs){
+                if(node.data.color){
+                   outputs['color'] = {data: null, params: [node.data.color]}; 
+                }
+            }
+        }
         class ColorCategoryComponent extends Rete.Component {
             constructor(){
                 super('Color Category')
@@ -261,7 +278,7 @@ const store = () => new Vuex.Store({
                     delete data.values;
 
                     outputs.colorMap = data;
-
+                    
                     outputs.colors = {
                         data: values, 
                         params: ['color', (val)=> data['field'+val] ]
@@ -269,20 +286,28 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-        class ColorComponent extends Rete.Component {
+        class ColorRangeComponent extends Rete.Component {
             constructor(){
-                super('Color')
-                this.data.component = BlankNode;
+                super('Color Range')
+                this.data.component = GridNode;
                 this.path = ['Color'];
             }
-            builder(node){
+            build(node){
                 node
-                    .addControl(new ColorControl(this.editor, 'color', node))
+                    .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
+                    .addControl(new TwoColorControl(this.editor, 'colors', node))
+                    .addControl(new TwoRangeControl(this.editor, 'range', [0, 1], node))
                     .addOutput(new Rete.Output('color', 'Color', colorSocket));
             }
-            worker(node, inputs, outputs){
-                if(node.data.color){
-                   outputs['color'] = {data: null, params: [node.data.color]}; 
+            async worker(node, inputs, outputs){
+                const range = node.data.range;
+                const nums = inputs.nums[0];
+                const diff = Math.max(...nums) - Math.min(...nums);
+                const min = Math.min(...nums) + (diff*range[0]);
+                const max = Math.min(...nums) + (diff*range[1]);
+                outputs.color = {
+                    data: nums.map(d=> d > max ? max : d < min ? min : d ), 
+                    params: ['color', node.data.colors]
                 }
             }
         }
@@ -403,31 +428,6 @@ const store = () => new Vuex.Store({
                     parse.position = node.position;
                     editor.addNode(parse);
                     this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
-                }
-            }
-        }
-        class ColorRangeComponent extends Rete.Component {
-            constructor(){
-                super('Color Range')
-                this.data.component = GridNode;
-                this.path = ['Color'];
-            }
-            build(node){
-                node
-                    .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
-                    .addControl(new TwoColorControl(this.editor, 'colors', node))
-                    .addControl(new TwoRangeControl(this.editor, 'range', [0, 1], node))
-                    .addOutput(new Rete.Output('color', 'Color', colorSocket));
-            }
-            async worker(node, inputs, outputs){
-                const range = node.data.range;
-                const nums = inputs.nums[0];
-                const diff = Math.max(...nums) - Math.min(...nums);
-                const min = Math.min(...nums) + (diff*range[0]);
-                const max = Math.min(...nums) + (diff*range[1]);
-                outputs.color = {
-                    data: nums.map(d=> d > max ? max : d < min ? min : d ), 
-                    params: ['color', node.data.colors]
                 }
             }
         }
@@ -645,15 +645,20 @@ const store = () => new Vuex.Store({
                     if( (inputs.lat.length && inputs.lon.length) && 
                         inputs.lat[0].length === inputs.lon[0].length )
                     {
-                        for(let i=0; i<inputs.lat[0].length; i++){
-                            let obj = {
-                                x: inputs.lon[0][i], 
-                                y: inputs.lat[0][i],
-                                ...(inputs.size.length ? inputs.size[0].values.length ? {size: inputs.size[0].values[i]} : {} : {}),
-                                ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
-                                ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
-                            }
-                            data.push(obj);
+                        data = {
+                            type: "FeatureCollection",
+                            features: inputs.lat[0].map((g, i)=>({ 
+                                type: "Feature",
+                                properties: {
+                                    ...(inputs.size.length ? inputs.size[0].values.length ? {size: inputs.size[0].values[i]} : {} : {}),
+                                    ...(inputs.colors.length  ? inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {} : {}),
+                                    ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
+                                },
+                                geometry: {
+                                    type: "Point",
+                                    coordinates: [inputs.lon[0][i], inputs.lat[0][i]]
+                                }
+                            }))
                         }
                     }else if(inputs.geometry.length){
                         data = {
@@ -679,7 +684,7 @@ const store = () => new Vuex.Store({
                             x: 'x',
                             y: 'y'
                         }},
-                        color: inputs.colors.length ? inputs.colors[0].params : null,
+                        color: inputs.colors.length ? inputs.colors[0].params : [],
                         shape: inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
                         size: inputs.size.length ? inputs.size[0].params : null
                     };
@@ -712,18 +717,23 @@ const store = () => new Vuex.Store({
                         (inputs.x[0].length === inputs.y[0].length) &&
                         (inputs.x[0].length === inputs.x1[0].length) &&
                         (inputs.x[0].length === inputs.y1[0].length) )
-                    {
-                        for(let i=0; i<inputs.x[0].length; i++){
-                            let obj = {
-                                x: inputs.x[0][i], 
-                                x1: inputs.x1[0][i], 
-                                y: inputs.y[0][i],
-                                y1: inputs.y1[0][i],
-                                ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
-                            }
-                            data.push(obj);
+                    {   
+                        data = {
+                            type: "FeatureCollection",
+                            features: inputs.x[0].map((g, i)=>({ 
+                                type: "Feature",
+                                properties: {
+                                    ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
+                                },
+                                geometry: {
+                                    type: "LineString",
+                                    coordinates: [
+                                        [inputs.x[0][i], inputs.y[0][i]],
+                                        [inputs.x1[0][i], inputs.y1[0][i]]
+                                    ]
+                                }
+                            }))
                         }
-                        
                     }else if(inputs.geometry.length){
                         data = {
                             type: "FeatureCollection",
@@ -778,7 +788,7 @@ const store = () => new Vuex.Store({
                                 ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                                 ...(inputs.sizes.length ? {size: inputs.sizes[0][i]} : {}), 
                             },
-                            geometry: g 
+                            geometry: g
                         }))
                     }
 

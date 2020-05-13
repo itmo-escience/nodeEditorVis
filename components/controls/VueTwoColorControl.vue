@@ -21,7 +21,11 @@ export default{
   props: ['emitter', 'ikey', 'node', 'getData', 'putData'],
   data(){
     return {
-      colors: ["#"+((1<<24)*Math.random()|0).toString(16), "#"+((1<<24)*Math.random()|0).toString(16)],
+      colors: [
+        `rgba(${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},1)`,
+        `rgba(${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},1)`
+      ],
+      // colors: ["#"+((1<<24)*Math.random()|0).toString(16), "#"+((1<<24)*Math.random()|0).toString(16)],
       opened: false,
       freez: false,
       index: 0,
@@ -37,7 +41,8 @@ export default{
       this.freez=freez;
     },
     updateValue(color, index){
-      this.colors[index] = color.hex;
+      // this.colors[index] = color.hex;
+      this.colors[index] = `rgba(${Object.values(color.rgba).toString()})`;
       this.render = !this.render;
       this.putData(this.ikey, this.colors)
       this.emitter.trigger('process');
