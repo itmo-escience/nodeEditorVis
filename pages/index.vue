@@ -24,7 +24,6 @@
       <div class="d-flex">
         <div v-for="(p, index) in preview" :key="index" class="preview-item fg-1" :class="{selected: index === selectedId}" @click="select(index)">{{ p.name }}</div>
       </div>
-      <!-- <div id="preview-map" ref="preview-map"></div>-->
       <div class="container-preview">
           <div class="mapbox" ref="map"></div>
           <canvas class="deck-canvas" ref="canvas"></canvas>
@@ -36,13 +35,10 @@
 <script>
   import * as d3 from "d3";
 
-  // import { Scene } from '@antv/l7';
-  // import { Mapbox } from '@antv/l7-maps';
-  // import { PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@antv/l7';
-
   import { Deck } from "@deck.gl/core";
   import mapboxgl from "mapbox-gl";
-  import {GeoJsonLayer} from '@deck.gl/layers';
+  import { GeoJsonLayer, ArcLayer } from '@deck.gl/layers';
+  import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers';
 
   export default {
     data(){
@@ -55,7 +51,6 @@
             pitch: 0,
             bearing: 0
         },
-        // scene: null,
         selectedId: 0,
         href: '',
         download: 'export.json',
@@ -65,7 +60,8 @@
         showMenu: false,
         menu: [0,0],
         hoveredComp: null,
-        searched: null
+        searched: null,
+        node: false
       }
     },
     computed: {
@@ -183,59 +179,70 @@
         if(layers){
             const ls = [];
             layers.forEach(l=>{
-                const layer = new GeoJsonLayer({
-                    id: 'scatterplot-layer',
-                    data: l.data,
-                    pickable: true,
-                    stroked: false,
-                    filled: true,
-                    extruded: true,
-                    lineWidthScale: 20,
-                    lineWidthMinPixels: 2,
-                    getFillColor: [160, 160, 180, 200],
-                    getLineColor: [160, 160, 180, 200],
-                    getRadius: 100,
-                    getLineWidth: 1,
-                    getElevation: 30,
-                });
+                const getColor = d => this.strToRGBA(l.color || d.properties.color);
+                const getRadius = d => l.radius || d.properties.radius;
+                const getWidth = d => l.width || d.properties.width;
+                const getHeight = d => l.height || d.properties.height;
+                const getWeight = d => l.weight || d.properties.weight;
 
+                let layer;
+                switch(l.type){
+                    case 'hexagon':
+                        layer = new HexagonLayer({
+                            data: l.data.features,
+                            getPosition: d => d.geometry.coordinates,
+                            extruded: true,
+                            elevationScale: 5,
+                            getElevationWeight: d => d.properties.elevation || 1,
+                            getColorWeight: d => d.properties.color || 1 
+                        });
+                        break
+                    case 'heatmap':
+                        layer = new HeatmapLayer({
+                            data: l.data.features,
+                            getPosition: d => d.geometry.coordinates,
+                            getWeight: getWeight,
+                            radiusPixels: l.radius || 30,
+                            intensity: l.intensity || 1,
+                            threshold: l.threshold || .2,
+                            colorRange: l.colorRange ? l.colorRange.map(d=>this.strToRGBA(d)) : [[160, 160, 180, 250], [10, 100, 100, 250]]
+                        });
+                        break
+                    case 'arc':
+                        layer = new ArcLayer({
+                            data: l.data.features,
+                            getSourcePosition: d => d.geometry.coordinates[0],
+                            getTargetPosition: d => d.geometry.coordinates[ d.geometry.coordinates.length -1 ],
+                            getSourceColor: getColor,
+                            getTargetColor: getColor,
+                            getWidth: getWidth,
+                        });
+                        break
+                    default:
+                        layer = new GeoJsonLayer({
+                            data: l.data,
+                            pickable: true,
+                            stroked: false,
+                            filled: true,
+                            extruded: !!l.extruded,
+                            lineWidthScale: 20,
+                            lineWidthMinPixels: 2,
+                            getFillColor: getColor,
+                            getLineColor: getColor,
+                            getRadius: getRadius,
+                            getLineWidth: 1,
+                            getElevation: getHeight,
+                        });
+                }
+                
                 ls.push(layer);
             });
-            
-            this.deck.setProps({ ls });
-            console.log( this.deck )
+            this.deck.setProps({ layers: ls });
         }
-        
-        // const options = { autoFit: true };
-        // if(layers && this.scene){
-        //   this.scene.getLayers().forEach(layer=>{
-        //       this.scene.removeLayer(layer);
-        //   });
-        //   layers.forEach(l=>{
-        //       if(l){
-        //           const layer = l.type === 'point' ? new PointLayer(options) : l.type === 'line' ? new LineLayer(options) : l.type === 'polygon' ? new PolygonLayer(options) : new HeatmapLayer(options);
-        //           layer.source(l.data, {...l.parse});
-        //           if(l.color) layer.color(...l.color);
-        //           if(l.shape) layer.shape(...l.shape);
-        //           if(l.size) layer.size(...l.size);
-        //           if(l.style) layer.style(...l.style);
-        //           this.scene.addLayer(layer)
-        //       };
-        //   });
-        // }
       }
     },
     async mounted(){
       this.$nextTick(()=>{
-        // this.scene = new Scene({
-        //     id: this.$refs['preview-map'],
-        //     map: new Mapbox({
-        //         style: 'dark',
-        //         pitch: 3,
-        //         center: [30.29, 59.92],
-        //         zoom: 9,
-        //     }),
-        // });
         const map = new mapboxgl.Map({
               accessToken: 'pk.eyJ1Ijoia2FwYzNkIiwiYSI6ImNpbGpodG82czAwMmlubmtxamdsOHF0a3AifQ.xCbMUsy_a_0A9cd4GvjXKQ',
               container: this.$refs.map,
@@ -303,6 +310,14 @@
       });
       this.state.editor.on('contextmenu',({ e, view, node })=>{
         e.preventDefault();
+        if(node){
+          this.node = true;
+          return
+        }
+        if(this.node){
+          this.node = false;
+          return
+        }
         if(!node){
           this.showMenu = true;
           this.menu = [e.clientX, e.clientY];

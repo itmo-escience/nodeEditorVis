@@ -60,7 +60,7 @@
   .dropdown-menu{
     position: absolute;
     width: 100%;
-    z-index: 1;
+    z-index: 3;
     border-radius: 0 0 4px 4px;
   }
   .dropdown-menu-item:hover{ color: #e3c000; }

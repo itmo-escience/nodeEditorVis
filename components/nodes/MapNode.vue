@@ -20,21 +20,17 @@
             <div class="map-container" :class="{hidden: node.data.preview}" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
                 <div class="mapbox" ref="map"></div>
                 <canvas class="deck-canvas" ref="canvas"></canvas>
-            </div> 
-            <!-- <div class="map-container" ></div>-->
+            </div>
         </div>
     </div>
 </template>
 <script>
 import VueRenderPlugin from 'rete-vue-render-plugin'
 
-// import { Scene } from '@antv/l7';
-// import { Mapbox } from '@antv/l7-maps';
-// import { PointLayer, LineLayer, PolygonLayer, HeatmapLayer } from '@antv/l7';
-
 import { Deck } from "@deck.gl/core";
 import mapboxgl from "mapbox-gl";
-import {GeoJsonLayer} from '@deck.gl/layers';
+import { GeoJsonLayer, ArcLayer } from '@deck.gl/layers';
+import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers';
 
 import {scaleLinear, min, max} from "d3"
 
@@ -51,7 +47,6 @@ export default{
                 pitch: 0,
                 bearing: 0
             },
-            // scene: null,
             freez: false,
             name: this.node.data.name || (this.node.name + this.node.data.id)
         }
@@ -96,42 +91,64 @@ export default{
                 if(layers){
                     const ls = [];
                     layers.forEach(l=>{
-                        const colors = l.data.features.map(d=>d.properties.color);
-                        const color = l.color.length ? l.color[1] ? l.color[1].length ? scaleLinear([min(colors), max(colors)], l.color[1]) : null : null : null
-                        // const getColor = d => l.color.length ? l.color[1] ? typeof l.color[1] != 'function' ? this.strToRGBA( color(d.properties.color) ) : this.strToRGBA((l.color[1])(d.properties.color)) : this.strToRGBA(...l.color) : [160, 160, 180, 250];
-                        const getColor = d => {
-                            if(l.color.length){
-                                if(l.color[1]){
-                                    if(typeof l.color[1] != 'function'){
-                                        return this.strToRGBA( color(d.properties.color) )
-                                    }else{
-                                        return this.strToRGBA((l.color[1])(d.properties.color))
-                                    } 
-                                }else{
-                                    return this.strToRGBA(...l.color)
-                                }
-                            }
-                            return [160, 160, 180, 250]};
-                        
-                        const layer = new GeoJsonLayer({
-                            id: 'scatterplot-layer',
-                            data: l.data,
-                            pickable: true,
-                            stroked: false,
-                            filled: true,
-                            extruded: true,
-                            lineWidthScale: 20,
-                            lineWidthMinPixels: 2,
-                            getFillColor: getColor,
-                            getLineColor: getColor,
-                            getRadius: 100,
-                            getLineWidth: 1,
-                            getElevation: 30,
-                        });
+                        const getColor = d => this.strToRGBA(l.color || d.properties.color);
+                        const getRadius = d => l.radius || d.properties.radius;
+                        const getWidth = d => l.width || d.properties.width;
+                        const getHeight = d => l.height || d.properties.height;
+                        const getWeight = d => l.weight || d.properties.weight;
+
+                        let layer;
+                        switch(l.type){
+                            case 'hexagon':
+                                layer = new HexagonLayer({
+                                    data: l.data.features,
+                                    getPosition: d => d.geometry.coordinates,
+                                    extruded: true,
+                                    elevationScale: 5,
+                                    getElevationWeight: d => d.properties.elevation || 1,
+                                    getColorWeight: d => d.properties.color || 1 
+                                });
+                                break
+                            case 'heatmap':
+                                layer = new HeatmapLayer({
+                                    data: l.data.features,
+                                    getPosition: d => d.geometry.coordinates,
+                                    getWeight: getWeight,
+                                    radiusPixels: l.radius || 30,
+                                    intensity: l.intensity || 1,
+                                    threshold: l.threshold || .2,
+                                    colorRange: l.colorRange ? l.colorRange.map(d=>this.strToRGBA(d)) : [[160, 160, 180, 250], [10, 100, 100, 250]]
+                                });
+                                break
+                            case 'arc':
+                                layer = new ArcLayer({
+                                    data: l.data.features,
+                                    getSourcePosition: d => d.geometry.coordinates[0],
+                                    getTargetPosition: d => d.geometry.coordinates[ d.geometry.coordinates.length -1 ],
+                                    getSourceColor: getColor,
+                                    getTargetColor: getColor,
+                                    getWidth: getWidth,
+                                });
+                                break
+                            default:
+                                layer = new GeoJsonLayer({
+                                    data: l.data,
+                                    pickable: true,
+                                    stroked: false,
+                                    filled: true,
+                                    extruded: !!l.extruded,
+                                    lineWidthScale: 20,
+                                    lineWidthMinPixels: 2,
+                                    getFillColor: getColor,
+                                    getLineColor: getColor,
+                                    getRadius: getRadius,
+                                    getLineWidth: 1,
+                                    getElevation: getHeight,
+                                });
+                        }
                         
                         ls.push(layer);
                     });
-                    
                     this.deck.setProps({ layers: ls });
                 }
                 this.node.data.update = false;

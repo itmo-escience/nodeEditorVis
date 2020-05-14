@@ -28,7 +28,7 @@
             index: null,
             opened: false,
             value: {
-                colors: ['#2E8AE6', '#a3377b'],
+                colors: ['rgba(160, 160, 180, 250)', 'rgba(10, 100, 100, 250)'],
                 positions: [ 0, .2, 1. ]
             }
           }
@@ -62,7 +62,7 @@
                     if(position < right && position > left){
                         if(!this.index){
                             this.value.positions.splice(1,0,position);
-                            this.value.colors.splice(0,0,'#aee772');
+                            this.value.colors.splice(0,0,'rgba(160, 160, 180, 250)');
                             this.index = 1;
                         };
                         this.value.positions[this.index] = position;
@@ -75,7 +75,7 @@
                 this.freez = freez;
             },
             change(color, index){
-                this.value.colors[index] = color.hex;
+                this.value.colors[index] = `rgba(${Object.values(color.rgba).toString()})`;;
                 this.render = !this.render;
                 this.update();
             },
