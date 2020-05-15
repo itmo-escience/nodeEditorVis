@@ -19,6 +19,8 @@ import VueTwoColorControl from '~/components/controls/VueTwoColorControl'
 import VueTwoRangeControl from '~/components/controls/VueTwoRangeControl'
 import VueLoadControl from '~/components/controls/VueLoadControl.vue'
 import VueRangeControl from '~/components/controls/VueRangeControl.vue'
+import VueCheckBoxControl from '~/components/controls/VueCheckBoxControl.vue'
+import VueColorRangeControl from '~/components/controls/VueColorRangeControl.vue'
 
 import ChartNode from '~/components/nodes/ChartNode'
 import FieldsNode from '~/components/nodes/FieldsNode'
@@ -103,6 +105,22 @@ const store = () => new Vuex.Store({
                 this.render = 'vue';
                 this.component = VueTwoColorControl;
                 this.props = { emitter, ikey: key, node};
+            }
+        }
+        class ColorRangeControl extends Rete.Control{
+            constructor(emitter, key, node){
+                super(key)
+                this.render = 'vue';
+                this.component = VueColorRangeControl;
+                this.props = { emitter, ikey: key, node};
+            }
+        }
+        class CheckBoxControl extends Rete.Control{
+            constructor(emitter, key, label, node){
+                super(key)
+                this.render = 'vue';
+                this.component = VueCheckBoxControl;
+                this.props = { emitter, ikey: key, label, node };
             }
         }
         class RangeControl extends Rete.Control{
@@ -872,13 +890,18 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-        class HexagonLayerComponent extends Rete.Component {
+        class GridMapLayerComponent extends Rete.Component {
             constructor(){
-                super('Hexagon Layer')
+                super('GridMap Layer')
                 this.path = ['Layers']
             }
             build(node){
+                node.data.extruded = true;
                 node
+                    .addControl(new SelectControl(this.editor, 'type', ['hexagon', 'grid']))
+                    .addControl(new CheckBoxControl(this.editor, 'extruded', 'Extrude', node))
+                    .addControl(new ColorRangeControl(this.editor, 'colorRange', node))
+                    .addControl(new TwoRangeControl(this.editor, 'elevationRange', [0, 200000], node))
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', pointGeometrySocket))
@@ -923,6 +946,10 @@ const store = () => new Vuex.Store({
                     }
                     outputs['layer'] = {
                         type: 'hexagon',
+                        grid_type: node.data.type,
+                        extruded: node.data.extruded,
+                        colorRange: node.data.colorRange,
+                        elevationRange: node.data.elevationRange,
                         data: data
                     };
                 }
@@ -1137,7 +1164,7 @@ const store = () => new Vuex.Store({
             new MapComponent,
             new PointLayerComponent, new LineLayerComponent,
             new PolygonLayerComponent, new HeatMapLayerComponent,
-            new HexagonLayerComponent, new ArcLayerComponent,
+            new GridMapLayerComponent, new ArcLayerComponent,
             new RangeComponent, new SizeComponent, 
             new ColorCategoryComponent,
             //new PointShapeCategoryComponent,

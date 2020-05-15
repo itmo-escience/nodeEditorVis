@@ -67,6 +67,7 @@ body{ color: #d5d6d6; }
 .cursor-pointer{ cursor: pointer; }
 .d-flex{ display: flex; }
 .hidden{ visibility: hidden; }
+.relative{ position: relative; }
 
 .file-input { 
   visibility: hidden; 

@@ -30,7 +30,7 @@ import VueRenderPlugin from 'rete-vue-render-plugin'
 import { Deck } from "@deck.gl/core";
 import mapboxgl from "mapbox-gl";
 import { GeoJsonLayer, ArcLayer } from '@deck.gl/layers';
-import { HeatmapLayer, HexagonLayer } from '@deck.gl/aggregation-layers';
+import { HeatmapLayer, HexagonLayer, GridLayer } from '@deck.gl/aggregation-layers';
 
 import {scaleLinear, min, max} from "d3"
 
@@ -100,14 +100,17 @@ export default{
                         let layer;
                         switch(l.type){
                             case 'hexagon':
-                                layer = new HexagonLayer({
+                                const settings = {
                                     data: l.data.features,
                                     getPosition: d => d.geometry.coordinates,
-                                    extruded: true,
-                                    elevationScale: 5,
+                                    extruded: l.extruded,
+                                    elevationScale: 1,
+                                    elevationRange: l.elevationRange,
+                                    colorRange: l.colorRange.map(d=>this.strToRGBA(d)),
                                     getElevationWeight: d => d.properties.elevation || 1,
                                     getColorWeight: d => d.properties.color || 1 
-                                });
+                                };
+                                layer = l.grid_type === 'hexagon' ? new HexagonLayer(settings) : new GridLayer(settings); 
                                 break
                             case 'heatmap':
                                 layer = new HeatmapLayer({
