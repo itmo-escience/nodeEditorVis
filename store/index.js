@@ -14,7 +14,6 @@ import VueSelectControl from '~/components/controls/VueSelectControl'
 import VueColorControl from '~/components/controls/VueColorControl'
 import VueClosedColorControl from '~/components/controls/VueClosedColorControl'
 import VueFileLoadControl from '~/components/controls/VueFileLoadControl'
-import VueRampControl from '~/components/controls/VueRampControl'
 import VueTwoColorControl from '~/components/controls/VueTwoColorControl'
 import VueTwoRangeControl from '~/components/controls/VueTwoRangeControl'
 import VueLoadControl from '~/components/controls/VueLoadControl.vue'
@@ -137,14 +136,6 @@ const store = () => new Vuex.Store({
                 this.render = 'vue';
                 this.component = VueTwoRangeControl;
                 this.props = { emitter, ikey: key, range, node};
-            }
-        }
-        class RampControl extends Rete.Control{
-            constructor(emitter, key){
-                super(key)
-                this.render = 'vue';
-                this.component = VueRampControl;
-                this.props = { emitter, ikey: key};
             }
         }
         class NumControl extends Rete.Control {
@@ -1061,7 +1052,7 @@ const store = () => new Vuex.Store({
                     .addControl(new NumControl(this.editor, 'intensity', node, 'intensity'))
                     .addControl(new NumControl(this.editor, 'radius', node, 'radius'))
                     .addControl(new RangeControl(this.editor, 'threshold', [0, 1], node))
-                    .addControl(new RampControl(this.editor, 'ramp'))
+                    .addControl(new ColorRangeControl(this.editor, 'colors', node))
                     .addOutput(new Rete.Output('heatmap', 'HeapMap', heatMapSocket));
             }
             worker(node, inputs, outputs){
@@ -1069,7 +1060,7 @@ const store = () => new Vuex.Store({
                     intensity: node.data.intensity,
                     radius: node.data.radius,
                     threshold: node.data.threshold,
-                    colors: node.data.ramp.colors
+                    colors: node.data.colors
                 }
             }
         }

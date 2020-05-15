@@ -1,17 +1,20 @@
 <template>
-  <div @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
-    <svg height="25" style="margin-right: 20px;" viewBox="0 0 20 20" @click="togglePallet(0)">
-      <circle cx="10" cy="10" r="10" :fill="colors[0]"></circle>
-    </svg>
-    <svg height="25" viewBox="0 0 20 20" @click="togglePallet(1)">
-      <circle cx="10" cy="10" r="10" :fill="colors[1]"></circle>
-    </svg>
-    <div class="pallet" v-if="opened">
-      <Chrome 
-        :value="colors[index]"
-        @input="updateValue($event, index)"/>
+  <div class="d-flex">
+    <div class="mrr-20">{{ ikey }}</div>
+    <div class="fg-1" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
+      <svg height="25" style="margin-right: 20px;" viewBox="0 0 20 20" @click="togglePallet(0)">
+        <circle cx="10" cy="10" r="10" :fill="colors[0]"></circle>
+      </svg>
+      <svg height="25" viewBox="0 0 20 20" @click="togglePallet(1)">
+        <circle cx="10" cy="10" r="10" :fill="colors[1]"></circle>
+      </svg>
+      <div class="pallet" v-if="opened">
+        <Chrome 
+          :value="colors[index]"
+          @input="updateValue($event, index)"/>
+      </div>
+      <div style="visibility: hidden; height: 0;">{{render}}</div>
     </div>
-    <div style="visibility: hidden; height: 0;">{{render}}</div>
   </div>
 </template>
 <script>
@@ -25,7 +28,6 @@ export default{
         `rgba(${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},1)`,
         `rgba(${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},1)`
       ],
-      // colors: ["#"+((1<<24)*Math.random()|0).toString(16), "#"+((1<<24)*Math.random()|0).toString(16)],
       opened: false,
       freez: false,
       index: 0,
@@ -41,7 +43,6 @@ export default{
       this.freez=freez;
     },
     updateValue(color, index){
-      // this.colors[index] = color.hex;
       this.colors[index] = `rgba(${Object.values(color.rgba).toString()})`;
       this.render = !this.render;
       this.putData(this.ikey, this.colors)

@@ -1,10 +1,17 @@
 <template>
-    <div class="container mrr-20" @mousemove="dragging($event)">
-        <div class="slider d-flex" ref="slider">
-            <svg class="circle" :style="{ left: (position*100) +'%' }" height="20" viewBox="0 0 10 10" 
-                @mousedown="dragStart">
-                <circle cx="5" cy="5" r="5"></circle>
-            </svg>
+    <div>
+        <div>{{ ikey }}</div>
+        <div class="relative">
+            <div class="min">{{ short(range[0]) }}</div>
+            <div class="container mrr-20" @mousemove="dragging($event)">
+                <div class="slider d-flex" ref="slider">
+                    <svg class="circle" :style="{ left: (position*100) +'%' }" height="20" viewBox="0 0 10 10" 
+                        @mousedown="dragStart">
+                        <circle cx="5" cy="5" r="5"></circle>
+                    </svg>
+                </div>
+            </div>
+            <div class="max">{{ short(range[1]) }}</div>
         </div>
     </div>
 </template>
@@ -24,6 +31,10 @@
           }
         },
         methods: {
+            short(val){
+                val = val.toString();
+                return val.length < 4 ? val : val.slice(0,-3) + 'K'
+            },
             dragStart(){
                 this.freezEditor(true);
                 this.drag = true;
@@ -63,40 +74,3 @@
         }
     }
 </script>
-<style>
-    .container{
-        height: 20px;
-    }
-    .slider{
-        position: relative;
-        top: 10px;
-        width: 100%;
-        height: 2px;
-        border-radius: 5px;
-        background: #d5d6d6;
-        margin-right: 10px;
-    }
-    .plus{
-        height: 10px;
-        position: relative;
-        top: -7px;
-    }
-    .plus:after{
-        content: url(~assets/plus.svg);
-    }
-    .circle{
-        position: absolute;
-        top: -8px;
-    }
-    .circle circle{ fill: #d5d6d6; }
-    .picker{
-        height: 10px;
-        width: 100%;
-        position: relative;
-        top: -6px;
-    }
-    #pallet{
-        position: absolute;
-        top: 10px;
-    }
-</style>
