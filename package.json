@@ -11,7 +11,7 @@
     "generate": "cross-env DEPLOY_ENV=GH_PAGES nuxt generate",
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
     "precommit": "npm run lint",
-    "deploy": "npm run generate && push-dir --dir=dist --branch=gh-pages --cleanup --force",
+    "deploy": "npm run generate && push-dir --dir=dist --branch=gh-pages --cleanup --force"
   },
   "dependencies": {
     "@antv/data-set": "^0.11.1",
