@@ -108,7 +108,9 @@ export default{
                                     elevationRange: l.elevationRange,
                                     colorRange: l.colorRange.map(d=>this.strToRGBA(d)),
                                     getElevationWeight: d => d.properties.elevation || 1,
-                                    getColorWeight: d => d.properties.color || 1 
+                                    elevationAggregation: l.elevationAggMethod,
+                                    getColorWeight: d => d.properties.color || 1,
+                                    colorAggregation: l.colorAggMethod
                                 };
                                 layer = l.grid_type === 'hexagon' ? new HexagonLayer(settings) : new GridLayer(settings); 
                                 break

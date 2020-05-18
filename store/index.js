@@ -23,6 +23,7 @@ import VueColorRangeControl from '~/components/controls/VueColorRangeControl.vue
 import ChartNode from '~/components/nodes/ChartNode'
 import MapNode from '~/components/nodes/MapNode'
 import CategoryNode from '~/components/nodes/CategoryNode'
+import GraphNode from '~/components/nodes/GraphNode'
 import Node from '~/components/nodes/Node'
 
 Vue.use(Vuex)
@@ -39,7 +40,6 @@ const store = () => new Vuex.Store({
     process: true,
     data: {},
     copiedNode: null,
-    options: ['', 'branches.json', 'cars.csv', 'arcs.json', /*'COVID'*/],
     shapes: [
         'circle','square','triangle','hexagon', // 2D
         'cylinder', 'triangleColumn', 'hexagonColumn', 'squareColumn', // 3D
@@ -64,6 +64,9 @@ const store = () => new Vuex.Store({
         const pointShapesSocket = new Rete.Socket('Point Shapes');
         const heatMapSocket = new Rete.Socket('HeatMap');
         const gridSocket = new Rete.Socket('Grid');
+
+        const nodesSocket = new Rete.Socket('Nodes');
+        const linksSocket = new Rete.Socket('Links');
 
         const pointGeometrySocket = new Rete.Socket('Point Geometry');
         const lineGeometrySocket = new Rete.Socket('Line Geometry');
@@ -350,6 +353,10 @@ const store = () => new Vuex.Store({
                     const geometry = node.data.data.features[0].geometry.type;
                     socket = geometry === 'Point' ? pointGeometrySocket : geometry === 'LineString' ? lineGeometrySocket : polygonGeometrySocket;
                     node.addOutput(new Rete.Output('geom', 'Geometry', socket));
+                }else if(node.data.data.nodes && node.data.data.links){
+                    node
+                        .addOutput(new Rete.Output('nodes', 'Nodes', nodesSocket))
+                        .addOutput(new Rete.Output('links', 'Links', linksSocket));
                 }else{
                     for(let key in node.data.data[0]){
                         let socket = isNaN(+ node.data.data[0][key]) ? strArrSocket : numArrSocket;
@@ -364,6 +371,9 @@ const store = () => new Vuex.Store({
                         outputs[key] = node.data.data.features.map(f=> f.properties[key]);
                     }
                     outputs.geom = node.data.data.features.map(f=> f.geometry);
+                }else if(node.data.data.nodes && node.data.data.links){
+                    outputs.nodes = node.data.data.nodes;
+                    outputs.links = node.data.data.links;
                 }else{
                    for(let key in node.data.data[0]){
                         outputs[key] = node.data.data.map(d=> !isNaN(+d[key]) ? +d[key] : d[key] );
@@ -379,7 +389,7 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node.data.dataset = '';
-                node.addControl(new SelectControl( this.editor, 'dataset', state.options ));
+                node.addControl(new SelectControl( this.editor, 'dataset', node.data.options ));
             }
             async worker(node, inputs, outputs){
                 if(node.data.dataset){
@@ -880,6 +890,8 @@ const store = () => new Vuex.Store({
                     .addControl(new CheckBoxControl(this.editor, 'extruded', 'Extrude', node))
                     .addControl(new ColorRangeControl(this.editor, 'colorRange', node))
                     .addControl(new TwoRangeControl(this.editor, 'elevationRange', [0, 200000], node))
+                    .addControl(new SelectControl(this.editor, 'colorAggMethod', ['SUM', 'MEAN', 'MIN', 'MAX']))
+                    .addControl(new SelectControl(this.editor, 'elevationAggMethod', ['SUM', 'MEAN', 'MIN', 'MAX']))
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', pointGeometrySocket))
@@ -928,6 +940,8 @@ const store = () => new Vuex.Store({
                         extruded: node.data.extruded,
                         colorRange: node.data.colorRange,
                         elevationRange: node.data.elevationRange,
+                        colorAggMethod: node.data.colorAggMethod,
+                        elevationAggMethod: node.data.elevationAggMethod,
                         data: data
                     };
                 }
@@ -1126,6 +1140,28 @@ const store = () => new Vuex.Store({
                 this.editor.nodes.find(n=>n.id===node.id).update();
             }
         }
+        class GraphComponent extends Rete.Component {
+            constructor() {
+                super('Graph')
+                this.data.component = GraphNode;
+                this.path = [];
+            }
+            builder(node){
+                node
+                    .addInput(new Rete.Input('nodes', 'Nodes', nodesSocket))
+                    .addInput(new Rete.Input('links', 'Links', linksSocket));
+            }
+            worker(node, inputs, outputs){
+                if(inputs.nodes.length && inputs.links.length){
+
+                    node.data.DATA = {
+                        nodes: inputs.nodes[0],
+                        links: inputs.links[0],
+                    };
+                }
+                this.editor.nodes.find(n=>n.id===node.id).update();
+            }
+        }
 
         var container = document.querySelector('#editor')
         var editor = new Rete.NodeEditor('demo@0.1.0', container)
@@ -1153,7 +1189,8 @@ const store = () => new Vuex.Store({
             new HeatMapComponent, 
             new ColorRangeComponent,
             new ScatterComponent,
-            new URLDataComponent
+            new URLDataComponent,
+            new GraphComponent
         ];
 
         components.map(c => {
