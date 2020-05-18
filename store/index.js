@@ -4,7 +4,6 @@ import Vuex from 'vuex'
 import Rete from 'rete'
 import ConnectionPlugin from 'rete-connection-plugin'
 import VueRenderPlugin from 'rete-vue-render-plugin'
-import ContextMenuPlugin from 'rete-context-menu-plugin';
 
 import * as d3 from "d3";
 
@@ -22,12 +21,9 @@ import VueCheckBoxControl from '~/components/controls/VueCheckBoxControl.vue'
 import VueColorRangeControl from '~/components/controls/VueColorRangeControl.vue'
 
 import ChartNode from '~/components/nodes/ChartNode'
-import FieldsNode from '~/components/nodes/FieldsNode'
 import MapNode from '~/components/nodes/MapNode'
 import CategoryNode from '~/components/nodes/CategoryNode'
-import GridNode from '~/components/nodes/GridNode'
-import BlankNode from '~/components/nodes/BlankNode'
-import SizeNode from '~/components/nodes/SizeNode'
+import Node from '~/components/nodes/Node'
 
 Vue.use(Vuex)
 
@@ -57,7 +53,6 @@ const store = () => new Vuex.Store({
     },
     initRete(state){
         const numSocket = new Rete.Socket('Number');
-        const objSocket = new Rete.Socket('Object');
         const colorSocket = new Rete.Socket('Color');
         const colorMapSocket = new Rete.Socket('Color Map');
         const strSocket = new Rete.Socket('String');
@@ -178,9 +173,11 @@ const store = () => new Vuex.Store({
                 this.vueContext.value = val;
             }
         }
+        // COMPONENTSS
         class NumComponent extends Rete.Component {
             constructor(){
                 super("Number");
+                this.data.component = Node;
                 this.path = ['Const']
             }
 
@@ -197,6 +194,7 @@ const store = () => new Vuex.Store({
         class StrComponent extends Rete.Component {
             constructor(){
                 super("String");
+                this.data.component = Node;
                 this.path = ['Const']
             }
 
@@ -213,7 +211,7 @@ const store = () => new Vuex.Store({
         class ColorComponent extends Rete.Component {
             constructor(){
                 super('Color')
-                this.data.component = BlankNode;
+                this.data.component = Node;
                 this.path = ['Color'];
             }
             builder(node){
@@ -311,7 +309,7 @@ const store = () => new Vuex.Store({
         class ColorRangeComponent extends Rete.Component {
             constructor(){
                 super('Color Range')
-                this.data.component = GridNode;
+                this.data.component = Node;
                 this.path = ['Color'];
             }
             build(node){
@@ -335,28 +333,10 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-        class FieldsComponent extends Rete.Component {
-            constructor(){
-                super('Fields')
-                this.data.component = FieldsNode;
-                this.path = null;
-            }
-            builder(node){
-                node.addInput(new Rete.Input('data', 'Data', objSocket));
-                for(let key in node.data[0]){
-                    node.addOutput(new Rete.Output(key, key, strSocket));
-                }
-            }
-            worker(node, inputs, outputs){
-                for(let key in node.data[0]){
-                    outputs[key] = key;
-                }
-            }
-        }
         class ParseComponent extends Rete.Component {
             constructor(){
                 super('Parse')
-                this.data.component = FieldsNode;
+                this.data.component = Node;
                 this.path = null;
             }
             builder(node){
@@ -394,6 +374,7 @@ const store = () => new Vuex.Store({
         class DatasetComponent extends Rete.Component {
             constructor() {
                 super('Dataset')
+                this.data.component = Node;
                 this.path = ['Data'];
             }
             builder(node){
@@ -413,7 +394,7 @@ const store = () => new Vuex.Store({
         class LoadDataComponent extends Rete.Component {
             constructor(){
                 super('Load Data')
-                this.data.component = BlankNode;
+                this.data.component = Node;
                 this.path = ['Data']
             }
             builder(node){
@@ -433,6 +414,7 @@ const store = () => new Vuex.Store({
         class URLDataComponent extends Rete.Component {
             constructor(){
                 super('Load from URL')
+                this.data.component = Node;
                 this.path = ['Data']
             }
             builder(node){
@@ -458,7 +440,7 @@ const store = () => new Vuex.Store({
         class RangeComponent extends Rete.Component {
             constructor(){
                 super('Range')
-                this.data.component = GridNode;
+                this.data.component = Node;
                 this.path = []
             }
             build(node){
@@ -507,7 +489,7 @@ const store = () => new Vuex.Store({
         class SizeComponent extends Rete.Component{
             constructor(){
                 super('Size')
-                this.data.component = SizeNode;
+                this.data.component = Node;
                 this.path = [];
             }
             builder(node){
@@ -648,6 +630,7 @@ const store = () => new Vuex.Store({
         class PointLayerComponent extends Rete.Component {  
             constructor(){
                 super('Point Layer')
+                this.data.component = Node;
                 this.path = ['Layers']
             }
             build(node){
@@ -712,6 +695,7 @@ const store = () => new Vuex.Store({
         class LineLayerComponent extends Rete.Component {
             constructor(){
                 super('Line Layer')
+                this.data.component = Node;
                 this.path = ['Layers']
             }
             build(node){
@@ -775,6 +759,7 @@ const store = () => new Vuex.Store({
         class ArcLayerComponent extends Rete.Component {
             constructor(){
                 super('Arc Layer')
+                this.data.component = Node;
                 this.path = ['Layers']
             }
             build(node){
@@ -844,6 +829,7 @@ const store = () => new Vuex.Store({
         class PolygonLayerComponent extends Rete.Component {
             constructor(){
                 super('Polygon Layer')
+                this.data.component = Node;
                 this.path = ['Layers']
             }
             build(node){
@@ -884,6 +870,7 @@ const store = () => new Vuex.Store({
         class GridMapLayerComponent extends Rete.Component {
             constructor(){
                 super('GridMap Layer')
+                this.data.component = Node;
                 this.path = ['Layers']
             }
             build(node){
@@ -1010,10 +997,10 @@ const store = () => new Vuex.Store({
                 }
             }
         }
-        class GridComponent extends Rete.Component {
+        /*class GridComponent extends Rete.Component {
             constructor(){
                 super('Grid')
-                this.data.component = GridNode;
+                this.data.component = Node;
                 this.path = []
             }
             builder(node){
@@ -1040,10 +1027,11 @@ const store = () => new Vuex.Store({
                     color: node.data.colors
                 }
             }
-        }
+        }*/
         class HeatMapComponent extends Rete.Component {
             constructor(){
                 super('HeatMap')
+                this.data.component = Node;
                 this.path = []
             }
             builder(node){
@@ -1151,7 +1139,7 @@ const store = () => new Vuex.Store({
             new ColorComponent,
             new StrComponent, new NumComponent,
             new DatasetComponent,
-            new FieldsComponent, new ParseComponent,
+            new ParseComponent,
             new MapComponent,
             new PointLayerComponent, new LineLayerComponent,
             new PolygonLayerComponent, new HeatMapLayerComponent,
@@ -1160,8 +1148,9 @@ const store = () => new Vuex.Store({
             new ColorCategoryComponent,
             //new PointShapeCategoryComponent,
             //new LineShapeCategoryComponent,
+            //new GridComponent,
             new LoadDataComponent,
-            new HeatMapComponent, //new GridComponent,
+            new HeatMapComponent, 
             new ColorRangeComponent,
             new ScatterComponent,
             new URLDataComponent

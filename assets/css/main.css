@@ -45,6 +45,11 @@ body{ color: #d5d6d6; }
     text-align: center;
     padding: 10px 0;
 }
+.title{
+  font-size: 20px;
+  color: #fff;
+  margin: 20px;
+}
 
 .arrow.up:after{ content: url(~assets/arrow-up.svg); }
 .arrow.down:after{ content: url(~assets/arrow-down.svg); }
@@ -64,6 +69,7 @@ body{ color: #d5d6d6; }
 .space-between{ justify-content: space-between; }
 .align-center{ align-items: center; }
 .justify-center{ justify-content: center; }
+.justify-end{ justify-content: flex-end }
 .cursor-pointer{ cursor: pointer; }
 .d-flex{ display: flex; }
 .hidden{ visibility: hidden; }

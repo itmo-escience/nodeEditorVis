@@ -5,12 +5,10 @@
         <div class="node-body d-flex">
             <div class="inputs">
                 <div class="control" v-for="(control, id) in controls()" v-control="control" :key="id"></div>
-                <div class="input" v-for="input in inputs()" :key="input.key">
-                    <div class="d-flex">
-                        <Socket v-socket:input="input" type="input" :socket="input.socket"></Socket>
-                        <div class="input-title" v-show="!input.showControl()">{{input.name}}</div>
-                        <div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
-                    </div>
+                <div class="input d-flex align-center" v-for="input in inputs()" :key="input.key">
+                    <Socket v-socket:input="input" type="input" :socket="input.socket"></Socket>
+                    <div class="input-title" v-show="!input.showControl()">{{input.name}}</div>
+                    <div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
                 </div>
             </div>
             <div ref="container" class="chart-container"></div>
@@ -75,18 +73,6 @@ export default{
 }
 </script>
 <style>
-    .input-title{
-        position: relative;
-        top: 7px;
-    }
-    .title{
-        font-size: 20px;
-        color: #fff;
-        margin: 20px;
-    }
-    .node-body{
-        text-align: left;
-    }
     .chart-container{
         margin: 20px;
     }
