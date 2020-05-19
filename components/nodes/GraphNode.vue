@@ -59,10 +59,10 @@ export default{
             this.context.translate(this.transform.x, this.transform.y);
             this.context.scale(this.transform.k, this.transform.k);
 
-            this.context.beginPath();
-            this.links.forEach(this.drawLink);
-            this.context.strokeStyle = "#aaa";
-            this.context.stroke();
+            // this.context.beginPath();
+            // this.links.forEach(this.drawLink);
+            // this.context.strokeStyle = "#aaa";
+            // this.context.stroke();
 
             this.context.beginPath();
             this.nodes.forEach(this.drawNode);
@@ -76,10 +76,13 @@ export default{
             this.nodes = data.GRAPH.nodes;
             this.links = data.GRAPH.links;
 
-            this.simulation
-                .nodes(this.nodes)
-                .force("link", d3.forceLink(this.links).id(d => d.id))
-                .alpha(1).restart();
+            this.simulation = d3.forceSimulation(this.nodes)
+                .force('x', d3.forceX().x(d=>d.xpos).strength(d=>d.xstr))
+                .force('y', d3.forceY().y(d=>d.ypos).strength(d=>d.ystr))
+                .force('charge', d3.forceManyBody().strength(d=>d.cstr))
+                .force('radial', d3.forceRadial(d=>d.rad, ...data.GRAPH.radialCenter).strength(d=>d.rstr));
+                // .force("center", d3.forceCenter(250, 250));
+                // .force("link", d3.forceLink(this.links).id(d => d.id))
 
             d3.select(this.canvas)
                 .call(d3.drag().subject(this.dragsubject).on("start", this.dragstarted).on("drag", this.dragged).on("end", this.dragended))
@@ -126,19 +129,17 @@ export default{
         }
     },
     updated(){
-        if(this.node.data.GRAPH){
-            if(!this.nodes) this.updateGraph();
-        }else{
-            this.nodes = null;
-            this.links = null;
-        }
+        // if(this.node.data.GRAPH){
+        //     if(!this.nodes) this.updateGraph();
+        // }else{
+        //     this.nodes = null;
+        //     this.links = null;
+        // }
+        if(this.node.data.GRAPH) this.updateGraph();
     },
     mounted(){
         this.canvas = this.$refs.container;
         this.context = this.canvas.getContext("2d");
-        this.simulation = d3.forceSimulation()
-            .force("charge", d3.forceManyBody())
-            .force("center", d3.forceCenter(250, 250));
 
         if(this.node.data.GRAPH) this.updateGraph();
 

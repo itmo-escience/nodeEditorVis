@@ -66,12 +66,18 @@ const store = () => new Vuex.Store({
         const heatMapSocket = new Rete.Socket('HeatMap');
         const gridSocket = new Rete.Socket('Grid');
 
+        const forceXSocket = new Rete.Socket('Force X');
+        const forceYSocket = new Rete.Socket('Force Y');
+        const forceManyBodySocket = new Rete.Socket('Force Many Body');
+        const forceRadialSocket = new Rete.Socket('Force Radial');
+
         const nodesSocket = new Rete.Socket('Nodes');
         const linksSocket = new Rete.Socket('Links');
 
         const pointGeometrySocket = new Rete.Socket('Point Geometry');
         const lineGeometrySocket = new Rete.Socket('Line Geometry');
         const polygonGeometrySocket = new Rete.Socket('Polygon Geometry');
+        
 
         class FileLoadControl extends Rete.Control {
             constructor(emitter, key, name){
@@ -1141,6 +1147,99 @@ const store = () => new Vuex.Store({
                 this.editor.nodes.find(n=>n.id===node.id).update();
             }
         }
+        // FORCES
+        class ForceManyBodyComponent extends Rete.Component {
+            constructor() {
+                super('Force Many Body')
+                this.data.component = Node;
+                this.path = ['Force'];
+            }
+            builder(node){
+                const strength = new Rete.Input('strength', 'Strength', numArrSocket);
+                strength.addControl(new RangeControl(this.editor, 'strength', [-30, 30], node));
+
+                node
+                    .addInput(strength)
+                    .addOutput(new Rete.Output('force', 'Force', forceManyBodySocket));
+            }
+            worker(node, inputs, outputs){
+                outputs.force = {
+                    strength: inputs.strength.length ? inputs.strength[0] : node.data.strength
+                }
+            }
+        }
+        class ForceRadialComponent extends Rete.Component {
+            constructor() {
+                super('Force Radial')
+                this.data.component = Node;
+                this.path = ['Force'];
+            }
+            builder(node){
+                const strength = new Rete.Input('strength', 'Strength', numArrSocket);
+                strength.addControl(new RangeControl(this.editor, 'strength', [0, 1], node));
+                const radius = new Rete.Input('radius', 'Radius', numArrSocket);
+                radius.addControl(new RangeControl(this.editor, 'radius', [0, 250], node));
+
+                node
+                    .addInput(strength).addInput(radius)
+                    .addControl(new RangeControl(this.editor, 'x', [0, 500], node))
+                    .addControl(new RangeControl(this.editor, 'y', [0, 500], node))
+                    .addOutput(new Rete.Output('force', 'Force', forceRadialSocket));
+            }
+            worker(node, inputs, outputs){
+                outputs.force = {
+                    strength: inputs.strength.length ? inputs.strength[0] : node.data.strength,
+                    radius: inputs.radius.length ? inputs.radius[0] : node.data.radius,
+                    center: [node.data.x, node.data.y]
+                }
+            }
+        }
+        class ForceXComponent extends Rete.Component {
+            constructor() {
+                super('Force X')
+                this.data.component = Node;
+                this.path = ['Force'];
+            }
+            builder(node){
+                const strength = new Rete.Input('strength', 'Strength', numArrSocket);
+                strength.addControl(new RangeControl(this.editor, 'strength', [-1, 1], node));
+                const x = new Rete.Input('x', 'X', numArrSocket);
+                x.addControl(new RangeControl(this.editor, 'x', [0, 500], node));
+
+                node
+                    .addInput(strength).addInput(x)
+                    .addOutput(new Rete.Output('force', 'Force', forceXSocket));
+            }
+            worker(node, inputs, outputs){
+                outputs.force = {
+                    strength: inputs.strength.length ? inputs.strength[0] : node.data.strength,
+                    x: inputs.x.length ? inputs.x[0] : node.data.x
+                }
+            }
+        }
+        class ForceYComponent extends Rete.Component {
+            constructor() {
+                super('Force Y')
+                this.data.component = Node;
+                this.path = ['Force'];
+            }
+            builder(node){
+                const strength = new Rete.Input('strength', 'Strength', numArrSocket);
+                strength.addControl(new RangeControl(this.editor, 'strength', [-1, 1], node));
+                const y = new Rete.Input('y', 'Y', numArrSocket);
+                y.addControl(new RangeControl(this.editor, 'y', [0, 500], node));
+
+                node
+                    .addInput(strength).addInput(y)
+                    .addOutput(new Rete.Output('force', 'Force', forceYSocket));
+            }
+            worker(node, inputs, outputs){
+                outputs.force = {
+                    strength: inputs.strength.length ? inputs.strength[0] : node.data.strength,
+                    y: inputs.y.length ? inputs.y[0] : node.data.y
+                }
+            }
+        }
         class GraphComponent extends Rete.Component {
             constructor() {
                 super('Graph')
@@ -1149,15 +1248,31 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node
-                    .addInput(new Rete.Input('nodes', 'Nodes', nodesSocket))
-                    .addInput(new Rete.Input('links', 'Links', linksSocket));
+                    .addInput(new Rete.Input('strId', 'id', strArrSocket))
+                    .addInput(new Rete.Input('intId', 'id', numArrSocket))
+                    .addInput(new Rete.Input('x', 'Force X', forceXSocket))
+                    .addInput(new Rete.Input('y', 'Force Y', forceYSocket))
+                    .addInput(new Rete.Input('charge', 'Force Many Body', forceManyBodySocket))
+                    .addInput(new Rete.Input('radial', 'Force Radial', forceRadialSocket));
             }
             worker(node, inputs, outputs){
-                if(inputs.nodes.length && inputs.links.length){
+                if(inputs.strId.length || inputs.intId.length){
                     node.data.GRAPH = {
-                        nodes: inputs.nodes[0],
-                        links: inputs.links[0],
-                    };
+                        radialCenter: inputs.radial.length ? inputs.radial[0].center : [],
+                        nodes: (inputs.strId.length ? inputs.strId[0] : inputs.intId[0]).map((d, i)=>{
+                            return { 
+                                id: d,
+                                ...(inputs.x.length ? inputs.x[0].strength.length ? {xstr: inputs.x[0].strength[i]} : {xstr: inputs.x[0].strength} : {xstr: null}),
+                                ...(inputs.x.length ? inputs.x[0].x.length ? {xpos: inputs.x[0].x[i]} : {xpos: inputs.x[0].x} : {xpos: null}),
+                                ...(inputs.y.length ? inputs.y[0].strength.length ? {ystr: inputs.y[0].strength[i]} : {ystr: inputs.y[0].strength} : {ystr: null}),
+                                ...(inputs.y.length ? inputs.y[0].y.length ? {ypos: inputs.y[0].y[i]} : {ypos: inputs.y[0].y} : {ypos: null}),
+                                ...(inputs.charge.length ? inputs.charge[0].strength.length ? {cstr: inputs.charge[0].strength[i]} : {cstr: inputs.charge[0].strength} : {cstr: null}),
+                                ...(inputs.radial.length ? inputs.radial[0].strength.length ? {rstr: inputs.radial[0].strength[i]} : {rstr: inputs.radial[0].strength} : {rstr: null}),
+                                ...(inputs.radial.length ? inputs.radial[0].radius.length ? {rad: inputs.radial[0].radius[i]} : {rad: inputs.radial[0].radius} : {rad: null}),
+                                ...(inputs.radial.length ? inputs.radial[0].radius.length ? {rad: inputs.radial[0].radius[i]} : {rad: inputs.radial[0].radius} : {rad: null}),
+                            }
+                        })
+                    }
                 }else{
                     node.data.GRAPH = null;
                 }
@@ -1192,7 +1307,10 @@ const store = () => new Vuex.Store({
             new ColorRangeComponent,
             new ScatterComponent,
             new URLDataComponent,
-            new GraphComponent
+            new GraphComponent,
+            new ForceXComponent, new ForceYComponent,
+            new ForceManyBodyComponent,
+            new ForceRadialComponent
         ];
 
         components.map(c => {
