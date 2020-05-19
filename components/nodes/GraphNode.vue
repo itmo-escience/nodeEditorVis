@@ -97,6 +97,7 @@ export default{
             }
         },
         dragstarted() {
+            //console.log(d3.event.subject)
             if (!d3.event.active) this.simulation.alphaTarget(0.3).restart();
             d3.event.subject.fx = this.transform.invertX(d3.event.x);
             d3.event.subject.fy = this.transform.invertY(d3.event.y);
@@ -119,7 +120,7 @@ export default{
         this.updateGraph();
 
         d3.select(this.$refs.container)
-            // .call(d3.drag().subject(this.dragsubject).on("start", this.dragstarted).on("drag", this.dragged).on("end", this.dragended))
+            .call(d3.drag().subject(this.dragsubject).on("start", this.dragstarted).on("drag", this.dragged).on("end", this.dragended))
             .call(d3.zoom().scaleExtent([1 / 10, 8])
             .on("zoom", this.zoom));
 

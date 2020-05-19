@@ -271,7 +271,7 @@
       });
 
       this.$store.commit('initRete');
-
+      this.state.data['graph'] = await d3.json('/data/graph.json');
       this.state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
       this.state.data['branches.json'] = await this.$axios.$get('/data/branches.json');
       const arcs = await this.$axios.$get('/data/arcs.json')
@@ -288,7 +288,7 @@
           "nodes": {
               "1": {
                   "id": 1,
-                  "data": {},
+                  "data": { options: ['', 'cars.csv', 'branches.json', 'arcs.json', 'graph'] },
                   "position": [80, 200],
                   "name": "Dataset"
               },
