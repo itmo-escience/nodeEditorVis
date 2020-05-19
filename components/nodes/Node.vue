@@ -1,6 +1,6 @@
 <template>
     <div class="node" :class="[selected(), node.name] | kebab">
-        <div class="title">{{node.name}}</div>
+        <div class="title">{{node.data.name || node.name}}</div>
         <div class="d-flex space-between">
             <div class="">
                 <div class="input d-flex align-center" v-for="input in inputs()" :key="input.key">

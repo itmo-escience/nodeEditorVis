@@ -33,6 +33,7 @@ const store = () => new Vuex.Store({
   state: {
     editor: null,
     engine: null,
+    options: ['', 'cars.csv', 'branches.json', 'arcs.json', 'graph'],
     preview: [],
     ids: {
         maps: 0
@@ -389,7 +390,7 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node.data.dataset = '';
-                node.addControl(new SelectControl( this.editor, 'dataset', node.data.options ));
+                node.addControl(new SelectControl( this.editor, 'dataset', state.options ));
             }
             async worker(node, inputs, outputs){
                 if(node.data.dataset){
@@ -1153,11 +1154,12 @@ const store = () => new Vuex.Store({
             }
             worker(node, inputs, outputs){
                 if(inputs.nodes.length && inputs.links.length){
-
-                    node.data.DATA = {
+                    node.data.GRAPH = {
                         nodes: inputs.nodes[0],
                         links: inputs.links[0],
                     };
+                }else{
+                    node.data.GRAPH = null;
                 }
                 this.editor.nodes.find(n=>n.id===node.id).update();
             }
@@ -1221,7 +1223,7 @@ const store = () => new Vuex.Store({
             }else if(e.ctrlKey && e.key.toLocaleLowerCase() === 'v'){
                 if(state.copiedNode){
                     const component = editor.components.get( state.copiedNode.name );
-                    const copy = await component.createNode();
+                    const copy = await component.createNode( state.copiedNode.data );
                     copy.position = [state.copiedNode.position[0]+10, state.copiedNode.position[1]+10];
                     editor.addNode(copy);
                 }

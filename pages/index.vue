@@ -288,7 +288,7 @@
           "nodes": {
               "1": {
                   "id": 1,
-                  "data": { options: ['', 'cars.csv', 'branches.json', 'arcs.json', 'graph'] },
+                  "data": {},
                   "position": [80, 200],
                   "name": "Dataset"
               },

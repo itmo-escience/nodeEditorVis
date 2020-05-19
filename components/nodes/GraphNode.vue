@@ -32,6 +32,8 @@ export default{
             nodes: null,
             links: null,
             simulation: null,
+            context: null,
+            canvas: null,
             transform: d3.zoomIdentity
         }
     },
@@ -41,7 +43,7 @@ export default{
         },
         zoom(){
             this.transform = d3.event.transform;
-            this.updateGraph();
+            this.redraw();
         },
         drawLink(d) {
             this.context.moveTo(d.source.x, d.source.y);
@@ -51,45 +53,57 @@ export default{
             this.context.moveTo(d.x + 3, d.y);
             this.context.arc(d.x, d.y, 3, 0, 2 * Math.PI);
         },
+        redraw(){
+            this.context.clearRect(0, 0, 500, 500);
+            this.context.save();
+            this.context.translate(this.transform.x, this.transform.y);
+            this.context.scale(this.transform.k, this.transform.k);
+
+            this.context.beginPath();
+            this.links.forEach(this.drawLink);
+            this.context.strokeStyle = "#aaa";
+            this.context.stroke();
+
+            this.context.beginPath();
+            this.nodes.forEach(this.drawNode);
+            this.context.fillStyle = '#e3c000';
+            this.context.fill();
+
+            this.context.restore();
+        },
         updateGraph(){
             const data = this.node.data;
-            if(data.DATA){
-                this.nodes = data.DATA.nodes;
-                this.links = data.DATA.links;
-                this.simulation = d3.forceSimulation(this.nodes)
-                    .force("link", d3.forceLink(this.links).id(d => d.id))
-                    .force("charge", d3.forceManyBody())
-                    .force("center", d3.forceCenter(250, 250));
+            this.nodes = data.GRAPH.nodes;
+            this.links = data.GRAPH.links;
 
-                this.simulation.on('tick', ()=>{
-                    this.context.clearRect(0, 0, 500, 500);
-                    this.context.save();
-                    this.context.translate(this.transform.x, this.transform.y);
-                    this.context.scale(this.transform.k, this.transform.k);
+            this.simulation
+                .nodes(this.nodes)
+                .force("link", d3.forceLink(this.links).id(d => d.id))
+                .alpha(1).restart();
 
-                    this.context.beginPath();
-                    this.links.forEach(this.drawLink);
-                    this.context.strokeStyle = "#aaa";
-                    this.context.stroke();
-
-                    this.context.beginPath();
-                    this.nodes.forEach(this.drawNode);
-                    this.context.fillStyle = '#e3c000';
-                    this.context.fill();
-
-                    this.context.restore();
-                });
-            }
+            d3.select(this.canvas)
+                .call(d3.drag().subject(this.dragsubject).on("start", this.dragstarted).on("drag", this.dragged).on("end", this.dragended))
+                .call(d3.zoom().scaleExtent([1 / 10, 8])
+                .on("zoom", this.zoom));
+            
+            this.simulation.on('tick', this.redraw);
+        },
+        getMousePosition() { 
+            const rect = this.canvas.getBoundingClientRect();
+            const event = d3.event.sourceEvent;
+            let x = event.clientX - rect.left; 
+            let y = event.clientY - rect.top; 
+            return { x, y }
         },
         dragsubject() {
-            const x = this.transform.invertX(d3.event.x);
-            const y = this.transform.invertY(d3.event.y);
+            const event = this.getMousePosition();
+            const x = this.transform.invertX(event.x);
+            const y = this.transform.invertY(event.y);
             for (let i=0; i < this.nodes.length; i++) {
                 const node = this.nodes[i];
                 const dx = x - node.x;
                 const dy = y - node.y;
-
-                if (dx * dx + dy * dy < 3 * 3) {
+                if (Math.abs(dx) < 3 && Math.abs(dy) < 3) {
                     node.x =  this.transform.applyX(node.x);
                     node.y = this.transform.applyY(node.y);
                     return node;
@@ -97,7 +111,6 @@ export default{
             }
         },
         dragstarted() {
-            //console.log(d3.event.subject)
             if (!d3.event.active) this.simulation.alphaTarget(0.3).restart();
             d3.event.subject.fx = this.transform.invertX(d3.event.x);
             d3.event.subject.fy = this.transform.invertY(d3.event.y);
@@ -113,16 +126,21 @@ export default{
         }
     },
     updated(){
-        this.updateGraph();
+        if(this.node.data.GRAPH){
+            if(!this.nodes) this.updateGraph();
+        }else{
+            this.nodes = null;
+            this.links = null;
+        }
     },
     mounted(){
-        this.context = this.$refs.container.getContext("2d");
-        this.updateGraph();
+        this.canvas = this.$refs.container;
+        this.context = this.canvas.getContext("2d");
+        this.simulation = d3.forceSimulation()
+            .force("charge", d3.forceManyBody())
+            .force("center", d3.forceCenter(250, 250));
 
-        d3.select(this.$refs.container)
-            .call(d3.drag().subject(this.dragsubject).on("start", this.dragstarted).on("drag", this.dragged).on("end", this.dragended))
-            .call(d3.zoom().scaleExtent([1 / 10, 8])
-            .on("zoom", this.zoom));
+        if(this.node.data.GRAPH) this.updateGraph();
 
         this.editor.on('noderemove', node=>{
             if(node.id === this.node.id) this.freez = false;
