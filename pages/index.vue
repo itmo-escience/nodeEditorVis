@@ -271,7 +271,8 @@
       });
 
       this.$store.commit('initRete');
-      this.state.data['graph'] = await d3.json('/data/graph.json');
+      this.state.data['nodes'] = await d3.json('/data/nodes.json');
+      this.state.data['links'] = await d3.json('/data/links.json');
       this.state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
       this.state.data['branches.json'] = await this.$axios.$get('/data/branches.json');
       const arcs = await this.$axios.$get('/data/arcs.json')

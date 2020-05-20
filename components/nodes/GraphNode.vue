@@ -59,10 +59,13 @@ export default{
             this.context.translate(this.transform.x, this.transform.y);
             this.context.scale(this.transform.k, this.transform.k);
 
-            // this.context.beginPath();
-            // this.links.forEach(this.drawLink);
-            // this.context.strokeStyle = "#aaa";
-            // this.context.stroke();
+            if(this.links){
+                this.context.beginPath();
+                this.links.forEach(this.drawLink);
+                this.context.strokeStyle = "#aaa";
+                this.context.stroke();
+            }
+            
 
             this.context.beginPath();
             this.nodes.forEach(this.drawNode);
@@ -75,15 +78,23 @@ export default{
             const data = this.node.data;
             this.nodes = data.GRAPH.nodes;
             this.links = data.GRAPH.links;
-
+            
             this.simulation = d3.forceSimulation(this.nodes)
                 .force('x', d3.forceX().x(d=>d.xpos).strength(d=>d.xstr))
                 .force('y', d3.forceY().y(d=>d.ypos).strength(d=>d.ystr))
                 .force('charge', d3.forceManyBody().strength(d=>d.cstr))
                 .force('radial', d3.forceRadial(d=>d.rad, ...data.GRAPH.radialCenter).strength(d=>d.rstr));
                 // .force("center", d3.forceCenter(250, 250));
-                // .force("link", d3.forceLink(this.links).id(d => d.id))
 
+            if(this.links){
+                this.simulation
+                    .force("link", d3.forceLink(this.links)
+                        .id(d => d.id)
+                        .iterations(data.GRAPH.iterations)
+                        .distance(d=>d.ldis)
+                    )
+            }
+                 
             d3.select(this.canvas)
                 .call(d3.drag().subject(this.dragsubject).on("start", this.dragstarted).on("drag", this.dragged).on("end", this.dragended))
                 .call(d3.zoom().scaleExtent([1 / 10, 8])

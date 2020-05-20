@@ -20,6 +20,7 @@
 .connection.socket-output-force-y > path{ stroke: #8be8ff !important; }
 .connection.socket-output-force-many-body > path{ stroke: #237083 !important; }
 .connection.socket-output-force-radial > path{ stroke: #92b2b9 !important; }
+.connection.socket-output-links > path{ stroke: #c8f3fd !important; }
 
 .socket.output.number-array, .socket.input.number-array { background: #aaff00; }
 .socket.output.string-array, .socket.input.string-array { background: #a002a0; }
@@ -43,6 +44,7 @@
 .socket.output.force-y, .socket.input.force-y { background: #8be8ff; }
 .socket.output.force-many-body, .socket.input.force-many-body { background: #237083; }
 .socket.output.force-radial, .socket.input.force-radial { background: #92b2b9; }
+.socket.output.links, .socket.input.links { background: #c8f3fd; }
 
 body{ color: #d5d6d6; }
 

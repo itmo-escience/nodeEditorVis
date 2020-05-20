@@ -33,7 +33,7 @@ const store = () => new Vuex.Store({
   state: {
     editor: null,
     engine: null,
-    options: ['', 'cars.csv', 'branches.json', 'arcs.json', 'graph'],
+    options: ['', 'cars.csv', 'branches.json', 'arcs.json', 'nodes', 'links'],
     preview: [],
     ids: {
         maps: 0
@@ -322,10 +322,6 @@ const store = () => new Vuex.Store({
 
                     outputs.colorMap = data;
                     
-                    // outputs.colors = {
-                    //     data: values, 
-                    //     params: ['color', (val)=> data['field'+val] ]
-                    // }
                     outputs.colors = {
                         data: values.map(v=> data['field'+v]), 
                         value: null
@@ -1257,6 +1253,41 @@ const store = () => new Vuex.Store({
                 }
             }
         }
+        class LinksComponent extends Rete.Component {
+            constructor() {
+                super('Links')
+                this.data.component = Node;
+                this.path = [];
+            }
+            builder(node){
+                const distance = new Rete.Input('distance', 'Distance', numArrSocket);
+                distance.addControl(new RangeControl(this.editor, 'distance', [0, 100], node));
+
+                node
+                    .addInput(new Rete.Input('strSource', 'source', strArrSocket))
+                    .addInput(new Rete.Input('intSource', 'source', numArrSocket))
+                    .addInput(new Rete.Input('strTarget', 'target', strArrSocket))
+                    .addInput(new Rete.Input('intTarget', 'target', numArrSocket))
+                    .addControl(new RangeControl(this.editor, 'iterations', [1, 10], node))
+                    .addInput(distance)
+                    .addOutput(new Rete.Output('links', 'Links', linksSocket));
+            }
+            worker(node, inputs, outputs){
+                if((inputs.strSource.length && inputs.strTarget.length) || (inputs.intSource.length && inputs.intTarget.length)){
+                    outputs.links = {
+                        iterations: node.data.iterations,
+                        links: (inputs.strSource.length ? inputs.strSource[0] : inputs.intSource[0]).map((d,i)=>{
+                            return {
+                                source: d,
+                                target: inputs.strTarget.length ? inputs.strTarget[0][i] : inputs.intTarget[0][i],
+                                ldis: inputs.distance.length ? inputs.distance[i] : node.data.distance,
+                            }
+                        })
+                    }
+                }
+                
+            }
+        }
         class GraphComponent extends Rete.Component {
             constructor() {
                 super('Graph')
@@ -1270,12 +1301,15 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('x', 'Force X', forceXSocket))
                     .addInput(new Rete.Input('y', 'Force Y', forceYSocket))
                     .addInput(new Rete.Input('charge', 'Force Many Body', forceManyBodySocket))
+                    .addInput(new Rete.Input('links', 'Links', linksSocket))
                     .addInput(new Rete.Input('radial', 'Force Radial', forceRadialSocket));
             }
             worker(node, inputs, outputs){
                 if(inputs.strId.length || inputs.intId.length){
                     node.data.GRAPH = {
                         radialCenter: inputs.radial.length ? inputs.radial[0].center : [],
+                        iterations: inputs.links.length ?  inputs.links[0].iterations : null,
+                        ...(inputs.links.length ? {links: inputs.links[0].links} : {}),
                         nodes: (inputs.strId.length ? inputs.strId[0] : inputs.intId[0]).map((d, i)=>{
                             return { 
                                 id: d,
@@ -1325,6 +1359,7 @@ const store = () => new Vuex.Store({
             new ScatterComponent,
             
             new GraphComponent,
+            new LinksComponent,
             new ForceXComponent, new ForceYComponent,
             new ForceManyBodyComponent,
             new ForceRadialComponent
