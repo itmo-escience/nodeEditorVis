@@ -50,8 +50,12 @@ export default{
             this.context.lineTo(d.target.x, d.target.y);
         },
         drawNode(d) {
-            this.context.moveTo(d.x + 3, d.y);
-            this.context.arc(d.x, d.y, 3, 0, 2 * Math.PI);
+            const radius = Math.max(d.radius, 3);
+            this.context.beginPath();
+            this.context.moveTo(d.x + radius, d.y);
+            this.context.arc(d.x, d.y, radius, 0, 2 * Math.PI);
+            this.context.fillStyle = d.color || '#e3c000';
+            this.context.fill();
         },
         redraw(){
             this.context.clearRect(0, 0, 500, 500);
@@ -66,11 +70,8 @@ export default{
                 this.context.stroke();
             }
             
-
-            this.context.beginPath();
             this.nodes.forEach(this.drawNode);
-            this.context.fillStyle = '#e3c000';
-            this.context.fill();
+            
 
             this.context.restore();
         },
@@ -83,8 +84,8 @@ export default{
                 .force('x', d3.forceX().x(d=>d.xpos).strength(d=>d.xstr))
                 .force('y', d3.forceY().y(d=>d.ypos).strength(d=>d.ystr))
                 .force('charge', d3.forceManyBody().strength(d=>d.cstr))
-                .force('radial', d3.forceRadial(d=>d.rad, ...data.GRAPH.radialCenter).strength(d=>d.rstr));
-                // .force("center", d3.forceCenter(250, 250));
+                .force('radial', d3.forceRadial(d=>d.rad, ...data.GRAPH.radialCenter).strength(d=>d.rstr))
+                .force("collide", d3.forceCollide().radius(d => Math.max(d.radius, 3)).iterations(2));
 
             if(this.links){
                 this.simulation

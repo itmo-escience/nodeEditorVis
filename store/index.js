@@ -1295,6 +1295,9 @@ const store = () => new Vuex.Store({
                 this.path = [];
             }
             builder(node){
+                node.data.radius = 10;
+                const radius = new Rete.Input('radius', 'Radius', numArrSocket);
+                radius.addControl(new NumControl(this.editor, 'radius', node, 'radius'));
                 node
                     .addInput(new Rete.Input('strId', 'id', strArrSocket))
                     .addInput(new Rete.Input('intId', 'id', numArrSocket))
@@ -1302,7 +1305,9 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('y', 'Force Y', forceYSocket))
                     .addInput(new Rete.Input('charge', 'Force Many Body', forceManyBodySocket))
                     .addInput(new Rete.Input('links', 'Links', linksSocket))
-                    .addInput(new Rete.Input('radial', 'Force Radial', forceRadialSocket));
+                    .addInput(new Rete.Input('radial', 'Force Radial', forceRadialSocket))
+                    .addInput(new Rete.Input('colors', 'Colors', colorSocket))
+                    .addInput(radius);
             }
             worker(node, inputs, outputs){
                 if(inputs.strId.length || inputs.intId.length){
@@ -1311,8 +1316,10 @@ const store = () => new Vuex.Store({
                         iterations: inputs.links.length ?  inputs.links[0].iterations : null,
                         ...(inputs.links.length ? {links: inputs.links[0].links} : {}),
                         nodes: (inputs.strId.length ? inputs.strId[0] : inputs.intId[0]).map((d, i)=>{
-                            return { 
+                            return {
                                 id: d,
+                                radius: inputs.radius.length ?  inputs.radius[0][i] : node.data.radius || null,
+                                ...(inputs.colors.length ? inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {color: inputs.colors[0].value} : {color: null}),
                                 ...(inputs.x.length ? inputs.x[0].strength.length ? {xstr: inputs.x[0].strength[i]} : {xstr: inputs.x[0].strength} : {xstr: null}),
                                 ...(inputs.x.length ? inputs.x[0].x.length ? {xpos: inputs.x[0].x[i]} : {xpos: inputs.x[0].x} : {xpos: null}),
                                 ...(inputs.y.length ? inputs.y[0].strength.length ? {ystr: inputs.y[0].strength[i]} : {ystr: inputs.y[0].strength} : {ystr: null}),
