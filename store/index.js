@@ -79,6 +79,23 @@ const store = () => new Vuex.Store({
         const polygonGeometrySocket = new Rete.Socket('Polygon Geometry');
         
 
+        class MultiplyComponent extends Rete.Component {
+            constructor() {
+                super('Multiply')
+                this.data.component = Node;
+                this.path = [];
+            }
+            builder(node){
+                node.data.multiplier = 1;
+                node
+                    .addInput(new Rete.Input('nums', 'Nums', numArrSocket))
+                    .addOutput(new Rete.Output('result', 'Result', numArrSocket))
+                    .addControl(new NumControl(this.editor, 'multiplier', node));
+            }
+            worker(node, inputs, outputs){
+                outputs.result = inputs.nums[0].map(d=> d*node.data.multiplier );
+            }
+        }
         class FileLoadControl extends Rete.Control {
             constructor(emitter, key, name){
                 super(key)
@@ -1289,24 +1306,24 @@ const store = () => new Vuex.Store({
         var engine = new Rete.Engine('demo@0.1.0')
 
         const components = [
-            new ColorComponent,
+            new DatasetComponent, new LoadDataComponent, new URLDataComponent,
+            new ColorComponent, new ColorCategoryComponent, new ColorRangeComponent,
+            new MultiplyComponent,
             new StrComponent, new NumComponent,
-            new DatasetComponent,
             new ParseComponent,
+
             new MapComponent,
             new PointLayerComponent, new LineLayerComponent,
             new PolygonLayerComponent, new HeatMapLayerComponent,
             new GridMapLayerComponent, new ArcLayerComponent,
-            new RangeComponent, new SizeComponent, 
-            new ColorCategoryComponent,
+            new HeatMapComponent,
             //new PointShapeCategoryComponent,
             //new LineShapeCategoryComponent,
             //new GridComponent,
-            new LoadDataComponent,
-            new HeatMapComponent, 
-            new ColorRangeComponent,
+            new RangeComponent, new SizeComponent, 
+             
             new ScatterComponent,
-            new URLDataComponent,
+            
             new GraphComponent,
             new ForceXComponent, new ForceYComponent,
             new ForceManyBodyComponent,
