@@ -1,7 +1,7 @@
 <template>
     <div class="d-flex space-between range-control">
         <div>{{ ikey }}</div>
-        <div class="relative range">
+        <div class="relative range-selector">
             <div class="min">{{ short(range[0]) }}</div>
             <div class="container mrr-20" @mousemove="dragging($event)">
                 <div class="slider d-flex" ref="slider">

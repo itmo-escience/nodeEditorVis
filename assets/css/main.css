@@ -218,7 +218,7 @@ a{
   width: 300px;
   margin-right: 10px;
 }
-.range{ width: 200px; }
+.range-selector{ width: 200px; }
 .container{
   height: 20px;
   flex-grow: 1;

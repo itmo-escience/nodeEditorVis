@@ -1,15 +1,15 @@
 <template>
-    <div>
+    <div class="d-flex space-between range-control">
         <div>{{ ikey }}</div>
-        <div class="relative">
+        <div class="relative range-selector">
             <div class="min">{{ short(range[0]) }}</div>
             <div class="container " @mousemove="dragging($event)">
                 <div class="slider d-flex" ref="slider">
-                    <svg class="circle" :style="{ left: (positions[0]*100) +'%' }" height="20" viewBox="0 0 10 10" 
+                    <svg class="circle" :style="{ left: (positions[0]*90) +'%' }" height="20" viewBox="0 0 10 10" 
                         @mousedown="dragStart(0)">
                         <circle cx="5" cy="5" r="5"></circle>
                     </svg>
-                    <svg class="circle" :style="{ left: (positions[1]*100) +'%' }" height="20" viewBox="0 0 10 10" 
+                    <svg class="circle" :style="{ left: (positions[1]*90) +'%' }" height="20" viewBox="0 0 10 10" 
                         @mousedown="dragStart(1)">
                         <circle cx="5" cy="5" r="5"></circle>
                     </svg>
