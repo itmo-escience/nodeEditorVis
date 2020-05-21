@@ -214,6 +214,10 @@ a{
     100% { top: -50px; }
 }
 
+.range-control{ 
+  width: 300px;
+  margin-right: 10px;
+}
 .range{ width: 200px; }
 .container{
   height: 20px;

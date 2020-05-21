@@ -1,5 +1,5 @@
 <template>
-    <div class="d-flex">
+    <div class="d-flex space-between range-control">
         <div>{{ ikey }}</div>
         <div class="relative range">
             <div class="min">{{ short(range[0]) }}</div>
