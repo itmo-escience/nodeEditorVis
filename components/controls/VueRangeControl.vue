@@ -1,7 +1,7 @@
 <template>
-    <div>
+    <div class="d-flex">
         <div>{{ ikey }}</div>
-        <div class="relative">
+        <div class="relative range">
             <div class="min">{{ short(range[0]) }}</div>
             <div class="container mrr-20" @mousemove="dragging($event)">
                 <div class="slider d-flex" ref="slider">

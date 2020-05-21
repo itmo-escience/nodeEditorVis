@@ -99,8 +99,8 @@ body{ color: #d5d6d6; }
   border-radius: 4px;
 }
 
-.l7-ctrl-logo { visibility: hidden; }
-.l7-marker-container { height: 0 !important; }
+/* .l7-ctrl-logo { visibility: hidden; }
+.l7-marker-container { height: 0 !important; }*/
 
 .mapbox {
   position: absolute;
@@ -214,11 +214,11 @@ a{
     100% { top: -50px; }
 }
 
+.range{ width: 200px; }
 .container{
   height: 20px;
   flex-grow: 1;
   margin: 0 50px 0 35px;
-  width: 200px;
 }
 .slider{
   position: relative;
