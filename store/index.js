@@ -1304,10 +1304,10 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('x', 'Force X', forceXSocket))
                     .addInput(new Rete.Input('y', 'Force Y', forceYSocket))
                     .addInput(new Rete.Input('charge', 'Force Many Body', forceManyBodySocket))
-                    .addInput(new Rete.Input('links', 'Links', linksSocket))
                     .addInput(new Rete.Input('radial', 'Force Radial', forceRadialSocket))
                     .addInput(new Rete.Input('colors', 'Colors', colorSocket))
-                    .addInput(radius);
+                    .addInput(radius)
+                    .addInput(new Rete.Input('links', 'Links', linksSocket));
             }
             worker(node, inputs, outputs){
                 if(inputs.strId.length || inputs.intId.length){
