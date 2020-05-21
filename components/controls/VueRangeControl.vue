@@ -5,7 +5,7 @@
             <div class="min">{{ short(range[0]) }}</div>
             <div class="container mrr-20" @mousemove="dragging($event)">
                 <div class="slider d-flex" ref="slider">
-                    <svg class="circle" :style="{ left: (position*100) +'%' }" height="20" viewBox="0 0 10 10" 
+                    <svg class="circle" :style="{ left: (position*90) +'%' }" height="20" viewBox="0 0 10 10" 
                         @mousedown="dragStart">
                         <circle cx="5" cy="5" r="5"></circle>
                     </svg>

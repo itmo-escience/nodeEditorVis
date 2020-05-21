@@ -222,7 +222,7 @@ a{
 .container{
   height: 20px;
   flex-grow: 1;
-  margin: 0 50px 0 35px;
+  margin: 0px 35px;
 }
 .slider{
   position: relative;
