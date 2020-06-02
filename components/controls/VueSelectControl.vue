@@ -1,5 +1,7 @@
-<template>  
-    <div class="dropdown" @mouseleave="close">
+<template>
+  <div class="d-flex space-between">
+      <div class="mrr-20">{{ ikey }}</div>
+      <div class="dropdown fg-1" @mouseleave="close">
       <div class="dropdown-control" :class="{opened: opened}" @click="toggle">
         {{ value }}
         <div class="ghost">{{ options.reduce((a,b)=> a.length > b.length ? a : b,'') }}</div>
@@ -8,6 +10,7 @@
           <div class="dropdown-menu-item" v-for="(option, index) in options" :key="index" @click="change(option)" :class="{selected: option === value}">{{ option }}</div>
         </div>
     </div>
+  </div>
 </template>
 <script>
     export default { 

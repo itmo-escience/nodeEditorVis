@@ -1,12 +1,15 @@
 <template>
-    <div class="d-flex align-center space-between" @mouseover="freezEditor(true)" @mouseleave="freezEditor(false)">
-      <div class="minus" @click="minus"></div>
-      <input type="number"
-        :value="value" 
-        @input="change($event)"
-        :placeholder="placeholder"/>
-      <div class="plus" @click="plus"></div>
-    </div>
+  <div class="d-flex space-between">
+      <div>{{ ikey }}</div>
+      <div class="d-flex align-center space-between" @mouseover="freezEditor(true)" @mouseleave="freezEditor(false)">
+        <div class="minus" @click="minus"></div>
+        <input type="number"
+          :value="value" 
+          @input="change($event)"
+          :placeholder="placeholder"/>
+        <div class="plus" @click="plus"></div>
+      </div>
+  </div>
 </template>
 <script>
     export default { 
@@ -59,6 +62,7 @@
   input[type=number] {
     -moz-appearance: textfield;
     text-align: center;
+    width: 100px;
   }
   .plus, .minus{ margin: 0 10px; }
   .plus:after{
