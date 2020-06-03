@@ -54,12 +54,14 @@ export default{
     watch:{
         name(val){
             this.node.data.name = val;
+            this.editor.nodeId = this.node.id;
             this.editor.trigger('process');
         }
     },
     methods: {
         preview(){
             this.node.data.preview = !this.node.data.preview,
+            this.editor.nodeId = this.node.id;
             this.editor.trigger('process');
         },
         freezEditor(freez){

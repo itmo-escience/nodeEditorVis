@@ -33,7 +33,8 @@ export default{
     },
     updateValue(color){
       this.color = `rgba(${Object.values(color.rgba).toString()})`;
-      this.putData(this.ikey, this.color)
+      this.putData(this.ikey, this.color);
+      this.emitter.nodeId = this.node.id;
       this.emitter.trigger('process');
     }
   },
@@ -43,6 +44,7 @@ export default{
   mounted(){
     this.color = this.getData(this.ikey) || this.color;
     this.putData(this.ikey, this.color);
+    this.emitter.nodeId = this.node.id;
     this.emitter.trigger('process');
     this.emitter.on('nodetranslate', ()=>!this.freez);
     this.emitter.on('noderemove', node=>{

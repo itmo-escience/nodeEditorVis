@@ -18,7 +18,7 @@
     import { Chrome } from "vue-color";
 
     export default { 
-        props: ['emitter', 'ikey', 'getData', 'putData'],
+        props: ['emitter', 'ikey', 'node', 'getData', 'putData'],
         components: { Chrome },
         data() {
           return {
@@ -81,6 +81,7 @@
             },
             update(){
                 this.putData(this.ikey, this.value)
+                this.emitter.nodeId = this.node.id;
                 this.emitter.trigger('process');
             }
         },

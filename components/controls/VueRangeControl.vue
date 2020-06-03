@@ -59,7 +59,8 @@
             },
             update(){
                 const diff = this.range[1] - this.range[0];
-                this.putData(this.ikey, this.range[0]+(diff*this.position))
+                this.putData(this.ikey, this.range[0]+(diff*this.position));
+                this.emitter.nodeId = this.node.id;
                 this.emitter.trigger('process');
             }
         },

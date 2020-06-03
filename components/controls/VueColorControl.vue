@@ -29,7 +29,8 @@ export default{
     },
     updateValue(color){
       this.color = `rgba(${Object.values(color.rgba).toString()})`;
-      this.putData(this.ikey, this.color)
+      this.putData(this.ikey, this.color);
+      this.emitter.nodeId = this.node.id;
       this.emitter.trigger('process');
     }
   },

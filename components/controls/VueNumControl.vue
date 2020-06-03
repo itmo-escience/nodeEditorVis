@@ -38,8 +38,8 @@
             this.update();
           },
           update() {
-            if (this.ikey)
-              this.putData(this.ikey, this.value)
+            this.putData(this.ikey, this.value)
+            this.emitter.nodeId = this.node.id;
             this.emitter.trigger('process');
           }
         },

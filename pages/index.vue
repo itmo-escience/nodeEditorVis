@@ -156,6 +156,7 @@
               }
 
               this.$store.commit('toggleProcess', true);
+              this.state.editor.nodeId = Object.keys(data.nodes)[0];
               this.state.editor.trigger('process');
           }
         }

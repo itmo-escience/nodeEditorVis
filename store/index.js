@@ -5,6 +5,8 @@ import Rete from 'rete'
 import ConnectionPlugin from 'rete-connection-plugin'
 import VueRenderPlugin from 'rete-vue-render-plugin'
 
+import Engine from '~/engine/engine.js'
+
 import * as d3 from "d3";
 
 import VueNumControl from '~/components/controls/VueNumControl'
@@ -97,11 +99,11 @@ const store = () => new Vuex.Store({
             }
         }
         class FileLoadControl extends Rete.Control {
-            constructor(emitter, key, name){
+            constructor(emitter, key, name, node){
                 super(key)
                 this.render = 'vue';
                 this.component = VueFileLoadControl;
-                this.props = { emitter, DATA: key, name: name }
+                this.props = { emitter, DATA: key, name, node }
             }
         }
         class ColorControl extends Rete.Control {
@@ -181,26 +183,26 @@ const store = () => new Vuex.Store({
             }
         }
         class LoadControl extends Rete.Control {
-            constructor(emitter, key, placeholder) {
+            constructor(emitter, key, placeholder, node) {
                 super(key);
                 this.render = 'vue';
                 this.component = VueLoadControl;
-                this.props = { emitter, ikey: key, placeholder };
+                this.props = { emitter, ikey: key, placeholder, node };
             }
         }
         class SelectControl extends Rete.Control {
-            constructor(emitter, key, options) {
+            constructor(emitter, key, options, node) {
                 super(key);
                 this.render = 'vue';
                 this.component = VueSelectControl;
-                this.props = { emitter, ikey: key, options };
+                this.props = { emitter, ikey: key, options, node };
             }
 
             setValue(val) {
                 this.vueContext.value = val;
             }
         }
-        // COMPONENTSS
+        // COMPONENTS
         class NumComponent extends Rete.Component {
             constructor(){
                 super("Number");
@@ -409,7 +411,7 @@ const store = () => new Vuex.Store({
             }
             builder(node){
                 node.data.dataset = '';
-                node.addControl(new SelectControl( this.editor, 'dataset', state.options ));
+                node.addControl(new SelectControl( this.editor, 'dataset', state.options, node ));
             }
             async worker(node, inputs, outputs){
                 if(node.data.dataset){
@@ -428,8 +430,7 @@ const store = () => new Vuex.Store({
                 this.path = ['Data']
             }
             builder(node){
-                node
-                    .addControl(new FileLoadControl(this.editor, 'data', 'name'));
+                node.addControl(new FileLoadControl(this.editor, 'data', 'name', node));
             }
             async worker(node, inputs, outputs){
                 if(node.data.data){
@@ -448,7 +449,7 @@ const store = () => new Vuex.Store({
                 this.path = ['Data']
             }
             builder(node){
-                node.addControl(new LoadControl(this.editor, 'url', 'data url'));
+                node.addControl(new LoadControl(this.editor, 'url', 'data url', node));
             }
             async worker(node){
                 if(node.data.url){
@@ -572,7 +573,7 @@ const store = () => new Vuex.Store({
                     .addOutput(new Rete.Output('shapes', 'Shapes', lineShapesSocket)); 
                 if(node.data.values){
                     node.data.values.forEach(v=>{
-                        node.addControl(new SelectControl(this.editor, 'field'+v, state.lineShapes))
+                        node.addControl(new SelectControl(this.editor, 'field'+v, state.lineShapes, node))
                     });
                 }
             }
@@ -621,7 +622,7 @@ const store = () => new Vuex.Store({
                     .addOutput(new Rete.Output('shapes', 'Shapes', pointShapesSocket)); 
                 if(node.data.values){
                     node.data.values.forEach(v=>{
-                        node.addControl(new SelectControl(this.editor, 'field'+v, state.shapes))
+                        node.addControl(new SelectControl(this.editor, 'field'+v, state.shapes, node))
                     });
                 }
             }
@@ -868,7 +869,7 @@ const store = () => new Vuex.Store({
                 heightInput.addControl(new NumControl(this.editor, 'height', node, 'height'))
 
                 node
-                    .addControl(new SelectControl(this.editor, 'shape', state.polygonShapes))
+                    .addControl(new SelectControl(this.editor, 'shape', state.polygonShapes, node))
                     .addInput(new Rete.Input('colors', 'Colors', colorSocket))
                     .addInput(heightInput)
                     .addInput(new Rete.Input('geometry', 'Geometry', polygonGeometrySocket))
@@ -906,12 +907,12 @@ const store = () => new Vuex.Store({
             build(node){
                 node.data.extruded = true;
                 node
-                    .addControl(new SelectControl(this.editor, 'type', ['hexagon', 'grid']))
+                    .addControl(new SelectControl(this.editor, 'type', ['hexagon', 'grid'], node))
                     .addControl(new CheckBoxControl(this.editor, 'extruded', 'Extrude', node))
                     .addControl(new ColorRangeControl(this.editor, 'colorRange', node))
                     .addControl(new TwoRangeControl(this.editor, 'elevationRange', [0, 200000], node))
-                    .addControl(new SelectControl(this.editor, 'colorAggMethod', ['SUM', 'MEAN', 'MIN', 'MAX']))
-                    .addControl(new SelectControl(this.editor, 'elevationAggMethod', ['SUM', 'MEAN', 'MIN', 'MAX']))
+                    .addControl(new SelectControl(this.editor, 'colorAggMethod', ['SUM', 'MEAN', 'MIN', 'MAX'], node))
+                    .addControl(new SelectControl(this.editor, 'elevationAggMethod', ['SUM', 'MEAN', 'MIN', 'MAX'], node))
                     .addInput(new Rete.Input('lat','Lat', numArrSocket))
                     .addInput(new Rete.Input('lon','Lon', numArrSocket))
                     .addInput(new Rete.Input('geometry', 'Geometry', pointGeometrySocket))
@@ -1138,7 +1139,7 @@ const store = () => new Vuex.Store({
                     .addInput(new Rete.Input('colors', 'Colors', colorSocket))
                     .addInput(sizeInput)
                     .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
-                    .addControl(new SelectControl(this.editor, 'shape', state.shapes));
+                    .addControl(new SelectControl(this.editor, 'shape', state.shapes, node));
             }
             worker(node, inputs, outputs){
                 node.data.type = 'point';
@@ -1377,11 +1378,30 @@ const store = () => new Vuex.Store({
             engine.register(c);
         });
 
-        editor.on('process connectioncreated connectionremoved nodecreated', async()=>{
+        this.Engine = new Engine(components);
+
+        editor.on('process connectionremoved connectioncreated', async()=>{
             if(state.process)
                 await engine.abort();
                 await engine.process( editor.toJSON() )
         });
+
+
+        // editor.on('connectionremoved', async(conn)=>{
+        //     if(state.process)
+        //         this.Engine.process( editor.toJSON(), conn.output.node.id );
+        //         this.Engine.process( editor.toJSON(), conn.input.node.id );
+        // });
+        // editor.on('connectioncreated', async(conn)=>{
+        //     if(state.process)
+        //         this.Engine.process( editor.toJSON(), conn.output.node.id );
+        // });
+        // editor.on('process', async()=>{
+        //     if(state.process)
+        //         this.Engine.process( editor.toJSON(), editor.nodeId );
+        // });
+
+
         editor.on('noderemove', (node)=>{
             if(state.process && node){
                 if(node.data.preview){

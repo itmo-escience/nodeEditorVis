@@ -14,7 +14,7 @@
 </template>
 <script>
     export default { 
-        props: ['options', 'emitter', 'ikey', 'getData', 'putData'],
+        props: ['options', 'emitter', 'ikey', 'node', 'getData', 'putData'],
         data() {
           return {
             opened: false,
@@ -34,7 +34,8 @@
             this.update();
           },
           update() {
-            this.putData(this.ikey, this.value)
+            this.putData(this.ikey, this.value);
+            this.emitter.nodeId = this.node.id;
             this.emitter.trigger('process');
           }
         },

@@ -45,12 +45,14 @@ export default{
     updateValue(color, index){
       this.colors[index] = `rgba(${Object.values(color.rgba).toString()})`;
       this.render = !this.render;
-      this.putData(this.ikey, this.colors)
+      this.putData(this.ikey, this.colors);
+      this.emitter.nodeId = this.node.id;
       this.emitter.trigger('process');
     }
   },
   mounted(){
       this.putData(this.ikey, this.colors);
+      this.emitter.nodeId = this.node.id;
       this.emitter.trigger('process');
       this.emitter.on('noderemove', node=>{
         if(node.id === this.node.id) this.freez = false;

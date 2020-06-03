@@ -29,6 +29,7 @@
           },
           update() {
             this.putData(this.ikey, this.value)
+            this.emitter.nodeId = this.node.id;
             this.emitter.trigger('process');
           }
         },

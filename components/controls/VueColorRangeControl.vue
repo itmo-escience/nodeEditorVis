@@ -60,7 +60,8 @@ export default{
         this.update();
     },
     update(){
-        this.putData(this.ikey, this.colors)
+        this.putData(this.ikey, this.colors);
+        this.emitter.nodeId = this.node.id;
         this.emitter.trigger('process');
     }
   },

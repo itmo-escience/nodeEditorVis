@@ -13,7 +13,7 @@
 import * as d3 from "d3";
 
 export default{
-    props: ['emitter', 'DATA', 'name', 'getData', 'putData'],
+    props: ['emitter', 'DATA', 'name', 'node', 'getData', 'putData'],
     data(){
       return {
         highlighted: false
@@ -38,6 +38,7 @@ export default{
             const data = file.name.endsWith('.csv') ? await d3.csvParse(fr.result) : JSON.parse(fr.result);
             this.putData(this.DATA, data);
             this.putData(this.name, file.name);
+            this.emitter.nodeId = this.node.id;
             this.emitter.trigger('process');
         };  
       }
