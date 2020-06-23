@@ -35,6 +35,29 @@
 <script>
   import * as d3 from "d3";
 
+  import Rete from 'rete'
+  import ConnectionPlugin from 'rete-connection-plugin';
+  import VueRenderPlugin from 'rete-vue-render-plugin';
+
+  import {
+      MultiplyComponent, NumComponent,
+      StrComponent, ColorComponent,
+      ColorCategoryComponent, ColorRangeComponent,
+      ParseComponent, DatasetComponent,
+      //LoadDataComponent, URLDataComponent,
+      RangeComponent, SizeComponent,
+      PointLayerComponent, LineLayerComponent,
+      ArcLayerComponent, PolygonLayerComponent,
+      GridMapLayerComponent, HeatMapLayerComponent,
+      HeatMapComponent, MapComponent,
+      ScatterComponent, ForceManyBodyComponent,
+      ForceRadialComponent, ForceXComponent,
+      ForceYComponent, LinksComponent,
+      GraphComponent
+  } from '~/language/components.js';
+
+  import Engine from '~/engine/engine.js';
+
   import { Deck } from "@deck.gl/core";
   import mapboxgl from "mapbox-gl";
   import { GeoJsonLayer, ArcLayer } from '@deck.gl/layers';
@@ -54,7 +77,19 @@
         selectedId: 0,
         href: '',
         download: 'export.json',
-        state: this.$store.state,
+        
+        editor: null,
+        engine: null,
+        
+        
+        state: {
+          preview: [],
+          maps: 0,
+          data: {},
+          //process: true,
+        },
+        copiedNode: null,
+
         errorMsg: false,
         msg: null,
         showMenu: false,
@@ -66,11 +101,11 @@
     },
     computed: {
       preview(){
-        return this.$store.state.preview
+        return this.state.preview;
       },
       components(){
         const menu = [];
-        const components = [...this.$store.state.editor.components.values()];
+        const components = [...this.editor.components.values()];
         
           components.forEach(comp=>{
             if(!comp.path) return
@@ -108,10 +143,10 @@
       },
       async createNode(comp){
         if(!comp.children){
-          const component = this.state.editor.components.get( comp.name );
+          const component = this.editor.components.get( comp.name );
           const node = await component.createNode();
           node.position = this.menu;
-          this.state.editor.addNode(node);
+          this.editor.addNode(node);
           this.showMenu = false;
         }
       },
@@ -123,41 +158,41 @@
           fr.onload = async ()=> {
               const data = JSON.parse(fr.result);
 
-              await this.state.engine.abort();
-              this.$store.commit('toggleProcess', false);
+              await this.engine.abort();
+             // this.$store.commit('toggleProcess', false);
 
-              const nodes = this.state.editor.nodes;
+              const nodes = this.editor.nodes;
               const len = nodes.length;
               for(let i=0; i < len; i++){
-                this.state.editor.removeNode(nodes[0]);
+                this.editor.removeNode(nodes[0]);
               }
 
               const NODES = Object.values(data.nodes);
             
               for(let i=0; i < NODES.length; i++){
                 const node = NODES[i];
-                const component = this.state.editor.components.get( node.name );
+                const component = this.editor.components.get( node.name );
                 const n = await component.createNode( node.data );
                 n.id = node.id;
                 n.position = node.position;
-                this.state.editor.addNode(n);
+                this.editor.addNode(n);
               }
 
               for(let i=0; i < NODES.length; i++){
                 const node = NODES[i];
-                const node1 = this.state.editor.nodes.find(n=> n.id === node.id);
+                const node1 = this.editor.nodes.find(n=> n.id === node.id);
                 Object.entries(node.inputs).forEach(([key, val])=>{
                   if(val.connections.length){
                     const conn = val.connections[0];
-                    const node2 = this.state.editor.nodes.find(n=> n.id === conn.node);
-                    this.state.editor.connect(node2.outputs.get( conn.output ), node1.inputs.get( key ));
+                    const node2 = this.editor.nodes.find(n=> n.id === conn.node);
+                    this.editor.connect(node2.outputs.get( conn.output ), node1.inputs.get( key ));
                   }
                 });
               }
 
-              this.$store.commit('toggleProcess', true);
-              this.state.editor.nodeId = Object.keys(data.nodes)[0];
-              this.state.editor.trigger('process');
+              //this.$store.commit('toggleProcess', true);
+              this.editor.nodeId = undefined;
+              this.editor.trigger('process');
           }
         }
       },
@@ -166,7 +201,7 @@
         this.drawMap();
       },
       async saveEditor(noMsg){
-        const json = await this.state.editor.toJSON();
+        const json = await this.editor.toJSON();
         const data = JSON.stringify(json, null, ' ');
         const file = new Blob([data], {type: 'application/json'});
         this.href = URL.createObjectURL(file);
@@ -176,7 +211,7 @@
           setTimeout(()=>{ this.msg = null }, 1000);
       },
       drawMap(){
-        const layers = this.$store.state.preview[this.selectedId].layers;
+        const layers = this.state.preview[this.selectedId].layers;
         if(layers){
             const ls = [];
             layers.forEach(l=>{
@@ -271,13 +306,107 @@
           });
       });
 
-      this.$store.commit('initRete');
+      //
+      var container = document.querySelector('#editor')
+      this.editor = new Rete.NodeEditor('demo@0.1.0', container)
+
+      this.editor.use( VueRenderPlugin )
+      this.editor.use( ConnectionPlugin )
+
+      this.engine = new Rete.Engine('demo@0.1.0')
+
+      const components = [
+          new DatasetComponent, //new LoadDataComponent, new URLDataComponent,
+          new ColorComponent, new ColorCategoryComponent, new ColorRangeComponent,
+          new MultiplyComponent,
+          new StrComponent, new NumComponent,
+          new ParseComponent,
+
+          new MapComponent,
+          new PointLayerComponent, new LineLayerComponent,
+          new PolygonLayerComponent, new HeatMapLayerComponent,
+          new GridMapLayerComponent, new ArcLayerComponent,
+          new HeatMapComponent,
+          new RangeComponent, new SizeComponent,
+            
+          new ScatterComponent,
+          
+          new GraphComponent,
+          new LinksComponent,
+          new ForceXComponent, new ForceYComponent,
+          new ForceManyBodyComponent,
+          new ForceRadialComponent
+      ];
+
+        components.map(c => {
+            this.editor.register(c);
+            this.engine.register(c);
+        });
+
+        this.Engine = new Engine(components);
+
+        this.editor.on('process', async()=>{
+            // if(state.process)
+                await this.engine.abort();
+                await this.engine.process( this.editor.toJSON(), this.editor.nodeId, this.state );
+        });
+        this.editor.on('connectionremoved', async(conn)=>{
+            // if(state.process)
+                await this.engine.abort();
+                await this.engine.process( this.editor.toJSON(), conn.input.node.id, this.state );
+        });
+        this.editor.on('connectioncreated', async(conn)=>{
+            // if(state.process)
+                await this.engine.abort();
+                await this.engine.process( this.editor.toJSON(), conn.input.node.id, this.state );
+        });
+
+        // editor.on('connectionremoved', async(conn)=>{
+        //     //if(state.process)
+        //         await this.Engine.process( editor.toJSON(), conn.input.node.id, this.state );
+        // });
+        // editor.on('connectioncreated', async(conn)=>{
+        //     //if(state.process)
+        //         await this.Engine.process( editor.toJSON(), conn.input.node.id, this.state );
+        // });
+        // editor.on('process', async()=>{
+        //     //if(state.process)
+        //         await this.Engine.process( editor.toJSON(), editor.nodeId, this.state );
+        // });
+
+
+        this.editor.on('noderemove', (node)=>{
+            // if(state.process && node){
+              if(node.data.preview){
+                  const item = this.state.preview.find(d=>d.id === node.data.id);
+                  this.state.preview.splice(this.state.preview.indexOf(item), 1);
+              }
+            // }
+        })
+
+        document.addEventListener('keydown', async function (e){
+            const node = this.editor.selected.list[0];
+            if (e.key === "Delete"){
+                this.editor.removeNode( node );
+            }else if(e.ctrlKey && e.key.toLocaleLowerCase() === 'c'){
+                this.copiedNode = node;
+            }else if(e.ctrlKey && e.key.toLocaleLowerCase() === 'v'){
+                if(this.copiedNode){
+                    const component = this.editor.components.get( this.copiedNode.name );
+                    const copy = await component.createNode( this.copiedNode.data );
+                    copy.position = [this.copiedNode.position[0]+10, this.copiedNode.position[1]+10];
+                    this.editor.addNode( copy );
+                }
+            }
+        });
+      ///
+
       this.state.data['nodes'] = await this.$axios.$get('/data/nodes.json');
       this.state.data['links'] = await this.$axios.$get('/data/links.json');
-      this.state.data['cars.csv'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
-      this.state.data['branches.json'] = await this.$axios.$get('/data/branches.json');
+      this.state.data['cars'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
+      this.state.data['branches'] = await this.$axios.$get('/data/branches.json');
       const arcs = await this.$axios.$get('/data/arcs.json')
-      this.state.data['arcs.json'] = arcs.map(d=>({
+      this.state.data['arcs'] = arcs.map(d=>({
             id: d.id,
             clients_count: d.clients_count,
             x: d.source[0],
@@ -285,7 +414,8 @@
             x1: d.target[0],
             y1: d.target[1]
           }));
-      this.state.editor.fromJSON({
+          
+      await this.editor.fromJSON({
           "id": "demo@0.1.0",
           "nodes": {
               "1": {
@@ -304,13 +434,16 @@
       });
       this.saveEditor(true);
 
+      this.editor.nodeId = undefined;
+      this.editor.trigger('process');
+
       document.addEventListener('keydown', async (e)=>{
         if(e.ctrlKey && e.key.toLocaleLowerCase() === 's' && this){
           e.preventDefault();
           this.saveEditor();
         }
       });
-      this.state.editor.on('contextmenu',({ e, view, node })=>{
+      this.editor.on('contextmenu',({ e, view, node })=>{
         e.preventDefault();
         if(node){
           this.node = true;
@@ -327,91 +460,9 @@
           this.$nextTick(()=> this.$refs.search.focus() )
         }
       });
-      this.state.editor.on('click',()=>{
+      this.editor.on('click',()=>{
         this.showMenu = false;
       });
     }
   }
 </script>
-<style>
-  .download:after{
-    content: url(~assets/download.svg);
-  }
-  .save:after{
-    content: url(~assets/save.svg);
-  }
-  .upload:after{
-    content: url(~assets/upload.svg);
-  }
-  #load{
-    position: fixed;
-    top: 0; left: 0;
-    margin: 10px;
-    z-index: 3;
-  }
-  #editor{
-    position: fixed;
-    left: 0; bottom: 0;
-    width: 100%;
-    height: 100% !important;
-    z-index: 2;
-    background: #292929;
-  }
-  #preview{
-    position: fixed;
-    right: 0; bottom: 0;
-    z-index: 2;
-    width: 900px;
-    height: 100%;
-  }
-  .preview-item{
-    border: 1px solid #d5d6d6;
-    color: #d5d6d6;
-    border-radius: 4px 4px 0 0;
-    background: #353535;
-    padding: 10px;
-  }
-  .preview-item.selected{
-    border-color: #e3c000;
-    color: #e3c000;
-  }
-
-  .container-preview{
-    width: 100%;
-    height: 100%;
-    position: relative;
-  }
-  .map-preview {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #e5e9ec;
-      overflow: hidden;
-  }
-  .deck-preview {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-  }
-
-  #preview.hidden{ visibility: hidden; }
-  .logo{
-    position: fixed;
-    left: 0; bottom: 0;
-    z-index: 2;
-  }
-  .logo:after{
-    content: url(~assets/logo.svg);
-  }
-  /*.context-menu{
-    position: fixed;
-    z-index: 3;
-    background: #292929;
-    padding: 10px;
-    width: 120px;
-  }*/
-</style>
