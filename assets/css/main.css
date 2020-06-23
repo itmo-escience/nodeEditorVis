@@ -21,6 +21,7 @@
 .connection.socket-output-force-many-body > path{ stroke: #237083 !important; }
 .connection.socket-output-force-radial > path{ stroke: #92b2b9 !important; }
 .connection.socket-output-links > path{ stroke: #c8f3fd !important; }
+.connection.socket-output-data > path{ stroke: #2697b1 !important; }
 
 .socket.output.number-array, .socket.input.number-array { background: #aaff00; }
 .socket.output.string-array, .socket.input.string-array { background: #a002a0; }
@@ -45,6 +46,7 @@
 .socket.output.force-many-body, .socket.input.force-many-body { background: #237083; }
 .socket.output.force-radial, .socket.input.force-radial { background: #92b2b9; }
 .socket.output.links, .socket.input.links { background: #c8f3fd; }
+.socket.output.data, .socket.input.data { background: #2697b1; }
 
 body{ color: #d5d6d6; }
 
@@ -261,4 +263,78 @@ a{
 #pallet{
   position: absolute;
   top: 10px;
+}
+
+.download:after{
+  content: url(~assets/download.svg);
+}
+.save:after{
+  content: url(~assets/save.svg);
+}
+.upload:after{
+  content: url(~assets/upload.svg);
+}
+#load{
+  position: fixed;
+  top: 0; left: 0;
+  margin: 10px;
+  z-index: 3;
+}
+#editor{
+  position: fixed;
+  left: 0; bottom: 0;
+  width: 100%;
+  height: 100% !important;
+  z-index: 2;
+  background: #292929;
+}
+#preview{
+  position: fixed;
+  right: 0; bottom: 0;
+  z-index: 2;
+  width: 900px;
+  height: 100%;
+}
+.preview-item{
+  border: 1px solid #d5d6d6;
+  color: #d5d6d6;
+  border-radius: 4px 4px 0 0;
+  background: #353535;
+  padding: 10px;
+}
+.preview-item.selected{
+  border-color: #e3c000;
+  color: #e3c000;
+}
+
+.container-preview{
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.map-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #e5e9ec;
+    overflow: hidden;
+}
+.deck-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#preview.hidden{ visibility: hidden; }
+.logo{
+  position: fixed;
+  left: 0; bottom: 0;
+  z-index: 2;
+}
+.logo:after{
+  content: url(~assets/logo.svg);
 }
