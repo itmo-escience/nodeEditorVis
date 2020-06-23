@@ -15,11 +15,10 @@
 import { Chrome } from "vue-color";
 export default{
   components: {Chrome},
-  props: ['emitter', 'ikey', 'node', 'getData', 'putData'],
+  props: ['emitter', 'ikey', 'node'],
   data(){
     return {
       color: `rgba(${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},${Math.floor(Math.random()*256)},1)`,
-      // color: "#"+((1<<24)*Math.random()|0).toString(16),
       opened: false,
       freez: false
     }
@@ -33,23 +32,19 @@ export default{
     },
     updateValue(color){
       this.color = `rgba(${Object.values(color.rgba).toString()})`;
-      this.putData(this.ikey, this.color);
-      this.emitter.nodeId = this.node.id;
-      this.emitter.trigger('process');
+      this.node.data.colors[this.ikey] = this.color;
     }
   },
-  updated(){
-    this.color = this.getData(this.ikey);
-  },
   mounted(){
-    this.color = this.getData(this.ikey) || this.color;
-    this.putData(this.ikey, this.color);
-    this.emitter.nodeId = this.node.id;
-    this.emitter.trigger('process');
+    this.color = this.node.data.colors[this.ikey] || this.color;
+    this.node.data.colors[this.ikey] = this.color;
     this.emitter.on('nodetranslate', ()=>!this.freez);
     this.emitter.on('noderemove', node=>{
       if(node.id === this.node.id) this.freez = false;
     });
+  },
+  beforeDestroy(){
+    delete this.node.data.colors[this.ikey];
   }
 }
 </script>

@@ -19,9 +19,10 @@
         </div>
 
         <div v-if="node.data.values" class="mrr-20 mrl-20">
-            <div v-for="(value, i) in node.data.values" class="d-flex space-between align-center mrv-10" v-if="opened || i < 5" :key="i">
+            <div v-for="(value, i) in node.data.values" class="d-flex space-between align-center mrv-10" v-if="opened || i < 5" :key="value">
                 <div>{{ value ? (value.length > 15 ? value.toString().slice(0,15)+'...' : value.toString().slice(0,15)) : 'Null'  }}</div>
-                <div v-control="controls()[i]"></div>
+                <!-- <div v-control="controls()[i]"></div>  -->
+                <Control :emitter="editor" :node="node" :ikey="value" />
             </div>
         </div>
 
@@ -29,15 +30,32 @@
     </div>
 </template>
 <script>
+    import VueClosedColorControl from '~/components/controls/VueClosedColorControl.vue'
+
     import VueRenderPlugin from 'rete-vue-render-plugin'
     export default{
         mixins: [VueRenderPlugin.mixin],
-        components:{ Socket: VueRenderPlugin.Socket },
-        data(){ return { opened: true } },
+        components:{ Socket: VueRenderPlugin.Socket, Control: VueClosedColorControl },
+        data(){ 
+            return { 
+                opened: true,
+                colors: null
+            }
+        },
         methods: {
             toggle(){
                 this.opened = !this.opened;
             }
+        },
+        updated(){
+            const colors = JSON.stringify( Object.values(this.node.data.colors ));
+            if(colors != this.colors){
+                this.editor.nodeId = this.node.id;
+                this.editor.trigger('process');
+
+                this.colors = colors;
+            }
+            
         }
     }
 </script>
