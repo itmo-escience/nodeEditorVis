@@ -4,10 +4,22 @@ export default class Engine {
         components.forEach(component=> this.components.set(component.name, component) );
 
         this.editor = null;
+        this.args = null;
         this.nodes = {};
     }
-    processNode(node){
-        // console.log(node.name);
+    async processNode(node){
+        console.log(node.name);
+        
+        let NODE = this.nodes[node.id];
+        if(!NODE){
+            NODE = this.nodes[node.id] = { id: node.id, visited: true };
+        }else if(NODE.visited){
+            return
+        }else{
+            NODE.visited = true;
+        }
+
+        // Worker 
         const component = this.components.get( node.name );
         const inputs = {};
         for(let key in node.inputs){
@@ -20,22 +32,33 @@ export default class Engine {
             }
         }
         const outputs = {};
-        component.worker(node, inputs, outputs);
-        
-        const id = node.id;
-        this.nodes[id] = { id, outputs }
+        await component.worker(node, inputs, outputs, ...this.args);
+       
+
+        NODE.outputs = outputs;
 
         for(let key in node.outputs){
             const conn = node.outputs[key].connections[0];
             if(conn){
                 const n = this.editor.nodes[conn.node];
-                this.processNode( n );
+                await this.processNode( n );
             }
         }
     }
-    process(editor, id){
+    async process(editor, id, ...args){
+        this.args = args;
+
+        for(let key in this.nodes){
+            this.nodes[key].visited = false;
+        }
+
+        if(!id){
+            Object.values(editor.nodes).forEach(node => this.processNode(node) );
+            return
+        }
+
         this.editor = editor;
         let node = this.editor.nodes[id];
-        this.processNode( node );
+        await this.processNode( node );
     }
 }
