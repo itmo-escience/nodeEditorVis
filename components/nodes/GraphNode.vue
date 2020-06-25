@@ -79,7 +79,7 @@ export default{
             const data = this.node.data;
             this.nodes = data.GRAPH.nodes;
             this.links = data.GRAPH.links;
-            
+
             this.simulation = d3.forceSimulation(this.nodes)
                 .force('x', d3.forceX().x(d=>d.xpos).strength(d=>d.xstr))
                 .force('y', d3.forceY().y(d=>d.ypos).strength(d=>d.ystr))
@@ -141,12 +141,6 @@ export default{
         }
     },
     updated(){
-        // if(this.node.data.GRAPH){
-        //     if(!this.nodes) this.updateGraph();
-        // }else{
-        //     this.nodes = null;
-        //     this.links = null;
-        // }
         if(this.node.data.GRAPH) this.updateGraph();
     },
     mounted(){

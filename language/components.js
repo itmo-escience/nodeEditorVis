@@ -945,7 +945,7 @@ class GraphComponent extends Rete.Component {
                 radialCenter: inputs.radial.length ? inputs.radial[0].center : [],
                 iterations: inputs.links.length ?  inputs.links[0].iterations : null,
                 ...(inputs.links.length ? {links: inputs.links[0].links} : {}),
-                nodes: inputs.id.map((d, i)=>{
+                nodes: inputs.id[0].map((d, i)=>{
                     return {
                         id: d,
                         radius: inputs.radius.length ?  inputs.radius[0][i] : node.data.radius || null,
