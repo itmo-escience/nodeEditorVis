@@ -157,9 +157,6 @@
           fr.onload = async ()=> {
               const data = JSON.parse(fr.result);
 
-              await this.engine.abort();
-             // this.$store.commit('toggleProcess', false);
-
               const nodes = this.editor.nodes;
               const len = nodes.length;
               for(let i=0; i < len; i++){
@@ -189,7 +186,6 @@
                 });
               }
 
-              //this.$store.commit('toggleProcess', true);
               this.editor.nodeId = undefined;
               this.editor.trigger('process');
           }
@@ -340,39 +336,20 @@
 
         components.map(c => {
             this.editor.register(c);
-            this.engine.register(c);
+            // this.engine.register(c);
         });
 
-        this.Engine = new Engine(components);
+        this.Engine = new Engine( components );
 
-        this.editor.on('process', async()=>{
-            // if(state.process)
-                await this.engine.abort();
-                await this.engine.process( this.editor.toJSON(), this.editor.nodeId, this.state );
-        });
         this.editor.on('connectionremoved', async(conn)=>{
-            // if(state.process)
-                await this.engine.abort();
-                await this.engine.process( this.editor.toJSON(), conn.input.node.id, this.state );
+          await this.Engine.process( this.editor.toJSON(), conn.input.node.id, this.state );
         });
         this.editor.on('connectioncreated', async(conn)=>{
-            // if(state.process)
-                await this.engine.abort();
-                await this.engine.process( this.editor.toJSON(), conn.input.node.id, this.state );
+          await this.Engine.process( this.editor.toJSON(), conn.output.node.id, this.state );
         });
-
-        // editor.on('connectionremoved', async(conn)=>{
-        //     //if(state.process)
-        //         await this.Engine.process( editor.toJSON(), conn.input.node.id, this.state );
-        // });
-        // editor.on('connectioncreated', async(conn)=>{
-        //     //if(state.process)
-        //         await this.Engine.process( editor.toJSON(), conn.input.node.id, this.state );
-        // });
-        // editor.on('process', async()=>{
-        //     //if(state.process)
-        //         await this.Engine.process( editor.toJSON(), editor.nodeId, this.state );
-        // });
+        this.editor.on('process', async()=>{
+          await this.Engine.process( this.editor.toJSON(), this.editor.nodeId, this.state );
+        });
 
 
         this.editor.on('noderemove', (node)=>{

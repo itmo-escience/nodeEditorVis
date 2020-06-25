@@ -8,7 +8,6 @@ export default class Engine {
         this.nodes = {};
     }
     async processNode(node){
-        console.log(node.name);
         
         let NODE = this.nodes[node.id];
         if(!NODE){
@@ -51,7 +50,7 @@ export default class Engine {
         for(let key in this.nodes){
             this.nodes[key].visited = false;
         }
-
+        
         if(!id){
             Object.values(editor.nodes).forEach(node => this.processNode(node) );
             return

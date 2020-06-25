@@ -230,12 +230,16 @@ class DatasetComponent extends Rete.Component {
                     const parse = await component.createNode( {name, data: { type: 'FeatureCollection', features: d.values }} );
                     parse.position = [ node.position[0], node.position[1] + i*20 ];
                     this.editor.addNode( parse );
+                    this.editor.nodeId = parse.id;
+                    this.editor.trigger('process');
                 });
             }else{
                 const component = new ParseComponent;
                 const parse = await component.createNode( data );
                 parse.position = node.position;
                 this.editor.addNode( parse );
+                this.editor.nodeId = parse.id;
+                this.editor.trigger('process');
             };
             
             this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
