@@ -44,7 +44,7 @@
       ColorCategoryComponent, ColorRangeComponent,
       ParseComponent, DatasetComponent,
       //LoadDataComponent, URLDataComponent,
-      RangeComponent, SizeComponent,
+      RangeComponent,
       PointLayerComponent, LineLayerComponent,
       ArcLayerComponent, PolygonLayerComponent,
       GridMapLayerComponent, HeatMapLayerComponent,
@@ -326,7 +326,8 @@
           new PolygonLayerComponent, new HeatMapLayerComponent,
           new GridMapLayerComponent, new ArcLayerComponent,
           new HeatMapComponent,
-          new RangeComponent, new SizeComponent,
+          
+          new RangeComponent,
             
           new ScatterComponent,
           

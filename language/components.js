@@ -19,7 +19,6 @@ import {
 
 const colorSocket = new Rete.Socket('Color');
 const colorMapSocket = new Rete.Socket('Color Map');
-const sizeSocket = new Rete.Socket('Size');
 const layerSocket = new Rete.Socket('Layer');
 
 const dataSocket = new Rete.Socket('Data');
@@ -198,6 +197,7 @@ class DatasetComponent extends Rete.Component {
             .addControl(new FileLoadControl(this.editor, 'data', 'name', node));
     }
     async worker(node, inputs, outputs, state){
+        
         let data;
         if(node.data.dataset){
             data = {
@@ -222,10 +222,22 @@ class DatasetComponent extends Rete.Component {
             data = { name, data };
         }
         if(data){
-            const component = new ParseComponent;
-            const parse = await component.createNode( data );
-            parse.position = node.position;
-            this.editor.addNode( parse );
+            if(data.data.type == 'FeatureCollection'){
+                (d3.nest()
+                .key(function(d) { return d.geometry.type; })
+                .entries(data.data.features) ).forEach(async (d, i)=>{
+                    const component = new ParseComponent;
+                    const parse = await component.createNode( {name, data: { type: 'FeatureCollection', features: d.values }} );
+                    parse.position = [ node.position[0], node.position[1] + i*20 ];
+                    this.editor.addNode( parse );
+                });
+            }else{
+                const component = new ParseComponent;
+                const parse = await component.createNode( data );
+                parse.position = node.position;
+                this.editor.addNode( parse );
+            };
+            
             this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
         }
     }
@@ -276,49 +288,6 @@ class RangeComponent extends Rete.Component {
             const n = this.editor.nodes.find(n=> n.id === connection.node);
             this.editor.connect(n.outputs.get( connection.output ), colors.inputs.get('nums'));
             this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
-        }
-    }
-}
-class SizeComponent extends Rete.Component{
-    constructor(){
-        super('Size')
-        this.data.component = Node;
-        this.path = [];
-    }
-    builder(node){
-        node.data.x = 5;
-        node.data.y = 5;
-        node.data.z = 0;
-        
-        const inX = new Rete.Input('x', 'X', dataSocket);
-        const inY = new Rete.Input('y', 'Y', dataSocket);
-        const inZ = new Rete.Input('z', 'Z', dataSocket);
-
-        inX.addControl(new NumControl(this.editor, 'x', node))
-        inY.addControl(new NumControl(this.editor, 'y', node))
-        inZ.addControl(new NumControl(this.editor, 'z', node))
-        
-        node
-            .addInput(inX).addInput(inY).addInput(inZ)
-            .addOutput(new Rete.Output('size', 'Size', sizeSocket));
-    }
-    worker(node, inputs, outputs){
-        outputs['size'] = {
-            values: [],
-            params: null
-        };
-        const nums = inputs.x[0] || inputs.y[0] || inputs.z[0];
-        if(nums){
-            outputs['size'].params = ['size', s=>{ return [ s.x, s.y, s.z ]; }]
-            for(let i=0; i < nums.length; i++){
-                outputs['size'].values.push({
-                     x: inputs.x.length ? inputs.x[0][i] : node.data.x,
-                     y: inputs.y.length ? inputs.y[0][i] : node.data.y,
-                     z: inputs.z.length ? inputs.z[0][i] : node.data.z,  
-                 }); 
-             }
-        }else{
-            outputs['size'].params = [[node.data.x, node.data.y, node.data.z]]
         }
     }
 }
@@ -968,11 +937,10 @@ class GraphComponent extends Rete.Component {
 }
 
 export {
-    MultiplyComponent,
+    MultiplyComponent, RangeComponent,
     ColorComponent,
     ColorCategoryComponent, ColorRangeComponent,
     ParseComponent, DatasetComponent,
-    RangeComponent, SizeComponent,
     PointLayerComponent, LineLayerComponent,
     ArcLayerComponent, PolygonLayerComponent,
     GridMapLayerComponent, HeatMapLayerComponent,
