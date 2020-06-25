@@ -13,7 +13,7 @@ import {
     ClosedColorControl, TwoColorControl,
     ColorRangeControl, CheckBoxControl,
     RangeControl, TwoRangeControl,
-    NumControl, StrControl,
+    NumControl,
     LoadControl, SelectControl
 } from '~/language/controls.js';
 
@@ -194,8 +194,8 @@ class DatasetComponent extends Rete.Component {
         node.data.dataset = '';
 
         node.addControl( new SelectControl( this.editor, 'dataset', ['', 'cars', 'branches', 'arcs', 'nodes', 'links'], node ) )
-            .addControl(new FileLoadControl(this.editor, 'data', 'name', node))
-            .addControl(new LoadControl(this.editor, 'url', 'data url', node));
+            .addControl(new LoadControl(this.editor, 'url', 'Url', node))
+            .addControl(new FileLoadControl(this.editor, 'data', 'name', node));
     }
     async worker(node, inputs, outputs, state){
         let data;
@@ -230,7 +230,6 @@ class DatasetComponent extends Rete.Component {
         }
     }
 }
-
 class RangeComponent extends Rete.Component {
     constructor(){
         super('Range')
@@ -777,9 +776,9 @@ class ScatterComponent extends Rete.Component {
         node.data.type = 'point';
         if( inputs.x.length && inputs.y.length ){
 
-            node.data.DATA = (inputs.x[0] || inputs.strx[0]).map((x, i)=> ({
-                x: +inputs.x[0][i],
-                y: +inputs.y[0][i],
+            node.data.DATA = inputs.x[0].map((x, i)=> ({
+                x: inputs.x[0][i],
+                y: inputs.y[0][i],
                 ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                 ...(inputs.size.length ? {size: +inputs.size[0][i]} : {}),
                 ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})

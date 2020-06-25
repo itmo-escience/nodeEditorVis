@@ -1,15 +1,18 @@
 <template>
     <div>
         <img v-if="loading" src="~assets/loading.svg" />
-        <input v-else 
-            type="string" 
-            :readonly="readonly"
-            :placeholder="placeholder"
-            :value="value" 
-            @input="change($event)" 
-            @dblclick.stop="" 
-            @pointerdown.stop="" 
-            @pointermove.stop=""/>
+        <div v-else class="d-flex">
+            <div class="mrr-20">{{ placeholder }}</div>
+            <input  
+                type="string" 
+                :readonly="readonly"
+                :placeholder="placeholder"
+                :value="value" 
+                @input="change($event)" 
+                @dblclick.stop="" 
+                @pointerdown.stop="" 
+                @pointermove.stop=""/>
+        </div>
     </div>
 </template>
 <script>
@@ -39,9 +42,6 @@
     }
 </script>
 <style>
-  input[type="string"] {
-    margin-right: 20px;
-  }
   .loading{
       width: 195px;
       height: 50px;

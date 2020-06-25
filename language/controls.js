@@ -1,7 +1,6 @@
 import Rete from 'rete';
 
 import VueNumControl from '~/components/controls/VueNumControl'
-import VueStrControl from '~/components/controls/VueStrControl'
 import VueSelectControl from '~/components/controls/VueSelectControl'
 import VueColorControl from '~/components/controls/VueColorControl'
 import VueClosedColorControl from '~/components/controls/VueClosedColorControl'
@@ -89,14 +88,6 @@ class NumControl extends Rete.Control {
         this.vueContext.value = val;
     }
 }
-class StrControl extends Rete.Control {
-    constructor(emitter, key, placeholder) {
-        super(key);
-        this.render = 'vue';
-        this.component = VueStrControl;
-        this.props = { emitter, ikey: key, placeholder };
-    }
-}
 class LoadControl extends Rete.Control {
     constructor(emitter, key, placeholder, node) {
         super(key);
@@ -122,7 +113,6 @@ export {
     FileLoadControl, ColorControl,
     ClosedColorControl, TwoColorControl,
     ColorRangeControl, CheckBoxControl,
-    RangeControl, TwoRangeControl,
-    NumControl, StrControl,
+    RangeControl, TwoRangeControl, NumControl,
     LoadControl, SelectControl
 }
