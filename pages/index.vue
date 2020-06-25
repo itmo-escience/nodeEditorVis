@@ -383,7 +383,7 @@
             // }
         })
 
-        document.addEventListener('keydown', async function (e){
+        document.addEventListener('keydown', async (e) => {
             const node = this.editor.selected.list[0];
             if (e.key === "Delete"){
                 this.editor.removeNode( node );
