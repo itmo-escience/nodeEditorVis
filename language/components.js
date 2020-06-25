@@ -17,18 +17,13 @@ import {
     LoadControl, SelectControl
 } from '~/language/controls.js';
 
-const numSocket = new Rete.Socket('Number');
 const colorSocket = new Rete.Socket('Color');
 const colorMapSocket = new Rete.Socket('Color Map');
-const strSocket = new Rete.Socket('String');
 const sizeSocket = new Rete.Socket('Size');
 const layerSocket = new Rete.Socket('Layer');
 
-const strArrSocket = new Rete.Socket('String Array');
-const numArrSocket = new Rete.Socket('Number Array');
 const dataSocket = new Rete.Socket('Data');
 
-const lineShapesSocket = new Rete.Socket('Line Shapes');
 const pointShapesSocket = new Rete.Socket('Point Shapes');
 const heatMapSocket = new Rete.Socket('HeatMap');
 const gridSocket = new Rete.Socket('Grid');
@@ -54,46 +49,12 @@ class MultiplyComponent extends Rete.Component {
     builder(node){
         node.data.multiplier = 1;
         node
-            .addInput(new Rete.Input('nums', 'Nums', numArrSocket))
-            .addOutput(new Rete.Output('result', 'Result', numArrSocket))
+            .addInput(new Rete.Input('nums', 'Nums', dataSocket))
+            .addOutput(new Rete.Output('result', 'Result', dataSocket))
             .addControl(new NumControl(this.editor, 'multiplier', node));
     }
     worker(node, inputs, outputs){
-        outputs.result = inputs.nums[0].map(d=> d*node.data.multiplier );
-    }
-}
-class NumComponent extends Rete.Component {
-    constructor(){
-        super("Number");
-        this.data.component = Node;
-        this.path = ['Const']
-    }
-
-    builder(node) {
-        var out1 = new Rete.Output('num', "Number", numSocket);
-        node.addControl(new NumControl(this.editor, 'num', node))
-            .addOutput(out1);
-    }
-
-    worker(node, inputs, outputs) {
-        outputs['num'] = node.data.num;
-    }
-}
-class StrComponent extends Rete.Component {
-    constructor(){
-        super("String");
-        this.data.component = Node;
-        this.path = ['Const']
-    }
-
-    builder(node) {
-        node
-            .addControl(new StrControl(this.editor, 'str'))
-            .addOutput(new Rete.Output('str', "String", strSocket));
-    }
-
-    worker(node, inputs, outputs) {
-        outputs['str'] = node.data.str;
+        outputs.result = inputs.nums[0].map(d=> !isNaN(+d) ? d*node.data.multiplier : d );
     }
 }
 class ColorComponent extends Rete.Component {
@@ -113,83 +74,6 @@ class ColorComponent extends Rete.Component {
         }
     }
 }
-// class ColorCategoryComponent extends Rete.Component {
-//     constructor(){
-//         super('Color Category')
-//         this.data.component = CategoryNode;
-//         this.path = ['Color']
-//     }
-//     build(node){
-//         node
-//             .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
-//             .addInput(new Rete.Input('strings', 'Str Values', strArrSocket))
-//             .addInput(new Rete.Input('color', 'Color Map', colorMapSocket))
-            
-//             .addOutput(new Rete.Output('colors', 'Colors', colorSocket))
-//             .addOutput(new Rete.Output('colorMap', 'Color Map', colorMapSocket)); 
-//         if(node.data.values){
-//             node.data.values.forEach(v=>{
-//                 node.addControl(new ClosedColorControl(this.editor, 'field'+v, node));
-//             });
-//         }
-//     }
-//     async worker(node, inputs, outputs){
-//         const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
-//         if(!values){
-//             node.data.values = null;
-//         }else if( !node.data.values ||  (node.data.values && (JSON.stringify(node.data.values) != JSON.stringify([...new Set( values )])))){
-//             const component = this.editor.components.get('Color Category');
-//             const colors = await component.createNode({ values: [...new Set( values )] });
-//             colors.position = node.position;
-//             this.editor.addNode(colors);
-//             const key = inputs.strings.length ? 'strings' :  'nums';
-//             const conn = node.inputs[key].connections[0];
-
-//             const n = this.editor.nodes.find(n=> n.id === conn.node);
-//             this.editor.connect(n.outputs.get( conn.output ), colors.inputs.get( key ));
-
-//             const colorConn = node.inputs['color'].connections[0];
-//             if(colorConn){
-//                 const colorNode = this.editor.nodes.find(n=> n.id === colorConn.node);
-//                 this.editor.connect(colorNode.outputs.get( colorConn.output ), colors.inputs.get( 'color' )); 
-//             }
-
-//             this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
-
-//             const outColorConn = node.outputs['colors'].connections[0];
-//             if(outColorConn){
-//                 const n = this.editor.nodes.find(n=> n.id === outColorConn.node);
-//                 this.editor.connect(colors.outputs.get( 'colors' ), n.inputs.get( outColorConn.input ));
-//             }
-//             const outColorMapConn = node.outputs['colorMap'].connections[0];
-//             if(outColorMapConn){
-//                 const n = this.editor.nodes.find(n=> n.id === outColorMapConn.node);
-//                 this.editor.connect(colors.outputs.get( 'colorMap' ), n.inputs.get( outColorMapConn.input ));
-//             }
-//         }
-//         if(node.data.values){
-//             if(inputs.color.length){
-//                 const n = this.editor.nodes.find(n=>n.id===node.id);
-//                 Object.keys(node.data).forEach(k=>{
-//                     if(inputs.color[0][k]){
-//                         node.data[k] = inputs.color[0][k];
-//                         n.controls.get(k).update();
-//                     }
-//                 });
-//             }
-
-//             var data = Object.assign({}, node.data);
-//             delete data.values;
-
-//             outputs.colorMap = data;
-            
-//             outputs.colors = {
-//                 data: values.map(v=> data['field'+v]), 
-//                 value: null
-//             }
-//         }
-//     }
-// }
 class ColorCategoryComponent extends Rete.Component {
     constructor(){
         super('Color Category')
@@ -200,15 +84,14 @@ class ColorCategoryComponent extends Rete.Component {
         node.data.colors = {};
 
         node
-            .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
-            .addInput(new Rete.Input('strings', 'Str Values', strArrSocket))
+            .addInput(new Rete.Input('values', 'Values', dataSocket))
             .addInput(new Rete.Input('color', 'Color Map', colorMapSocket))
             
             .addOutput(new Rete.Output('colors', 'Colors', colorSocket))
             .addOutput(new Rete.Output('colorMap', 'Color Map', colorMapSocket)); 
     }
     async worker(node, inputs, outputs){
-        const values = inputs.strings.length ? inputs.strings[0] : inputs.nums[0];
+        const values = inputs.values.length ? inputs.values[0] : [];
         
         if(values){
             node.data.values = values ? [...new Set( values )] : null;
@@ -246,7 +129,7 @@ class ColorRangeComponent extends Rete.Component {
     }
     build(node){
         node
-            .addInput(new Rete.Input('nums', 'Num Values', numArrSocket))
+            .addInput(new Rete.Input('nums', 'Values', dataSocket))
             .addControl(new TwoColorControl(this.editor, 'colors', node))
             .addControl(new TwoRangeControl(this.editor, 'range', [0, 1], node))
             .addOutput(new Rete.Output('color', 'Color', colorSocket));
@@ -301,51 +184,6 @@ class ParseComponent extends Rete.Component {
         }
     }
 }
-// class ParseComponent extends Rete.Component {
-//     constructor(){
-//         super('Parse')
-//         this.data.component = Node;
-//         this.path = null;
-//     }
-//     builder(node){
-//         if(node.data.data.type === 'FeatureCollection'){
-//             const props = node.data.data.features[0].properties;
-//             let socket;
-//             for(let key in props){
-//                 socket = isNaN(+ props[key]) ? strArrSocket : numArrSocket;
-//                 node.addOutput(new Rete.Output(key, key, socket));
-//             }
-//             const geometry = node.data.data.features[0].geometry.type;
-//             socket = geometry === 'Point' ? pointGeometrySocket : geometry === 'LineString' ? lineGeometrySocket : polygonGeometrySocket;
-//             node.addOutput(new Rete.Output('geom', 'Geometry', socket));
-//         }else if(node.data.data.nodes && node.data.data.links){
-//             node
-//                 .addOutput(new Rete.Output('nodes', 'Nodes', nodesSocket))
-//                 .addOutput(new Rete.Output('links', 'Links', linksSocket));
-//         }else{
-//             for(let key in node.data.data[0]){
-//                 let socket = isNaN(+ node.data.data[0][key]) ? strArrSocket : numArrSocket;
-//                 node.addOutput(new Rete.Output(key, key, socket));
-//             }
-//         }
-//     }
-//     worker(node, inputs, outputs){
-//         if(node.data.data.type === 'FeatureCollection'){
-//             const props = node.data.data.features[0].properties;
-//             for(let key in props){
-//                 outputs[key] = node.data.data.features.map(f=> f.properties[key]);
-//             }
-//             outputs.geom = node.data.data.features.map(f=> f.geometry);
-//         }else if(node.data.data.nodes && node.data.data.links){
-//             outputs.nodes = node.data.data.nodes;
-//             outputs.links = node.data.data.links;
-//         }else{
-//            for(let key in node.data.data[0]){
-//                 outputs[key] = node.data.data.map(d=> !isNaN(+d[key]) ? +d[key] : d[key] );
-//             } 
-//         }
-//     }
-// }
 class DatasetComponent extends Rete.Component {
     constructor() {
         super('Dataset')
@@ -400,12 +238,12 @@ class RangeComponent extends Rete.Component {
         this.path = []
     }
     build(node){
-        node.addInput(new Rete.Input('nums', 'Num Values', numArrSocket));
+        node.addInput(new Rete.Input('nums', 'Values', dataSocket));
         if(node.data.values){
             node
                 .addControl(new TwoRangeControl(this.editor, 'domain', [node.data.domainFrom, node.data.domainTo], node))
                 .addControl(new TwoRangeControl(this.editor, 'range', [1, 30], node))
-                .addOutput(new Rete.Output('range', 'Range', numArrSocket));
+                .addOutput(new Rete.Output('range', 'Range', dataSocket));
         }
     }
     async worker(node, inputs, outputs){
@@ -453,9 +291,9 @@ class SizeComponent extends Rete.Component{
         node.data.y = 5;
         node.data.z = 0;
         
-        const inX = new Rete.Input('x', 'X', numArrSocket);
-        const inY = new Rete.Input('y', 'Y', numArrSocket);
-        const inZ = new Rete.Input('z', 'Z', numArrSocket);
+        const inX = new Rete.Input('x', 'X', dataSocket);
+        const inY = new Rete.Input('y', 'Y', dataSocket);
+        const inZ = new Rete.Input('z', 'Z', dataSocket);
 
         inX.addControl(new NumControl(this.editor, 'x', node))
         inY.addControl(new NumControl(this.editor, 'y', node))
@@ -494,12 +332,12 @@ class PointLayerComponent extends Rete.Component {
     build(node){
         node.data.radius = 100;
 
-        const radiusInput = new Rete.Input('radius','Radius', numArrSocket);
+        const radiusInput = new Rete.Input('radius','Radius', dataSocket);
         radiusInput.addControl(new NumControl(this.editor, 'radius', node, 'radius'));
 
         node
-            .addInput(new Rete.Input('lat','Lat', numArrSocket))
-            .addInput(new Rete.Input('lon','Lon', numArrSocket))
+            .addInput(new Rete.Input('lat','Lat', dataSocket))
+            .addInput(new Rete.Input('lon','Lon', dataSocket))
             .addInput(new Rete.Input('geometry', 'Geometry', pointGeometrySocket))
             .addInput(new Rete.Input('colors', 'Color', colorSocket))
             .addInput(radiusInput)
@@ -557,10 +395,10 @@ class LineLayerComponent extends Rete.Component {
     }
     build(node){
         node
-            .addInput(new Rete.Input('x','X', numArrSocket))
-            .addInput(new Rete.Input('x1','X1', numArrSocket))
-            .addInput(new Rete.Input('y','Y', numArrSocket))
-            .addInput(new Rete.Input('y1','Y1', numArrSocket))
+            .addInput(new Rete.Input('x','X', dataSocket))
+            .addInput(new Rete.Input('x1','X1', dataSocket))
+            .addInput(new Rete.Input('y','Y', dataSocket))
+            .addInput(new Rete.Input('y1','Y1', dataSocket))
             .addInput(new Rete.Input('geometry', 'Geometry', lineGeometrySocket))
             .addInput(new Rete.Input('colors', 'Color', colorSocket))
             .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
@@ -619,14 +457,14 @@ class ArcLayerComponent extends Rete.Component {
     }
     build(node){
         node.data.width = 2;
-        const widthInput = new Rete.Input('width','Width', numArrSocket);
+        const widthInput = new Rete.Input('width','Width', dataSocket);
         widthInput.addControl(new NumControl(this.editor, 'width', node, 'width'));
 
         node
-            .addInput(new Rete.Input('x','X', numArrSocket))
-            .addInput(new Rete.Input('x1','X1', numArrSocket))
-            .addInput(new Rete.Input('y','Y', numArrSocket))
-            .addInput(new Rete.Input('y1','Y1', numArrSocket))
+            .addInput(new Rete.Input('x','X', dataSocket))
+            .addInput(new Rete.Input('x1','X1', dataSocket))
+            .addInput(new Rete.Input('y','Y', dataSocket))
+            .addInput(new Rete.Input('y1','Y1', dataSocket))
             .addInput(new Rete.Input('geometry', 'Geometry', lineGeometrySocket))
             .addInput(new Rete.Input('colors', 'Color', colorSocket))
             .addInput(widthInput)
@@ -689,7 +527,7 @@ class PolygonLayerComponent extends Rete.Component {
     }
     build(node){
         node.data.height = 30;
-        const heightInput = new Rete.Input('height','Height', numArrSocket);
+        const heightInput = new Rete.Input('height','Height', dataSocket);
         heightInput.addControl(new NumControl(this.editor, 'height', node, 'height'))
 
         node
@@ -737,11 +575,11 @@ class GridMapLayerComponent extends Rete.Component {
             .addControl(new TwoRangeControl(this.editor, 'elevationRange', [0, 200000], node))
             .addControl(new SelectControl(this.editor, 'colorAggMethod', ['SUM', 'MEAN', 'MIN', 'MAX'], node))
             .addControl(new SelectControl(this.editor, 'elevationAggMethod', ['SUM', 'MEAN', 'MIN', 'MAX'], node))
-            .addInput(new Rete.Input('lat','Lat', numArrSocket))
-            .addInput(new Rete.Input('lon','Lon', numArrSocket))
+            .addInput(new Rete.Input('lat','Lat', dataSocket))
+            .addInput(new Rete.Input('lon','Lon', dataSocket))
             .addInput(new Rete.Input('geometry', 'Geometry', pointGeometrySocket))
-            .addInput(new Rete.Input('elevation', 'Elevation', numArrSocket))
-            .addInput(new Rete.Input('color', 'Color', numArrSocket))
+            .addInput(new Rete.Input('elevation', 'Elevation', dataSocket))
+            .addInput(new Rete.Input('color', 'Color', dataSocket))
             .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
     }
     worker(node, inputs, outputs){
@@ -799,12 +637,12 @@ class HeatMapLayerComponent extends Rete.Component {
     }
     build(node){
         node.data.weight = 30;
-        const weightInput = new Rete.Input('weight','Weight', numArrSocket);
+        const weightInput = new Rete.Input('weight','Weight', dataSocket);
         weightInput.addControl(new NumControl(this.editor, 'weight', node, 'weight'));
 
         node
-            .addInput(new Rete.Input('lat','Lat', numArrSocket))
-            .addInput(new Rete.Input('lon','Lon', numArrSocket))
+            .addInput(new Rete.Input('lat','Lat', dataSocket))
+            .addInput(new Rete.Input('lon','Lon', dataSocket))
             .addInput(new Rete.Input('geometry', 'Geometry', pointGeometrySocket))
             .addInput(weightInput)
             .addInput(new Rete.Input('heatmap', 'Heatmap', heatMapSocket))
@@ -856,37 +694,6 @@ class HeatMapLayerComponent extends Rete.Component {
         }
     }
 }
-/*class GridComponent extends Rete.Component {
-    constructor(){
-        super('Grid')
-        this.data.component = Node;
-        this.path = []
-    }
-    builder(node){
-        node.data.type = 'hexagon',
-        node.data.method = 'sum',
-        node.data.size = 1000;
-
-        node
-            .addControl(new NumControl(this.editor, 'size', node, 'size'))
-            .addControl(new TwoRangeControl(this.editor, 'height', [0, 100000], node))
-            .addControl(new TwoColorControl(this.editor, 'colors', node))
-            .addControl(new SelectControl(this.editor, 'type', ['grid', 'hexagon']))
-            .addControl(new SelectControl(this.editor, 'method', ['max','min','sum','mean']))
-            .addInput(new Rete.Input('field', 'Field', numArrSocket))
-            .addOutput(new Rete.Output('grid', 'Grid', gridSocket));
-    }
-    worker(node, inputs, outputs){
-        outputs.grid = {
-            type: node.data.type,
-            method: node.data.method,
-            size: node.data.size,
-            field: inputs.field.length ? inputs.field[0] : [],
-            height: node.data.height,
-            color: node.data.colors
-        }
-    }
-}*/
 class HeatMapComponent extends Rete.Component {
     constructor(){
         super('HeatMap')
@@ -953,13 +760,11 @@ class ScatterComponent extends Rete.Component {
         this.path = [];
     }
     builder(node){
-        const sizeInput = new Rete.Input('size','Size', numArrSocket);
+        const sizeInput = new Rete.Input('size','Size', dataSocket);
         sizeInput.addControl(new NumControl(this.editor, 'size', node, 'size'))
         node
-            .addInput(new Rete.Input('x', 'X', numArrSocket))
-            .addInput(new Rete.Input('y', 'Y', numArrSocket))
-            .addInput(new Rete.Input('strx', 'X', strArrSocket))
-            .addInput(new Rete.Input('stry', 'Y', strArrSocket))
+            .addInput(new Rete.Input('x', 'X', dataSocket))
+            .addInput(new Rete.Input('y', 'Y', dataSocket))
             .addInput(new Rete.Input('colors', 'Colors', colorSocket))
             .addInput(sizeInput)
             .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
@@ -970,11 +775,11 @@ class ScatterComponent extends Rete.Component {
     }
     worker(node, inputs, outputs){
         node.data.type = 'point';
-        if((inputs.x.length || inputs.strx.length) && (inputs.y.length || inputs.stry.length)){
+        if( inputs.x.length && inputs.y.length ){
 
             node.data.DATA = (inputs.x[0] || inputs.strx[0]).map((x, i)=> ({
-                x: inputs.x.length ? +inputs.x[0][i] : inputs.strx[0][i],
-                y: inputs.y.length ? +inputs.y[0][i] : inputs.stry[0][i],
+                x: +inputs.x[0][i],
+                y: +inputs.y[0][i],
                 ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
                 ...(inputs.size.length ? {size: +inputs.size[0][i]} : {}),
                 ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
@@ -996,7 +801,7 @@ class ForceManyBodyComponent extends Rete.Component {
         this.path = ['Force'];
     }
     builder(node){
-        const strength = new Rete.Input('strength', 'Strength', numArrSocket);
+        const strength = new Rete.Input('strength', 'Strength', dataSocket);
         strength.addControl(new RangeControl(this.editor, 'strength', [-30, 30], node));
 
         node
@@ -1016,9 +821,9 @@ class ForceRadialComponent extends Rete.Component {
         this.path = ['Force'];
     }
     builder(node){
-        const strength = new Rete.Input('strength', 'Strength', numArrSocket);
+        const strength = new Rete.Input('strength', 'Strength', dataSocket);
         strength.addControl(new RangeControl(this.editor, 'strength', [0, 1], node));
-        const radius = new Rete.Input('radius', 'Radius', numArrSocket);
+        const radius = new Rete.Input('radius', 'Radius', dataSocket);
         radius.addControl(new RangeControl(this.editor, 'radius', [0, 250], node));
 
         node
@@ -1042,9 +847,9 @@ class ForceXComponent extends Rete.Component {
         this.path = ['Force'];
     }
     builder(node){
-        const strength = new Rete.Input('strength', 'Strength', numArrSocket);
+        const strength = new Rete.Input('strength', 'Strength', dataSocket);
         strength.addControl(new RangeControl(this.editor, 'strength', [-1, 1], node));
-        const x = new Rete.Input('x', 'X', numArrSocket);
+        const x = new Rete.Input('x', 'X', dataSocket);
         x.addControl(new RangeControl(this.editor, 'x', [0, 500], node));
 
         node
@@ -1065,9 +870,9 @@ class ForceYComponent extends Rete.Component {
         this.path = ['Force'];
     }
     builder(node){
-        const strength = new Rete.Input('strength', 'Strength', numArrSocket);
+        const strength = new Rete.Input('strength', 'Strength', dataSocket);
         strength.addControl(new RangeControl(this.editor, 'strength', [-1, 1], node));
-        const y = new Rete.Input('y', 'Y', numArrSocket);
+        const y = new Rete.Input('y', 'Y', dataSocket);
         y.addControl(new RangeControl(this.editor, 'y', [0, 500], node));
 
         node
@@ -1088,26 +893,24 @@ class LinksComponent extends Rete.Component {
         this.path = [];
     }
     builder(node){
-        const distance = new Rete.Input('distance', 'Distance', numArrSocket);
+        const distance = new Rete.Input('distance', 'Distance', dataSocket);
         distance.addControl(new RangeControl(this.editor, 'distance', [0, 100], node));
 
         node
-            .addInput(new Rete.Input('strSource', 'source', strArrSocket))
-            .addInput(new Rete.Input('intSource', 'source', numArrSocket))
-            .addInput(new Rete.Input('strTarget', 'target', strArrSocket))
-            .addInput(new Rete.Input('intTarget', 'target', numArrSocket))
+            .addInput(new Rete.Input('source', 'source', dataSocket))
+            .addInput(new Rete.Input('target', 'target', dataSocket))
             .addControl(new RangeControl(this.editor, 'iterations', [1, 10], node))
             .addInput(distance)
             .addOutput(new Rete.Output('links', 'Links', linksSocket));
     }
     worker(node, inputs, outputs){
-        if((inputs.strSource.length && inputs.strTarget.length) || (inputs.intSource.length && inputs.intTarget.length)){
+        if( inputs.source.length && inputs.target.length ){
             outputs.links = {
                 iterations: node.data.iterations,
-                links: (inputs.strSource.length ? inputs.strSource[0] : inputs.intSource[0]).map((d,i)=>{
+                links: inputs.source.map((d,i)=>{
                     return {
                         source: d,
-                        target: inputs.strTarget.length ? inputs.strTarget[0][i] : inputs.intTarget[0][i],
+                        target: inputs.target[0][i],
                         ldis: inputs.distance.length ? inputs.distance[i] : node.data.distance,
                     }
                 })
@@ -1124,11 +927,10 @@ class GraphComponent extends Rete.Component {
     }
     builder(node){
         node.data.radius = 10;
-        const radius = new Rete.Input('radius', 'Radius', numArrSocket);
+        const radius = new Rete.Input('radius', 'Radius', dataSocket);
         radius.addControl(new NumControl(this.editor, 'radius', node, 'radius'));
         node
-            .addInput(new Rete.Input('strId', 'id', strArrSocket))
-            .addInput(new Rete.Input('intId', 'id', numArrSocket))
+            .addInput(new Rete.Input('id', 'id', dataSocket))
             .addInput(new Rete.Input('x', 'Force X', forceXSocket))
             .addInput(new Rete.Input('y', 'Force Y', forceYSocket))
             .addInput(new Rete.Input('charge', 'Force Many Body', forceManyBodySocket))
@@ -1138,12 +940,12 @@ class GraphComponent extends Rete.Component {
             .addInput(new Rete.Input('links', 'Links', linksSocket));
     }
     worker(node, inputs, outputs){
-        if(inputs.strId.length || inputs.intId.length){
+        if( inputs.id.length ){
             node.data.GRAPH = {
                 radialCenter: inputs.radial.length ? inputs.radial[0].center : [],
                 iterations: inputs.links.length ?  inputs.links[0].iterations : null,
                 ...(inputs.links.length ? {links: inputs.links[0].links} : {}),
-                nodes: (inputs.strId.length ? inputs.strId[0] : inputs.intId[0]).map((d, i)=>{
+                nodes: inputs.id.map((d, i)=>{
                     return {
                         id: d,
                         radius: inputs.radius.length ?  inputs.radius[0][i] : node.data.radius || null,
@@ -1167,8 +969,8 @@ class GraphComponent extends Rete.Component {
 }
 
 export {
-    MultiplyComponent, NumComponent,
-    StrComponent, ColorComponent,
+    MultiplyComponent,
+    ColorComponent,
     ColorCategoryComponent, ColorRangeComponent,
     ParseComponent, DatasetComponent,
     RangeComponent, SizeComponent,

@@ -40,8 +40,7 @@
   import VueRenderPlugin from 'rete-vue-render-plugin';
 
   import {
-      MultiplyComponent, NumComponent,
-      StrComponent, ColorComponent,
+      MultiplyComponent, ColorComponent,
       ColorCategoryComponent, ColorRangeComponent,
       ParseComponent, DatasetComponent,
       //LoadDataComponent, URLDataComponent,
@@ -306,7 +305,7 @@
           });
       });
 
-      //
+      
       var container = document.querySelector('#editor')
       this.editor = new Rete.NodeEditor('demo@0.1.0', container)
 
@@ -316,11 +315,11 @@
       this.engine = new Rete.Engine('demo@0.1.0')
 
       const components = [
-          new DatasetComponent, //new LoadDataComponent, new URLDataComponent,
+          new DatasetComponent, new ParseComponent,
+
           new ColorComponent, new ColorCategoryComponent, new ColorRangeComponent,
+          
           new MultiplyComponent,
-          new StrComponent, new NumComponent,
-          new ParseComponent,
 
           new MapComponent,
           new PointLayerComponent, new LineLayerComponent,
