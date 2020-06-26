@@ -19,14 +19,11 @@
         </div>
 
         <div v-if="node.data.values" class="mrr-20 mrl-20">
-            <div v-for="(value, i) in node.data.values" class="d-flex space-between align-center mrv-10" v-if="opened || i < 5" :key="value">
-                <div>{{ value ? (value.length > 15 ? value.toString().slice(0,15)+'...' : value.toString().slice(0,15)) : 'Null'  }}</div>
-                <!-- <div v-control="controls()[i]"></div>  -->
+            <div v-for="value in node.data.values" class="d-flex align-center mrv-10" :key="value">
                 <Control :emitter="editor" :node="node" :ikey="value" />
+                <div>{{ value ? (value.length > 15 ? value.toString().slice(0,15)+'...' : value.toString().slice(0,15)) : 'Null'  }}</div>
             </div>
         </div>
-
-        <div v-if="node.data.values && node.data.values.length > 10" class="arrow" @click="toggle" :class="{up: opened, down: !opened}"></div>
     </div>
 </template>
 <script>
@@ -37,14 +34,8 @@
         mixins: [VueRenderPlugin.mixin],
         components:{ Socket: VueRenderPlugin.Socket, Control: VueClosedColorControl },
         data(){ 
-            return { 
-                opened: true,
+            return {
                 colors: null
-            }
-        },
-        methods: {
-            toggle(){
-                this.opened = !this.opened;
             }
         },
         updated(){
@@ -55,7 +46,6 @@
 
                 this.colors = colors;
             }
-            
         }
     }
 </script>

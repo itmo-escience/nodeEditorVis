@@ -1,11 +1,13 @@
 <template>
   <div class="color-control" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
-    <Chrome 
-      v-if="opened"
-      :value="color"
-      @input="updateValue"/>
-    <div v-if="!opened" class="toggle-color" @click="toggle" :style="{background: color}"></div>
-    <div class="arrow" @click="toggle" :class="{up: opened, down: !opened}"></div>
+    <svg width="40" height="20" viewBox="0 0 20 10" @click="toggle">
+      <rect width="20" height="10" :fill="color"></rect>
+    </svg>
+    <div class="pallet" v-if="opened">
+      <Chrome 
+        :value="color"
+        @input="updateValue"/>
+    </div>
   </div>
 </template>
 <script>
@@ -16,7 +18,7 @@ export default{
   data(){
     return{
       freez: false,
-      opened: true,
+      opened: false,
       color: "rgba(0,0,0,250)"
     }
   },
@@ -44,10 +46,7 @@ export default{
 }
 </script>
 <style>
-  .color-control{ margin: 0 10px; }
-  .toggle-color{  
-    width: 225px;
-    height: 40px;
-    border-radius: 2px;
+  .color-control{ 
+    margin: 0 10px; 
   }
 </style>

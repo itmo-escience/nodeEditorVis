@@ -8,7 +8,7 @@ export default class Engine {
         this.nodes = {};
     }
     async processNode(node){
-        
+
         let NODE = this.nodes[node.id];
         if(!NODE){
             NODE = this.nodes[node.id] = { id: node.id, visited: true };
@@ -18,7 +18,7 @@ export default class Engine {
             NODE.visited = true;
         }
 
-        // Worker 
+        // Worker
         const component = this.components.get( node.name );
         const inputs = {};
         for(let key in node.inputs){

@@ -59,25 +59,8 @@ class MultiplyComponent extends Rete.Component {
 class ColorComponent extends Rete.Component {
     constructor(){
         super('Color')
-        this.data.component = Node;
-        this.path = ['Color'];
-    }
-    builder(node){
-        node
-            .addControl(new ColorControl(this.editor, 'color', node))
-            .addOutput(new Rete.Output('color', 'Color', colorSocket));
-    }
-    worker(node, inputs, outputs){
-        if(node.data.color){
-           outputs['color'] = {data: null, value: node.data.color}; 
-        }
-    }
-}
-class ColorCategoryComponent extends Rete.Component {
-    constructor(){
-        super('Color Category')
         this.data.component = CategoryNode;
-        this.path = ['Color']
+        this.path = []
     }
     build(node){
         node.data.colors = {};
@@ -85,68 +68,30 @@ class ColorCategoryComponent extends Rete.Component {
         val.addControl(new ColorControl(this.editor, 'color', node))
         node
             .addInput( val )
-            .addOutput(new Rete.Output('colors', 'Colors', colorSocket))
-            .addInput(new Rete.Input('color', 'Color Map', colorMapSocket))
-            .addOutput(new Rete.Output('colorMap', 'Color Map', colorMapSocket)); 
+            .addOutput(new Rete.Output('colors', 'Colors', colorSocket)); 
     }
     async worker(node, inputs, outputs){
+
         node.data.values = inputs.values.length ? [...new Set( inputs.values[0] )] : [];
-        
 
-        if(node.data.values){
-            if(inputs.color.length){
-                Object.keys(node.data.colors).forEach(k=>{
-                    if(inputs.color[0][k]){
-                        node.data.colors[k] = inputs.color[0][k];
-                    }
-                });
-            }
+        if(!node.data.values.length){
+            outputs.colors = { data: null, value: node.data.color };
+            return;
+        }
 
-            // if(!isNaN(+node.data.values[0])){ // if number
-
-            // }
-            
-
-            if(Object.keys(node.data.colors).length){
-                var data = node.data.colors;
-                console.log(data);
-                outputs.colorMap = data; 
-                outputs.colors = {
-                    data: node.data.values.map(v=> data[v]), 
-                    value: null
-                }
-            }else{
-                outputs.colors = { data: null, value: node.data.color }
-            }
+        if(!isNaN(+node.data.values[0])){ // if number
+            node.data.values = d3.extent( node.data.values ); 
         }
         this.editor.nodes.find(n=>n.id===node.id).update();
-    }
-}
-class ColorRangeComponent extends Rete.Component {
-    constructor(){
-        super('Color Range')
-        this.data.component = Node;
-        this.path = ['Color'];
-    }
-    build(node){
-        node
-            .addInput(new Rete.Input('nums', 'Values', dataSocket))
-            .addControl(new TwoColorControl(this.editor, 'colors', node))
-            .addControl(new TwoRangeControl(this.editor, 'range', [0, 1], node))
-            .addOutput(new Rete.Output('color', 'Color', colorSocket));
-    }
-    worker(node, inputs, outputs){
-        const range = node.data.range;
-        const nums = inputs.nums[0];
-        const diff = d3.max(nums) - d3.min(nums);
-        const min = d3.min(nums) + (diff*range[0]);
-        const max = d3.min(nums) + (diff*range[1]);
-        const data = nums.map(d=> d > max ? max : d < min ? min : d );
-        const color = d3.scaleLinear([min, max], node.data.colors);
-        outputs.color = {
-            data: data.map(d=> color(d) ),
+
+        const colors = node.data.colors;
+        const color = d3.scaleLinear(d3.extent( node.data.values ), Object.values(colors));
+        
+        outputs.colors = {
+            data: inputs.values[0].map(d=> isNaN(d) ? colors[d] : color(d) ),
             value: null
         }
+        console.log(outputs.colors.data);
     }
 }
 class ParseComponent extends Rete.Component {
@@ -741,9 +686,8 @@ class ScatterComponent extends Rete.Component {
             .addInput(new Rete.Input('size','Size', dataSocket));
     }
     worker(node, inputs, outputs){
-        node.data.type = 'point';
+        console.log(inputs.colors)
         if( inputs.x.length && inputs.y.length ){
-
             node.data.DATA = inputs.x[0].map((x, i)=> ({
                 x: inputs.x[0][i],
                 y: inputs.y[0][i],
@@ -751,9 +695,7 @@ class ScatterComponent extends Rete.Component {
                 ...(inputs.size.length ? {size: +inputs.size[0][i]} : {}),
             }));
         }
-        node.data.color = inputs.colors.length ? inputs.colors[0].data ? ['color', d=>d] : [inputs.colors[0].value] : null,
-        node.data.size = inputs.size.length ? ['size'] : node.data.size ? [node.data.size] : null;
-
+        
         this.editor.nodes.find(n=>n.id===node.id).update();
     }
 }
@@ -935,7 +877,7 @@ class GraphComponent extends Rete.Component {
 export {
     MultiplyComponent, RangeComponent,
     ColorComponent,
-    ColorCategoryComponent, ColorRangeComponent,
+    //ColorCategoryComponent, ColorRangeComponent,
     ParseComponent, DatasetComponent,
     PointLayerComponent, LineLayerComponent,
     ArcLayerComponent, PolygonLayerComponent,

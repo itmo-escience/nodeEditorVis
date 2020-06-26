@@ -41,9 +41,7 @@
 
   import {
       MultiplyComponent, ColorComponent,
-      ColorCategoryComponent, ColorRangeComponent,
       ParseComponent, DatasetComponent,
-      //LoadDataComponent, URLDataComponent,
       RangeComponent,
       PointLayerComponent, LineLayerComponent,
       ArcLayerComponent, PolygonLayerComponent,
@@ -312,10 +310,7 @@
 
       const components = [
           new DatasetComponent, new ParseComponent,
-
-          new ColorComponent, new ColorCategoryComponent, new ColorRangeComponent,
-          
-          new MultiplyComponent,
+          new ColorComponent, new MultiplyComponent,
 
           new MapComponent,
           new PointLayerComponent, new LineLayerComponent,

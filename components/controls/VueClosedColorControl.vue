@@ -1,7 +1,7 @@
 <template>
   <div @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
-    <svg height="15" viewBox="0 0 24 10" @click="togglePallet">
-      <rect width="24" height="10" :fill="color"></rect>
+    <svg height="15" viewBox="0 0 20 10" @click="togglePallet">
+      <circle cx="10" cy="5" r="5" :fill="color"></circle>
     </svg>
     <div class="pallet" v-if="opened">
       <Chrome 
@@ -9,7 +9,6 @@
         @input="updateValue"/>
     </div>
   </div>
-  
 </template>
 <script>
 import { Chrome } from "vue-color";
