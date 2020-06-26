@@ -11,7 +11,11 @@
                     <div class="input-control" v-show="input.showControl()" v-control="input.control"></div>
                 </div>
             </div>
-            <div ref="container" class="chart-container"></div>
+            <canvas ref="container" :width="size" :height="size"></canvas>
+            <svg class="absolute r-0" :width="size" :height="size">
+                <g ref="x" :transform="`translate(0, ${size-offset})`"></g>
+                <g ref="y" :transform="`translate(${offset}, 0)`"></g>
+            </svg>
         </div>
     </div>
 </template>
@@ -19,61 +23,68 @@
 import VueRenderPlugin from 'rete-vue-render-plugin'
 import G2 from '@antv/g2';
 
+import * as d3 from "d3";
+
 export default{
     mixins: [VueRenderPlugin.mixin],
     components:{ Socket: VueRenderPlugin.Socket },
     data(){
         return{
-            chart: null
+            size: 500,
+            offset: 30
         }
     },
     methods:{
+        makeScale(values){
+            const isNum = isNaN(+values[0]);
+            return isNum ? 
+                d3.scalePoint().domain( values ) :
+                d3.scaleLinear().domain( d3.extent(values) );
+        },
         updateChart(){
-            const data = this.node.data;
-            if(this.chart){
-                this.chart.destroy()
-                this.chart = null;
-            };
-
-            this.chart = new G2.Chart({
-                container: this.$refs.container,
-                autoFit: true,
-                height: 500
-            });
-            this.chart.legend('size', false);
-            if(data.DATA){
-                this.chart.source(data.DATA);
-                let chart;
-                switch(data.type){
-                    case 'area':
-                        chart = this.chart.area();
-                        break
-                    case 'line':
-                        chart = this.chart.line();
-                        break
-                    default:
-                        chart = this.chart.point();
-                        break
-                }
-                chart.position(`x*y`).shape(...data.shape);
+            if(this.node.data.DATA){
+                const x = [...new Set( this.node.data.DATA.map( d=>d.x ) )].sort();
+                const y = [...new Set( this.node.data.DATA.map( d=>d.y ) )].sort();
+                const s = [...new Set( this.node.data.DATA.map( d=>d.size ) )].sort();
                 
-                if(data.color) chart.color(...data.color);
-                if(data.size) chart.size(...data.size);
-            }
+                const scale = {
+                    x: this.makeScale(x).range([this.offset, this.size-this.offset]),
+                    y: this.makeScale(y).range([this.size-this.offset, this.offset]),
+                    size: d3.scaleSqrt().domain(d3.extent(s)).range([0, 30])
+                };
+                
+                d3.select( this.$refs.y ).call( d3.axisLeft( scale.y ) );
+                d3.select( this.$refs.x ).call( d3.axisBottom( scale.x ) );
 
-            this.chart.render();
+                this.context.clearRect(0, 0, this.size, this.size);
+                this.context.save();
+                
+                this.node.data.DATA.forEach(d=>{
+                    const radius = scale.size(d.size) || 6;
+                    const X = scale.x(d.x);
+                    const Y = scale.y(d.y);
+                    this.context.beginPath();
+                    this.context.moveTo(X + radius, Y);
+                    this.context.arc(X, Y, radius, 0, 2 * Math.PI);
+                    this.context.fillStyle = d.color || '#e3c000';
+                    this.context.fill();
+                    this.context.strokeStyle = '#000';
+                    this.context.stroke();
+                });
+
+                this.context.restore();
+
+            }
+            
         }
     },
     updated(){
         this.updateChart();
     },
     mounted() {
+        this.context = this.$refs.container.getContext('2d');
+
         this.updateChart();
     }
 }
 </script>
-<style>
-    .chart-container{
-        margin: 20px;
-    }
-</style>

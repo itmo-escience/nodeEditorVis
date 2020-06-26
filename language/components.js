@@ -81,43 +81,45 @@ class ColorCategoryComponent extends Rete.Component {
     }
     build(node){
         node.data.colors = {};
-
+        const val = new Rete.Input('values', 'Values', dataSocket);
+        val.addControl(new ColorControl(this.editor, 'color', node))
         node
-            .addInput(new Rete.Input('values', 'Values', dataSocket))
-            .addInput(new Rete.Input('color', 'Color Map', colorMapSocket))
-            
+            .addInput( val )
             .addOutput(new Rete.Output('colors', 'Colors', colorSocket))
+            .addInput(new Rete.Input('color', 'Color Map', colorMapSocket))
             .addOutput(new Rete.Output('colorMap', 'Color Map', colorMapSocket)); 
     }
     async worker(node, inputs, outputs){
-        const values = inputs.values.length ? inputs.values[0] : [];
+        node.data.values = inputs.values.length ? [...new Set( inputs.values[0] )] : [];
         
-        if(values){
-            node.data.values = values ? [...new Set( values )] : null;
-        }
-        
+
         if(node.data.values){
             if(inputs.color.length){
-                const n = this.editor.nodes.find(n=>n.id===node.id);
                 Object.keys(node.data.colors).forEach(k=>{
                     if(inputs.color[0][k]){
                         node.data.colors[k] = inputs.color[0][k];
                     }
                 });
             }
-            this.editor.nodes.find(n=>n.id===node.id).update();
+
+            // if(!isNaN(+node.data.values[0])){ // if number
+
+            // }
+            
 
             if(Object.keys(node.data.colors).length){
-                var data = Object.assign({}, node.data.colors);
-            
+                var data = node.data.colors;
+                console.log(data);
                 outputs.colorMap = data; 
                 outputs.colors = {
-                    data: values.map(v=> data[v]), 
+                    data: node.data.values.map(v=> data[v]), 
                     value: null
                 }
+            }else{
+                outputs.colors = { data: null, value: node.data.color }
             }
-            
         }
+        this.editor.nodes.find(n=>n.id===node.id).update();
     }
 }
 class ColorRangeComponent extends Rete.Component {
@@ -732,18 +734,11 @@ class ScatterComponent extends Rete.Component {
         this.path = [];
     }
     builder(node){
-        const sizeInput = new Rete.Input('size','Size', dataSocket);
-        sizeInput.addControl(new NumControl(this.editor, 'size', node, 'size'))
         node
             .addInput(new Rete.Input('x', 'X', dataSocket))
             .addInput(new Rete.Input('y', 'Y', dataSocket))
             .addInput(new Rete.Input('colors', 'Colors', colorSocket))
-            .addInput(sizeInput)
-            .addInput(new Rete.Input('shapes', 'Shape by Cat', pointShapesSocket))
-            .addControl(new SelectControl(this.editor, 'shape', [
-                'circle','square','triangle','hexagon', // 2D
-                'cylinder', 'triangleColumn', 'hexagonColumn', 'squareColumn', // 3D
-                ], node));
+            .addInput(new Rete.Input('size','Size', dataSocket));
     }
     worker(node, inputs, outputs){
         node.data.type = 'point';
@@ -752,16 +747,13 @@ class ScatterComponent extends Rete.Component {
             node.data.DATA = inputs.x[0].map((x, i)=> ({
                 x: inputs.x[0][i],
                 y: inputs.y[0][i],
-                ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
+                ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? { color: inputs.colors[0].data[i] } : { color: inputs.colors[0].value }),
                 ...(inputs.size.length ? {size: +inputs.size[0][i]} : {}),
-                ...(inputs.shapes.length ? {shape: inputs.shapes[0].field[i]}:{})
             }));
         }
-        // node.data.color = inputs.colors.length ? inputs.colors[0].params : null,
         node.data.color = inputs.colors.length ? inputs.colors[0].data ? ['color', d=>d] : [inputs.colors[0].value] : null,
         node.data.size = inputs.size.length ? ['size'] : node.data.size ? [node.data.size] : null;
-        node.data.shape = inputs.shapes.length ? ['shape', s=>{ return inputs.shapes[0].shapes['field'+s] }] : [node.data.shape],
-        
+
         this.editor.nodes.find(n=>n.id===node.id).update();
     }
 }

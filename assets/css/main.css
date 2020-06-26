@@ -339,3 +339,8 @@ a{
 .logo:after{
   content: url(~assets/logo.svg);
 }
+
+.absolute.r-0 {
+  position: absolute;
+  right: 0;
+}
