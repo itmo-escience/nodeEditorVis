@@ -10,13 +10,12 @@ export default class Engine {
     async processNode(node){
 
         let NODE = this.nodes[node.id];
-        if(!NODE){
-            NODE = this.nodes[node.id] = { id: node.id, visited: true };
-        }else if(NODE.visited){
-            return
-        }else{
-            NODE.visited = true;
-        }
+        
+        if(!NODE) NODE = this.nodes[node.id] = { id: node.id };
+        
+        if(NODE.visited) return;
+        
+        NODE.visited = true;
 
         // Worker
         const component = this.components.get( node.name );
@@ -30,11 +29,8 @@ export default class Engine {
                 inputs[key] = []; 
             }
         }
-        const outputs = {};
-        await component.worker(node, inputs, outputs, ...this.args);
-       
-
-        NODE.outputs = outputs;
+        NODE.outputs = {};
+        await component.worker(node, inputs, NODE.outputs, ...this.args);
 
         for(let key in node.outputs){
             const conn = node.outputs[key].connections[0];
