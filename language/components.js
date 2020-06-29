@@ -89,7 +89,8 @@ class ColorComponent extends Rete.Component {
         
         outputs.colors = {
             data: inputs.values[0].map(d=> isNaN(d) ? colors[d] : color(d) ),
-            value: null
+            value: null,
+            colors: colors
         }
     }
 }
@@ -676,12 +677,40 @@ class ScatterComponent extends Rete.Component {
     }
     worker(node, inputs, outputs){
         if( inputs.x.length && inputs.y.length ){
+            node.data.type = 'point';
             node.data.DATA = inputs.x[0].map((x, i)=> ({
                 x: inputs.x[0][i],
                 y: inputs.y[0][i],
                 ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? { color: inputs.colors[0].data[i] } : { color: inputs.colors[0].value }),
                 ...(inputs.size.length ? {size: +inputs.size[0][i]} : {}),
             }));
+        }
+        this.editor.nodes.find(n=>n.id===node.id).update();
+    }
+}
+class LineComponent extends Rete.Component {
+    constructor() {
+        super('Line')
+        this.data.component = ChartNode;
+        this.path = [];
+    }
+    builder(node){
+        node
+            .addInput(new Rete.Input('x', 'X', dataSocket))
+            .addInput(new Rete.Input('y', 'Y', dataSocket))
+            .addInput(new Rete.Input('i', 'Index', dataSocket))
+            .addInput(new Rete.Input('color', 'Colors', colorSocket));
+    }
+    worker(node, inputs, outputs){
+        if( inputs.x.length && inputs.y.length ){
+            node.data.type = 'line';
+
+            node.data.DATA = inputs.x[0].map((x, i)=> ({
+                x: inputs.x[0][i],
+                y: inputs.y[0][i],
+                index: inputs.i.length ? isNaN(inputs.i[0][i]) ? inputs.i[0][i] : 0 : 0,
+            }));
+            node.data.colors = inputs.color.length ? inputs.color[0].colors || [inputs.color[0].value] : ['#e3c000'];
         }
         this.editor.nodes.find(n=>n.id===node.id).update();
     }
@@ -870,7 +899,8 @@ export {
     ArcLayerComponent, PolygonLayerComponent,
     GridMapLayerComponent, HeatMapLayerComponent,
     HeatMapComponent, MapComponent,
-    ScatterComponent, ForceManyBodyComponent,
+    ScatterComponent, LineComponent,
+    ForceManyBodyComponent,
     ForceRadialComponent, ForceXComponent,
     ForceYComponent, LinksComponent,
     GraphComponent

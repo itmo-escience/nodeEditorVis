@@ -47,7 +47,8 @@
       ArcLayerComponent, PolygonLayerComponent,
       GridMapLayerComponent, HeatMapLayerComponent,
       HeatMapComponent, MapComponent,
-      ScatterComponent, ForceManyBodyComponent,
+      ScatterComponent, LineComponent,
+      ForceManyBodyComponent,
       ForceRadialComponent, ForceXComponent,
       ForceYComponent, LinksComponent,
       GraphComponent
@@ -320,7 +321,7 @@
           
           new RangeComponent,
             
-          new ScatterComponent,
+          new ScatterComponent, new LineComponent,
           
           new GraphComponent,
           new LinksComponent,
