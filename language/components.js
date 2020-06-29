@@ -91,7 +91,6 @@ class ColorComponent extends Rete.Component {
             data: inputs.values[0].map(d=> isNaN(d) ? colors[d] : color(d) ),
             value: null
         }
-        console.log(outputs.colors.data);
     }
 }
 class ParseComponent extends Rete.Component {
@@ -157,16 +156,6 @@ class DatasetComponent extends Rete.Component {
                 name: node.data.name, 
                 data: node.data.data
             };
-        }
-        if(node.data.url){
-            let url = node.data.url;
-            if(!(url.endsWith('.csv') || url.endsWith('.json') || url.endsWith('.geojson'))) return;
-            url = url.startsWith('https') ? url : 'https://' + url;
-            const result = await d3.text(url);
-            const data = url.endsWith('.csv') ? await d3.csvParse(result) : JSON.parse(result);
-            const name = url.split('/').pop();
-
-            data = { name, data };
         }
         if(data){
             if(data.data.type == 'FeatureCollection'){
@@ -686,7 +675,6 @@ class ScatterComponent extends Rete.Component {
             .addInput(new Rete.Input('size','Size', dataSocket));
     }
     worker(node, inputs, outputs){
-        console.log(inputs.colors)
         if( inputs.x.length && inputs.y.length ){
             node.data.DATA = inputs.x[0].map((x, i)=> ({
                 x: inputs.x[0][i],
@@ -695,7 +683,6 @@ class ScatterComponent extends Rete.Component {
                 ...(inputs.size.length ? {size: +inputs.size[0][i]} : {}),
             }));
         }
-        
         this.editor.nodes.find(n=>n.id===node.id).update();
     }
 }
