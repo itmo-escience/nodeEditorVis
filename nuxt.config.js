@@ -20,35 +20,19 @@ module.exports = {
       { hid: 'description', name: 'description', content: 'Nuxt.js project' }
     ],
     link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      { rel: 'icon', type: 'image/x-icon', href: '/logo.svg' }
     ]
   },
-  css: [
-    '~/assets/css/main.css'
-  ],
   modules: [
     '@nuxtjs/axios'
   ],
-  /*
-  router: {
-    base: '/nodeEditorVis/dist/'
-  },
-  */
   ...prefix,
   ...routerBase,
-  /*
-  ** Customize the progress bar color
-  */
-  loading: { color: '#3B8070' },
+
   mode: 'spa',
   runtimeCompiler: true,
-  /*
-  ** Build configuration
-  */
+  
   build: {
-    /*
-    ** Run ESLint on save
-    */
     extend (config, { isDev, isClient }) {
       if (isDev && isClient) {
         config.module.rules.push({
