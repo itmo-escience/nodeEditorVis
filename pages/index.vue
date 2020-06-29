@@ -29,7 +29,7 @@
           <canvas class="deck-canvas" ref="canvas"></canvas>
       </div> 
     </div>
-    <div class="logo"></div>
+    <a href="https://itmo.games/lab/" target="blank" class="logo"></a>
   </div>
 </template>
 <script>
@@ -393,14 +393,8 @@
               "1": {
                   "id": 1,
                   "data": {},
-                  "position": [80, 200],
-                  "name": "Dataset"
-              },
-              "2": {
-                  "id": 2,
-                  "data": {},
                   "position": [500, 200],
-                  "name": "Map"
+                  "name": "Dataset"
               }
           }
       });
