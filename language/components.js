@@ -18,21 +18,17 @@ import {
 } from '~/language/controls.js';
 
 const colorSocket = new Rete.Socket('Color');
-const colorMapSocket = new Rete.Socket('Color Map');
 const layerSocket = new Rete.Socket('Layer');
 
 const dataSocket = new Rete.Socket('Data');
 
-const pointShapesSocket = new Rete.Socket('Point Shapes');
 const heatMapSocket = new Rete.Socket('HeatMap');
-const gridSocket = new Rete.Socket('Grid');
 
 const forceXSocket = new Rete.Socket('Force X');
 const forceYSocket = new Rete.Socket('Force Y');
 const forceManyBodySocket = new Rete.Socket('Force Many Body');
 const forceRadialSocket = new Rete.Socket('Force Radial');
 
-const nodesSocket = new Rete.Socket('Nodes');
 const linksSocket = new Rete.Socket('Links');
 
 const pointGeometrySocket = new Rete.Socket('Point Geometry');
@@ -63,7 +59,7 @@ class ColorComponent extends Rete.Component {
         this.path = []
     }
     build(node){
-        node.data.colors = {};
+        node.data.colors  = node.data.colors || {};
         const val = new Rete.Input('values', 'Values', dataSocket);
         val.addControl(new ColorControl(this.editor, 'color', node))
         node
@@ -71,21 +67,28 @@ class ColorComponent extends Rete.Component {
             .addOutput(new Rete.Output('colors', 'Colors', colorSocket)); 
     }
     async worker(node, inputs, outputs){
+        // pallets
+        // d3.schemePaired // 12 dark
+        // d3.schemeSet3 // 12 light
+        // d3.schemeCategory10 // 10 dark
+        // d3.schemeAccent // 8 light
+        // d3.schemeDark2 // 8 dark
+        // d3.schemeSet1 // 9 light
 
-        node.data.values = inputs.values.length ? [...new Set( inputs.values[0] )] : [];
-
-        if(!node.data.values.length){
-            outputs.colors = { data: null, value: node.data.color };
+        const data = node.data;
+        data.values = inputs.values.length ? [...new Set( inputs.values[0] )] : [];
+        
+        if(!data.values.length){
+            outputs.colors = { value: data.color };
             return;
         }
-
-        if(!isNaN(+node.data.values[0])){ // if number
-            node.data.values = d3.extent( node.data.values ); 
+        if(data.values.length > 12){
+            data.values = d3.extent( data.values ); 
         }
         this.editor.nodes.find(n=>n.id===node.id).update();
 
-        const colors = node.data.colors;
-        const color = d3.scaleLinear(d3.extent( node.data.values ), Object.values(colors));
+        const colors = data.colors;
+        const color = d3.scaleLinear(d3.extent( data.values ), Object.values(colors));
         
         outputs.colors = {
             data: inputs.values[0].map(d=> isNaN(d) ? colors[d] : color(d) ),
@@ -139,7 +142,7 @@ class DatasetComponent extends Rete.Component {
     builder(node){
         node.data.dataset = '';
 
-        node.addControl( new SelectControl( this.editor, 'dataset', ['', 'cars', 'branches', 'arcs', 'nodes', 'links'], node ) )
+        node.addControl( new SelectControl( this.editor, 'dataset', ['', 'cars', 'sea-ice','branches', 'arcs', 'nodes', 'links'], node ) )
             .addControl(new LoadControl(this.editor, 'url', 'Url', node))
             .addControl(new FileLoadControl(this.editor, 'data', 'name', node));
     }
@@ -708,7 +711,7 @@ class LineComponent extends Rete.Component {
             node.data.DATA = inputs.x[0].map((x, i)=> ({
                 x: inputs.x[0][i],
                 y: inputs.y[0][i],
-                index: inputs.i.length ? isNaN(inputs.i[0][i]) ? inputs.i[0][i] : 0 : 0,
+                index: inputs.i.length ? inputs.i[0][i] : 0,
             }));
             node.data.colors = inputs.color.length ? inputs.color[0].colors || [inputs.color[0].value] : ['#e3c000'];
         }

@@ -36,10 +36,15 @@ export default{
     },
     methods:{
         makeScale(values){
-            const isNum = isNaN(+values[0]);
-            return isNum ? 
-                d3.scalePoint().domain( values ) :
-                d3.scaleLinear().domain( d3.extent(values) );
+            if( !isNaN(values[0]) )
+                return d3.scaleLinear().domain( d3.extent(values) );
+            //console.log(d3.extent( values.map(val=> new Date('2000-'+val)) ));
+            if(values[0].includes('-')) // m-d
+                return d3.scaleTime().domain(d3.extent( values.map(val=> new Date('2000-'+val)) ));
+
+            return d3.scalePoint().domain( values );
+            
+            
         },
         updateChart(){
             if(this.node.data.DATA){
@@ -54,7 +59,7 @@ export default{
                 };
                 
                 d3.select( this.$refs.y ).call( d3.axisLeft( scale.y ) );
-                d3.select( this.$refs.x ).call( d3.axisBottom( scale.x ) );
+                d3.select( this.$refs.x ).call( d3.axisBottom( scale.x ).ticks(12, '%b') );
 
                 this.context.clearRect(0, 0, this.size, this.size);
                 this.context.save();
@@ -80,11 +85,10 @@ export default{
                         const data = d.values.sort( (a,b)=>a.x-b.x );
                         this.context.moveTo( scale.x(data[0].x), scale.y(data[0].y) );
                         data.forEach((d)=>{
-                            this.context.lineTo(scale.x(d.x), scale.y(d.y));
+                            this.context.lineTo(scale.x( new Date('2000-'+d.x) ), scale.y(d.y));
                         });
                         this.context.lineWidth = 3;
-                        console.log(d.key, this.node.data.colors);
-                        this.context.strokeStyle = this.node.data.colors[d.key];
+                        this.context.strokeStyle = this.node.data.colors[d.key] || this.node.data.colors[0];
                         this.context.stroke();
                     });
                 }
