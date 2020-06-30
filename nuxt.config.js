@@ -13,7 +13,7 @@ module.exports = {
   ** Headers of the page
   */
   head: {
-    title: 'WebWis',
+    title: 'WebVis',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
