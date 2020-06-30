@@ -341,7 +341,7 @@
           await this.Engine.process( this.editor.toJSON(), conn.input.node.id, this.state );
         });
         this.editor.on('connectioncreated', async(conn)=>{
-          await this.Engine.process( this.editor.toJSON(), conn.output.node.id, this.state );
+          await this.Engine.process( this.editor.toJSON(), conn.input.node.id, this.state );
         });
         this.editor.on('process', async()=>{
           await this.Engine.process( this.editor.toJSON(), this.editor.nodeId, this.state );
@@ -349,12 +349,10 @@
 
 
         this.editor.on('noderemove', (node)=>{
-            // if(state.process && node){
-              if(node.data.preview){
-                  const item = this.state.preview.find(d=>d.id === node.data.id);
-                  this.state.preview.splice(this.state.preview.indexOf(item), 1);
-              }
-            // }
+          if(node.data.preview){
+              const item = this.state.preview.find(d=>d.id === node.data.id);
+              this.state.preview.splice(this.state.preview.indexOf(item), 1);
+          }
         })
 
         document.addEventListener('keydown', async (e) => {
@@ -372,8 +370,8 @@
                 }
             }
         });
-      ///
-
+      //
+      this.state.data['sea-ice'] = d3.csvParse(await this.$axios.$get('/data/sea-ice-extent.csv'));
       this.state.data['nodes'] = await this.$axios.$get('/data/nodes.json');
       this.state.data['links'] = await this.$axios.$get('/data/links.json');
       this.state.data['cars'] = d3.csvParse(await this.$axios.$get('/data/cars.csv'));
