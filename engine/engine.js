@@ -24,9 +24,9 @@ export default class Engine {
             const conn = node.inputs[key].connections[0];
             if(conn){
                 const n = this.nodes[conn.node];
-                inputs[key] = [ n.outputs[conn.output] ]; 
+                inputs[key] = n.outputs[conn.output];
             }else{
-                inputs[key] = []; 
+                inputs[key] = null; 
             }
         }
         NODE.outputs = {};

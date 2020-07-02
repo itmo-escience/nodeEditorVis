@@ -49,7 +49,7 @@ class MultiplyComponent extends Rete.Component {
             .addControl(new NumControl(this.editor, 'multiplier', node));
     }
     worker(node, inputs, outputs){
-        outputs.result = inputs.nums[0].map(d=> !isNaN(+d) ? d*node.data.multiplier : d );
+        outputs.result = inputs.nums.map(d=> !isNaN(+d) ? d*node.data.multiplier : d );
     }
 }
 class ColorComponent extends Rete.Component {
@@ -76,7 +76,7 @@ class ColorComponent extends Rete.Component {
         // d3.schemeSet1 // 9 light
 
         const data = node.data;
-        data.values = inputs.values.length ? [...new Set( inputs.values[0] )] : [];
+        data.values = inputs.values ? [...new Set( inputs.values )] : [];
         
         if(!data.values.length){
             outputs.colors = { value: data.color };
@@ -91,9 +91,8 @@ class ColorComponent extends Rete.Component {
         const color = d3.scaleLinear(d3.extent( data.values ), Object.values(colors));
         
         outputs.colors = {
-            data: inputs.values[0].map(d=> isNaN(d) ? colors[d] : color(d) ),
+            data: inputs.values.map(d=> isNaN(d) ? colors[d] : color(d) ),
             value: null,
-            colors: colors
         }
     }
 }
@@ -207,18 +206,18 @@ class RangeComponent extends Rete.Component {
             const domainTo = node.data.domain[1];
             const rangeFrom = node.data.range[0];
             const rangeTo = node.data.range[1];
-            outputs['range'] = inputs.nums[0].map(v=>{
+            outputs['range'] = inputs.nums.map(v=>{
                 v = v > domainTo ? domainTo : v;
                 v = v < domainFrom ? domainFrom : v;
                 return (((v - domainFrom) * (rangeTo - rangeFrom)) / (domainTo - domainFrom)) + rangeFrom
             });
-            if(JSON.stringify(node.data.values) != JSON.stringify(inputs.nums[0])){
+            if(JSON.stringify(node.data.values) != JSON.stringify(inputs.nums)){
                 node.data.values = null;
             }
         }
         
-        if(!node.data.values && inputs.nums.length){
-            const values = inputs.nums[0];
+        if(!node.data.values && inputs.nums){
+            const values = inputs.nums;
             const connection = node.inputs.nums.connections[0];
 
             const component = this.editor.components.get('Range');
@@ -256,35 +255,33 @@ class PointLayerComponent extends Rete.Component {
             .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
     }
     worker(node, inputs, outputs){
-        if( (inputs.lat.length && inputs.lon.length) || inputs.geometry.length ){
+        if( (inputs.lat && inputs.lon) || inputs.geometry ){
             let data = [];
-            if( (inputs.lat.length && inputs.lon.length) && 
-                inputs.lat[0].length === inputs.lon[0].length )
+            const props = {
+                radius: inputs.radius ?  inputs.radius[i] : null,
+                color: inputs.colors ?  inputs.colors.data[i] : null,
+            };
+
+            if( (inputs.lat && inputs.lon) && 
+                inputs.lat.length === inputs.lon.length )
             {
                 data = {
                     type: "FeatureCollection",
-                    features: inputs.lat[0].map((g, i)=>({ 
+                    features: inputs.lat.map((g, i)=>({ 
                         type: "Feature",
-                        properties: {
-                            ...(inputs.radius.length ? {radius: inputs.radius[0][i]} : {}),
-                            ...(inputs.colors.length  ? inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {} : {}),
-                            
-                        },
+                        properties: props,
                         geometry: {
                             type: "Point",
-                            coordinates: [inputs.lon[0][i], inputs.lat[0][i]]
+                            coordinates: [inputs.lon[i], inputs.lat[i]]
                         }
                     }))
                 }
-            }else if(inputs.geometry.length){
+            }else if(inputs.geometry){
                 data = {
                     type: "FeatureCollection",
-                    features: inputs.geometry[0].map((g, i)=>({ 
+                    features: inputs.geometry.map((g, i)=>({ 
                         type: "Feature",
-                        properties: {
-                            ...(inputs.radius.length ? {radius: inputs.radius[0][i]} : {}),
-                            ...(inputs.colors.length  ? inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {} : {}),
-                        },
+                        properties: props,
                         geometry: g 
                     }))
                 }
@@ -293,8 +290,8 @@ class PointLayerComponent extends Rete.Component {
             outputs['layer'] = {
                 type: 'point',
                 data: data,
-                radius: inputs.radius.length ? null : node.data.radius,
-                color: inputs.colors.length ? inputs.colors[0].value : 'rgba(160, 160, 180, 250)',
+                radius: inputs.radius ? null : node.data.radius,
+                color: inputs.colors ? inputs.colors.value : 'rgba(160, 160, 180, 250)',
             };
         }
     }
@@ -316,26 +313,26 @@ class LineLayerComponent extends Rete.Component {
             .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
     }
     worker(node, inputs, outputs){
-        if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) || inputs.geometry.length ){
+        if( (inputs.x && inputs.y && inputs.x1 && inputs.y1) || inputs.geometry ){
             let data = [];
-
-            if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) && 
-                (inputs.x[0].length === inputs.y[0].length) &&
-                (inputs.x[0].length === inputs.x1[0].length) &&
-                (inputs.x[0].length === inputs.y1[0].length) )
+            const props = {
+                color: inputs.colors ?  inputs.colors.data[i] : null,
+            };
+            if( (inputs.x && inputs.y && inputs.x1 && inputs.y1) && 
+                (inputs.x.length === inputs.y.length) &&
+                (inputs.x.length === inputs.x1.length) &&
+                (inputs.x.length === inputs.y1.length) )
             {   
                 data = {
                     type: "FeatureCollection",
-                    features: inputs.x[0].map((g, i)=>({ 
+                    features: inputs.x.map((g, i)=>({ 
                         type: "Feature",
-                        properties: {
-                            ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
-                        },
+                        properties: props,
                         geometry: {
                             type: "LineString",
                             coordinates: [
-                                [inputs.x[0][i], inputs.y[0][i]],
-                                [inputs.x1[0][i], inputs.y1[0][i]]
+                                [inputs.x[i], inputs.y[i]],
+                                [inputs.x1[i], inputs.y1[i]]
                             ]
                         }
                     }))
@@ -343,11 +340,9 @@ class LineLayerComponent extends Rete.Component {
             }else if(inputs.geometry.length){
                 data = {
                     type: "FeatureCollection",
-                    features: inputs.geometry[0].map((g, i)=>({ 
+                    features: inputs.geometry.map((g, i)=>({ 
                         type: "Feature",
-                        properties: {
-                            ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
-                        },
+                        properties: props,
                         geometry: g 
                     }))
                 }
@@ -356,7 +351,7 @@ class LineLayerComponent extends Rete.Component {
             outputs['layer'] = {
                 type: 'line',
                 data: data,
-                color: inputs.colors.length ? inputs.colors[0].value : 'rgba(160, 160, 180, 250)',
+                color: inputs.colors ? inputs.colors.value : 'rgba(160, 160, 180, 250)',
             };                    
         }
     }
@@ -383,27 +378,28 @@ class ArcLayerComponent extends Rete.Component {
             .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
     }
     worker(node, inputs, outputs){
-        if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) || inputs.geometry.length ){
+        if( (inputs.x && inputs.y && inputs.x1 && inputs.y1) || inputs.geometry ){
             let data = [];
-            console.log(inputs.colors)
-            if( (inputs.x.length && inputs.y.length && inputs.x1.length && inputs.y1.length) && 
-                (inputs.x[0].length === inputs.y[0].length) &&
-                (inputs.x[0].length === inputs.x1[0].length) &&
-                (inputs.x[0].length === inputs.y1[0].length) )
+            const props = {
+                color: inputs.colors ? inputs.colors.value || inputs.colors.data[i] : null,
+                width: inputs.width ? inputs.width[i] : null,
+            };
+
+            if( (inputs.x && inputs.y && inputs.x1 && inputs.y1) && 
+                (inputs.x.length === inputs.y.length) &&
+                (inputs.x.length === inputs.x1.length) &&
+                (inputs.x.length === inputs.y1.length) )
             {   
                 data = {
                     type: "FeatureCollection",
-                    features: inputs.x[0].map((g, i)=>({ 
+                    features: inputs.x.map((g, i)=>({ 
                         type: "Feature",
-                        properties: {
-                            ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
-                            ...(!inputs.width.length  ? {} : {width: inputs.width[0][i]}),
-                        },
+                        properties: props,
                         geometry: {
                             type: "LineString",
                             coordinates: [
-                                [inputs.x[0][i], inputs.y[0][i]],
-                                [inputs.x1[0][i], inputs.y1[0][i]]
+                                [inputs.x[i], inputs.y[i]],
+                                [inputs.x1[i], inputs.y1[i]]
                             ]
                         }
                     }))
@@ -413,10 +409,7 @@ class ArcLayerComponent extends Rete.Component {
                     type: "FeatureCollection",
                     features: inputs.geometry[0].map((g, i)=>({ 
                         type: "Feature",
-                        properties: {
-                            ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
-                            ...(!inputs.width.length  ? {} : {width: inputs.width[0][i]}),
-                        },
+                        properties: props,
                         geometry: g 
                     }))
                 }
@@ -425,8 +418,8 @@ class ArcLayerComponent extends Rete.Component {
             outputs['layer'] = {
                 type: 'arc',
                 data: data,
-                width: inputs.width.length ? null : node.data.width,
-                color: inputs.colors.length ? inputs.colors[0].value : 'rgba(160, 160, 180, 250)'
+                width: inputs.width ? null : node.data.width,
+                color: inputs.colors ? inputs.colors.value : 'rgba(160, 160, 180, 250)'
             };                    
         }
     }
@@ -453,11 +446,11 @@ class PolygonLayerComponent extends Rete.Component {
         if(inputs.geometry.length){
             const data = {
                 type: "FeatureCollection",
-                features: inputs.geometry[0].map((g, i)=>({ 
+                features: inputs.geometry.map((g, i)=>({ 
                     type: "Feature",
                     properties: { 
-                        ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {}),
-                        ...(inputs.height.length ? {height: inputs.height[0][i]} : {}), 
+                        color: inputs.colors ? inputs.colors.value || inputs.colors.data[i] : null,
+                        width: inputs.height ? inputs.height[i] : null,
                     },
                     geometry: g
                 }))
@@ -466,8 +459,8 @@ class PolygonLayerComponent extends Rete.Component {
                 type: 'polygon',
                 data: data,
                 extruded: node.data.shape === 'extrude',
-                color: inputs.colors.length ? inputs.colors[0].value : 'rgba(160, 160, 180, 250)',
-                height: inputs.height.length ? null : node.data.height
+                color: inputs.colors ? inputs.colors.value : 'rgba(160, 160, 180, 250)',
+                height: inputs.height ? null : node.data.height
             };
         }
     }
@@ -491,27 +484,26 @@ class GridMapLayerComponent extends Rete.Component {
             .addInput(new Rete.Input('lon','Lon', dataSocket))
             .addInput(new Rete.Input('geometry', 'Geometry', pointGeometrySocket))
             .addInput(new Rete.Input('elevation', 'Elevation', dataSocket))
-            .addInput(new Rete.Input('color', 'Color', dataSocket))
+            .addInput(new Rete.Input('color', 'Color', colorSocket))
             .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
     }
     worker(node, inputs, outputs){
-        if( (inputs.lat.length && inputs.lon.length) || inputs.geometry.length ){
-            
+        if( (inputs.lat && inputs.lon) || inputs.geometry ){
             let data = [];
-            if( (inputs.lat.length && inputs.lon.length) && 
-            inputs.lat[0].length === inputs.lon[0].length )
+            const props = {
+                color: inputs.colors ? inputs.colors.value || inputs.colors.data[i] : null,
+                elevation: inputs.elevation ? inputs.elevation[i] : null,
+            }
+            if( (inputs.lat && inputs.lon) && inputs.lat.length === inputs.lon.length )
             {
                 data = {
                     type: "FeatureCollection",
-                    features: inputs.lat[0].map((g, i)=>({ 
+                    features: inputs.lat.map((g, i)=>({ 
                         type: "Feature",
-                        properties: {
-                            ...(inputs.elevation.length ? {elevation: inputs.elevation[0][i]} : {}),
-                            ...(inputs.color.length ? {color: inputs.color[0][i]} : {}),
-                        },
+                        properties: props,
                         geometry: {
                             type: "Point",
-                            coordinates: [inputs.lon[0][i], inputs.lat[0][i]]
+                            coordinates: [inputs.lon[i], inputs.lat[i]]
                         }
                     }))
                 }
@@ -519,12 +511,9 @@ class GridMapLayerComponent extends Rete.Component {
             }else if(inputs.geometry.length){
                 data = {
                     type: "FeatureCollection",
-                    features: inputs.geometry[0].map((g, i)=>({ 
+                    features: inputs.geometry.map((g, i)=>({ 
                         type: "Feature",
-                        properties: {
-                            ...(inputs.elevation.length ? {elevation: inputs.elevation[0][i]} : {}),
-                            ...(inputs.color.length ? {color: inputs.color[0][i]} : {}),
-                        },
+                        properties: props,
                         geometry: g 
                     }))
                 }
@@ -561,34 +550,32 @@ class HeatMapLayerComponent extends Rete.Component {
             .addOutput(new Rete.Output('layer', 'Layer', layerSocket));
     }
     worker(node, inputs, outputs){
-        if( (inputs.lat.length && inputs.lon.length) || inputs.geometry.length ){
+        if( (inputs.lat && inputs.lon) || inputs.geometry ){
             
             let data = {};
-
-            if( (inputs.lat.length && inputs.lon.length) && 
-            inputs.lat[0].length === inputs.lon[0].length )
+            const props = {
+                weight: inputs.weight ? inputs.weight[i] : null
+            }
+            if( (inputs.lat && inputs.lon) && 
+            inputs.lat.length === inputs.lon.length )
             {
                 data = {
                     type: "FeatureCollection",
-                    features: inputs.lat[0].map((g, i)=>({ 
+                    features: inputs.lat.map((g, i)=>({ 
                         type: "Feature",
-                        properties: { 
-                            ...(inputs.weight.length ? {weight: inputs.weight[0][i]} : {}),
-                        },
+                        properties: props,
                         geometry: {
                             type: "Point",
-                            coordinates: [inputs.lon[0][i], inputs.lat[0][i]]
+                            coordinates: [inputs.lon[i], inputs.lat[i]]
                         }
                     }))
                 }
             }else if(inputs.geometry.length){
                 data = {
                     type: "FeatureCollection",
-                    features: inputs.geometry[0].map((g, i)=>({ 
+                    features: inputs.geometry.map((g, i)=>({ 
                         type: "Feature",
-                        properties: {
-                            ...(inputs.weight.length ? {weight: inputs.weight[0][i]} : {}),
-                        },
+                        properties: props,
                         geometry: g 
                     }))
                 }
@@ -597,11 +584,11 @@ class HeatMapLayerComponent extends Rete.Component {
             outputs['layer'] = {
                 type: 'heatmap',
                 data: data,
-                weight: inputs.weight.length ? null : node.data.weight,
-                radius: inputs.heatmap.length ? inputs.heatmap[0].radius : null,
-                intensity: inputs.heatmap.length ? inputs.heatmap[0].intensity : null,
-                threshold: inputs.heatmap.length ? inputs.heatmap[0].threshold : null,
-                colorRange: inputs.heatmap.length ? inputs.heatmap[0].colors : null
+                weight: inputs.weight ? null : node.data.weight,
+                radius: inputs.heatmap ? inputs.heatmap.radius : null,
+                intensity: inputs.heatmap ? inputs.heatmap.intensity : null,
+                threshold: inputs.heatmap ? inputs.heatmap.threshold : null,
+                colorRange: inputs.heatmap ? inputs.heatmap.colors : null
             };
         }
     }
@@ -679,13 +666,13 @@ class ScatterComponent extends Rete.Component {
             .addInput(new Rete.Input('size','Size', dataSocket));
     }
     worker(node, inputs, outputs){
-        if( inputs.x.length && inputs.y.length ){
+        if( inputs.x && inputs.y ){
             node.data.type = 'point';
-            node.data.DATA = inputs.x[0].map((x, i)=> ({
-                x: inputs.x[0][i],
-                y: inputs.y[0][i],
-                ...(!inputs.colors.length  ? {} : inputs.colors[0].data ? { color: inputs.colors[0].data[i] } : { color: inputs.colors[0].value }),
-                ...(inputs.size.length ? {size: +inputs.size[0][i]} : {}),
+            node.data.DATA = inputs.x.map((x, i)=> ({
+                x: inputs.x[i],
+                y: inputs.y[i],
+                color: inputs.color ? inputs.color.value || inputs.color.data[i] : '#e3c000',
+                size: inputs.size ? +inputs.size[i] : {},
             }));
         }
         this.editor.nodes.find(n=>n.id===node.id).update();
@@ -707,13 +694,13 @@ class LineComponent extends Rete.Component {
     worker(node, inputs, outputs){
         if( inputs.x.length && inputs.y.length ){
             node.data.type = 'line';
-
-            node.data.DATA = inputs.x[0].map((x, i)=> ({
-                x: inputs.x[0][i],
-                y: inputs.y[0][i],
-                index: inputs.i.length ? inputs.i[0][i] : 0,
+            console.log(inputs);
+            node.data.DATA = inputs.x.map((x, i)=> ({
+                x: inputs.x[i],
+                y: inputs.y[i],
+                index: inputs.i ? inputs.i[i] : 0,
+                color: inputs.color ? inputs.color.value || inputs.color.data[i] : '#e3c000'
             }));
-            node.data.colors = inputs.color.length ? inputs.color[0].colors || [inputs.color[0].value] : ['#e3c000'];
         }
         this.editor.nodes.find(n=>n.id===node.id).update();
     }
@@ -735,7 +722,7 @@ class ForceManyBodyComponent extends Rete.Component {
     }
     worker(node, inputs, outputs){
         outputs.force = {
-            strength: inputs.strength.length ? inputs.strength[0] : node.data.strength
+            strength: inputs.strength || node.data.strength
         }
     }
 }
@@ -759,8 +746,8 @@ class ForceRadialComponent extends Rete.Component {
     }
     worker(node, inputs, outputs){
         outputs.force = {
-            strength: inputs.strength.length ? inputs.strength[0] : node.data.strength,
-            radius: inputs.radius.length ? inputs.radius[0] : node.data.radius,
+            strength: inputs.strength || node.data.strength,
+            radius: inputs.radius || node.data.radius,
             center: [node.data.x, node.data.y]
         }
     }
@@ -783,8 +770,8 @@ class ForceXComponent extends Rete.Component {
     }
     worker(node, inputs, outputs){
         outputs.force = {
-            strength: inputs.strength.length ? inputs.strength[0] : node.data.strength,
-            x: inputs.x.length ? inputs.x[0] : node.data.x
+            strength: inputs.strength || node.data.strength,
+            x: inputs.x || node.data.x
         }
     }
 }
@@ -806,8 +793,8 @@ class ForceYComponent extends Rete.Component {
     }
     worker(node, inputs, outputs){
         outputs.force = {
-            strength: inputs.strength.length ? inputs.strength[0] : node.data.strength,
-            y: inputs.y.length ? inputs.y[0] : node.data.y
+            strength: inputs.strength || node.data.strength,
+            y: inputs.y || node.data.y
         }
     }
 }
@@ -829,14 +816,14 @@ class LinksComponent extends Rete.Component {
             .addOutput(new Rete.Output('links', 'Links', linksSocket));
     }
     worker(node, inputs, outputs){
-        if( inputs.source.length && inputs.target.length ){
+        if( inputs.source && inputs.target ){
             outputs.links = {
                 iterations: node.data.iterations,
                 links: inputs.source.map((d,i)=>{
                     return {
                         source: d,
-                        target: inputs.target[0][i],
-                        ldis: inputs.distance.length ? inputs.distance[i] : node.data.distance,
+                        target: inputs.target[i],
+                        ldis: inputs.distance[i] || node.data.distance,
                     }
                 })
             }
@@ -865,24 +852,25 @@ class GraphComponent extends Rete.Component {
             .addInput(new Rete.Input('links', 'Links', linksSocket));
     }
     worker(node, inputs, outputs){
-        if( inputs.id.length ){
+        if( inputs.id ){
             node.data.GRAPH = {
-                radialCenter: inputs.radial.length ? inputs.radial[0].center : [],
-                iterations: inputs.links.length ?  inputs.links[0].iterations : null,
-                ...(inputs.links.length ? {links: inputs.links[0].links} : {}),
-                nodes: inputs.id[0].map((d, i)=>{
+                radialCenter: inputs.radial ? inputs.radial.center : [],
+                iterations: inputs.links ?  inputs.links.iterations : null,
+                links: inputs.links ? inputs.links.links : null,
+                nodes: inputs.id.map((d, i)=>{
                     return {
                         id: d,
-                        radius: inputs.radius.length ?  inputs.radius[0][i] : node.data.radius || null,
-                        ...(inputs.colors.length ? inputs.colors[0].data ? {color: inputs.colors[0].data[i]} : {color: inputs.colors[0].value} : {color: null}),
-                        ...(inputs.x.length ? inputs.x[0].strength.length ? {xstr: inputs.x[0].strength[i]} : {xstr: inputs.x[0].strength} : {xstr: null}),
-                        ...(inputs.x.length ? inputs.x[0].x.length ? {xpos: inputs.x[0].x[i]} : {xpos: inputs.x[0].x} : {xpos: null}),
-                        ...(inputs.y.length ? inputs.y[0].strength.length ? {ystr: inputs.y[0].strength[i]} : {ystr: inputs.y[0].strength} : {ystr: null}),
-                        ...(inputs.y.length ? inputs.y[0].y.length ? {ypos: inputs.y[0].y[i]} : {ypos: inputs.y[0].y} : {ypos: null}),
-                        ...(inputs.charge.length ? inputs.charge[0].strength.length ? {cstr: inputs.charge[0].strength[i]} : {cstr: inputs.charge[0].strength} : {cstr: null}),
-                        ...(inputs.radial.length ? inputs.radial[0].strength.length ? {rstr: inputs.radial[0].strength[i]} : {rstr: inputs.radial[0].strength} : {rstr: null}),
-                        ...(inputs.radial.length ? inputs.radial[0].radius.length ? {rad: inputs.radial[0].radius[i]} : {rad: inputs.radial[0].radius} : {rad: null}),
-                        ...(inputs.radial.length ? inputs.radial[0].radius.length ? {rad: inputs.radial[0].radius[i]} : {rad: inputs.radial[0].radius} : {rad: null}),
+                        radius: inputs.radius ?  inputs.radius[i] : node.data.radius || null,
+                        color: inputs.colors ? inputs.colors.value || inputs.colors.data[i] : null,
+                        xstr: inputs.x ? inputs.x.strength.length ? inputs.x.strength[i] : inputs.x.strength : null,
+                        xpos: inputs.x ? inputs.x.length ? inputs.x[i] : inputs.x : null,
+                        ypos: inputs.y ? inputs.y.length ? inputs.y[i] : inputs.y : null,
+                        ystr: inputs.y ? inputs.y.strength.length ? inputs.y.strength[i] : inputs.y.strength : null,
+
+                        cstr: inputs.charge ? inputs.charge.strength.length ? inputs.charge.strength[i] : inputs.charge.strength : null,
+                        rstr: inputs.radial ? inputs.radial.strength.length ? inputs.radial.strength[i] : inputs.radial.strength : null,
+
+                        rad: inputs.radial ? inputs.radial.radius.length ? inputs.radial.radius[i] : inputs.radial.radius : null,
                     }
                 })
             }
