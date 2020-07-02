@@ -87,8 +87,9 @@ export default{
                         data.forEach((d)=>{
                             this.context.lineTo(scale.x( new Date('2000-'+d.x) ), scale.y(d.y));
                         });
+                        console.log(data[0].color);
                         this.context.lineWidth = 3;
-                        this.context.strokeStyle = this.node.data.colors[d.key] || this.node.data.colors[0];
+                        this.context.strokeStyle = data[0].color;
                         this.context.stroke();
                     });
                 }
