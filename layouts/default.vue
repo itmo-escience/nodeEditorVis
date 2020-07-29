@@ -20,23 +20,19 @@ html {
   box-sizing: border-box;
   margin: 0;
 }
-.connection.socket-output-number-array > path{ stroke: #aaff00 !important; }
+.connection.socket-output-encode > path{ stroke: #aaff00 !important; }
 .connection.socket-output-string-array > path{ stroke: #a002a0 !important; }
 .connection.socket-output-number > path{ stroke: #9acd32 !important; }
-.connection.socket-output-string > path{ stroke: #FF00FF !important; }
 .connection.socket-output-layer > path { stroke: #0000FF !important; }
-.connection.socket-output-color-map > path{ stroke: #800000 !important; }
-.connection.socket-output-any > path{ stroke: #6699ff !important; }
-.connection.socket-output-flow > path{ stroke: #e6e6e6 !important; }
-.connection.socket-output-size > path{ stroke: #091580 !important; }
+.connection.socket-output-field > path{ stroke: #FF00FF !important; }
+.connection.socket-output-axis > path{ stroke: #6699ff !important; }
+.connection.socket-output-mark > path{ stroke: #e6e6e6 !important; }
+.connection.socket-output-scale > path{ stroke: #091580 !important; }
 .connection.socket-output-color > path{ stroke: #ee0063 !important; }
 .connection.socket-output-heatmap > path{ stroke: #f70469 !important; }
-.connection.socket-output-point-shapes > path{ stroke: #b4a200 !important; }
-.connection.socket-output-line-shapes > path{ stroke: #746800 !important; }
 .connection.socket-output-point-geometry > path{ stroke: #afaea6 !important; }
 .connection.socket-output-line-geometry > path{ stroke: #b3b3b3 !important; }
 .connection.socket-output-polygon-geometry > path{ stroke: #fffef7 !important; }
-.connection.socket-output-nodes > path{ stroke: #ffe604 !important; }
 .connection.socket-output-links > path{ stroke: #3463fd !important; }
 .connection.socket-output-force-x > path{ stroke: #04c0f0 !important; }
 .connection.socket-output-force-y > path{ stroke: #8be8ff !important; }
@@ -44,20 +40,18 @@ html {
 .connection.socket-output-force-radial > path{ stroke: #92b2b9 !important; }
 .connection.socket-output-links > path{ stroke: #c8f3fd !important; }
 .connection.socket-output-data > path{ stroke: #2697b1 !important; }
+.connection.socket-output-date > path{ stroke: #b4a200 !important; }
 
-.socket.output.number-array, .socket.input.number-array { background: #aaff00; }
+.socket.output.encode, .socket.input.encode { background: #aaff00; }
 .socket.output.string-array, .socket.input.string-array { background: #a002a0; }
 .socket.output.number, .socket.input.number { background: #9acd32; }
-.socket.output.string, .socket.input.string { background: #FF00FF; }
 .socket.output.layer, .socket.input.layer { background: #0000FF; }
-.socket.output.color-map, .socket.input.color-map { background: #800000; }
-.socket.output.any, .socket.input.any { background: #6699ff; }
-.socket.output.flow, .socket.input.flow { background: #e6e6e6; }
-.socket.output.size, .socket.input.size { background: #091580; }
+.socket.output.field, .socket.input.field { background: #FF00FF; }
+.socket.output.axis, .socket.input.axis { background: #6699ff; }
+.socket.output.mark, .socket.input.mark { background: #e6e6e6; }
+.socket.output.scale, .socket.input.scale { background: #091580; }
 .socket.output.color, .socket.input.color { background: #ee0063; }
 .socket.output.heatmap, .socket.input.heatmap { background: #f70469; }
-.socket.output.point-shapes, .socket.input.point-shapes { background: #b4a200; }
-.socket.output.line-shapes, .socket.input.line-shapes { background: #746800; }
 .socket.output.point-geometry, .socket.input.point-geometry { background: #afaea6; }
 .socket.output.line-geometry, .socket.input.line-geometry { background: #b3b3b3; }
 .socket.output.polygon-geometry, .socket.input.polygon-geometry { background: #fffef7; }
@@ -69,6 +63,7 @@ html {
 .socket.output.force-radial, .socket.input.force-radial { background: #92b2b9; }
 .socket.output.links, .socket.input.links { background: #c8f3fd; }
 .socket.output.data, .socket.input.data { background: #2697b1; }
+.socket.output.date, .socket.input.date { background: #b4a200; }
 
 body{ color: #d5d6d6; }
 
@@ -84,7 +79,7 @@ body{ color: #d5d6d6; }
 .title{
   font-size: 20px;
   color: #fff;
-  margin: 20px;
+  margin: 5px 20px;
 }
 
 .arrow.up:after{ content: url(~assets/arrow-up.svg); }
