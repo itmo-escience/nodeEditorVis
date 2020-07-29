@@ -7,4 +7,6 @@ npm-debug.log
 # Nuxt build
 .nuxt
 
+dist
+
 package-lock.json
