@@ -1,8 +1,6 @@
 <template>
-  <div class="color-control" @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
-    <svg width="40" height="20" viewBox="0 0 20 10" @click="toggle">
-      <rect width="20" height="10" :fill="color"></rect>
-    </svg>
+  <div @mouseover="freezEditor(true)" @mouseout="freezEditor(false)">
+    <div class="color-toggle" :style="{ backgroundColor: color }" @click="toggle"></div>
     <div class="pallet" v-if="opened">
       <Chrome 
         :value="color"
@@ -46,7 +44,8 @@ export default{
 }
 </script>
 <style>
-  .color-control{ 
-    margin: 0 10px; 
+  .color-toggle{
+    width: 100px;
+    height: 20px;
   }
 </style>
