@@ -35,40 +35,28 @@ export default{
         }
     },
     methods:{
-        makeScale(values){
-            if( !isNaN(values[0]) )
-                return d3.scaleLinear().domain( d3.extent(values) );
-            //console.log(d3.extent( values.map(val=> new Date('2000-'+val)) ));
-            if(values[0].includes('-')) // m-d
-                return d3.scaleTime().domain(d3.extent( values.map(val=> new Date('2000-'+val)) ));
-
-            return d3.scalePoint().domain( values );
-            
-            
-        },
         updateChart(){
             if(this.node.data.DATA){
-                const x = [...new Set( this.node.data.DATA.map( d=>d.x ) )].sort();
-                const y = [...new Set( this.node.data.DATA.map( d=>d.y ) )].sort();
                 const s = [...new Set( this.node.data.DATA.map( d=>d.size ) )].sort();
+                const size = d3.scaleSqrt().domain(d3.extent(s)).range([0, 30]);
                 
-                const scale = {
-                    x: this.makeScale(x).range([this.offset, this.size-this.offset]),
-                    y: this.makeScale(y).range([this.size-this.offset, this.offset]),
-                    size: d3.scaleSqrt().domain(d3.extent(s)).range([0, 30])
-                };
+                const x = d3.scaleLinear([0,1], [this.offset, this.size-this.offset])
+                const y = d3.scaleLinear([0,1], [this.size-this.offset, this.offset])
                 
-                d3.select( this.$refs.y ).call( d3.axisLeft( scale.y ) );
-                d3.select( this.$refs.x ).call( d3.axisBottom( scale.x ).ticks(12, '%b') );
+                //d3.select( this.$refs.y ).call( d3.axisLeft( y ) );
+                //d3.select( this.$refs.x ).call( d3.axisBottom( x ) );//.ticks(12, '%b')
+
+                d3.select( this.$refs.y ).call( d3.axisLeft( y ) );
+                d3.select( this.$refs.x ).call( d3.axisBottom( x ) );
 
                 this.context.clearRect(0, 0, this.size, this.size);
                 this.context.save();
                 
                 if(this.node.data.type === 'point'){
                     this.node.data.DATA.forEach(d=>{
-                        const radius = scale.size(d.size) || 6;
-                        const X = scale.x(d.x);
-                        const Y = scale.y(d.y);
+                        const radius = size(d.size) || 6;
+                        const X = x(d.x);
+                        const Y = y(d.y);
                         this.context.beginPath();
                         this.context.moveTo(X + radius, Y);
                         this.context.arc(X, Y, radius, 0, 2 * Math.PI);
@@ -83,11 +71,10 @@ export default{
                     lines.forEach(d=>{
                         this.context.beginPath();
                         const data = d.values.sort( (a,b)=>a.x-b.x );
-                        this.context.moveTo( scale.x(data[0].x), scale.y(data[0].y) );
+                        this.context.moveTo( x(data[0].x), y(data[0].y) );
                         data.forEach((d)=>{
-                            this.context.lineTo(scale.x( new Date('2000-'+d.x) ), scale.y(d.y));
+                            this.context.lineTo( x(d.x) , y(d.y) );
                         });
-                        console.log(data[0].color);
                         this.context.lineWidth = 3;
                         this.context.strokeStyle = data[0].color;
                         this.context.stroke();
