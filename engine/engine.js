@@ -21,11 +21,17 @@ export default class Engine {
         const component = this.components.get( node.name );
         const inputs = {};
         for(let key in node.inputs){
-            const conn = node.inputs[key].connections[0];
-            if(conn){
-                const n = this.nodes[conn.node];
-                inputs[key] = n.outputs[conn.output];
-            }else{
+            const conns = node.inputs[key].connections;
+            inputs[key] = [];
+
+            conns.forEach(c=>{
+                const n = this.nodes[c.node];
+                inputs[key].push( n.outputs[c.output] )  ;
+            });
+            if(conns.length === 1){
+                inputs[key] = inputs[key][0];
+            }
+            if(!conns){
                 inputs[key] = null; 
             }
         }
