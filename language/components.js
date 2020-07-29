@@ -7,20 +7,33 @@ import MapNode from '~/components/nodes/MapNode'
 import CategoryNode from '~/components/nodes/CategoryNode'
 import GraphNode from '~/components/nodes/GraphNode'
 import Node from '~/components/nodes/Node'
+import VegaNode from '~/components/nodes/VegaNode'
 
 import {
     FileLoadControl, ColorControl,
     ClosedColorControl, TwoColorControl,
     ColorRangeControl, CheckBoxControl,
     RangeControl, TwoRangeControl,
-    NumControl,
+    NumControl, TextControl,
     LoadControl, SelectControl
 } from '~/language/controls.js';
+
+const SPEC = {
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "width": 400,
+    "height": 400,
+    "padding": 5,
+    "data": [],
+    "scales": [],
+    
+      
+};
 
 const colorSocket = new Rete.Socket('Color');
 const layerSocket = new Rete.Socket('Layer');
 
 const dataSocket = new Rete.Socket('Data');
+const dateSocket = new Rete.Socket('Date');
 
 const heatMapSocket = new Rete.Socket('HeatMap');
 
@@ -34,6 +47,12 @@ const linksSocket = new Rete.Socket('Links');
 const pointGeometrySocket = new Rete.Socket('Point Geometry');
 const lineGeometrySocket = new Rete.Socket('Line Geometry');
 const polygonGeometrySocket = new Rete.Socket('Polygon Geometry');
+
+const axisSocket = new Rete.Socket('Axis');
+const markSocket = new Rete.Socket('Mark');
+const scaleSocket = new Rete.Socket('Scale');
+const fieldSocket = new Rete.Socket('Field');
+const encodeSocket = new Rete.Socket('Encode');
 
 class MultiplyComponent extends Rete.Component {
     constructor() {
@@ -76,60 +95,25 @@ class ColorComponent extends Rete.Component {
         // d3.schemeSet1 // 9 light
 
         const data = node.data;
-        data.values = inputs.values ? [...new Set( inputs.values )] : [];
+        outputs.colors = data.color;
+        // data.values = inputs.values ? [...new Set( inputs.values )] : [];
         
-        if(!data.values.length){
-            outputs.colors = { value: data.color };
-            return;
-        }
-        if(data.values.length > 12){
-            data.values = d3.extent( data.values ); 
-        }
-        this.editor.nodes.find(n=>n.id===node.id).update();
+        // if(!data.values.length){
+        //     outputs.colors = { value: data.color };
+        //     return;
+        // }
+        // if(data.values.length > 12){
+        //     data.values = d3.extent( data.values ); 
+        // }
+        // this.editor.nodes.find(n=>n.id===node.id).update();
 
-        const colors = data.colors;
-        const color = d3.scaleLinear(d3.extent( data.values ), Object.values(colors));
+        // const colors = data.colors;
+        // const color = d3.scaleLinear(d3.extent( data.values ), Object.values(colors));
         
-        outputs.colors = {
-            data: inputs.values.map(d=> isNaN(d) ? colors[d] : color(d) ),
-            value: null,
-        }
-    }
-}
-class ParseComponent extends Rete.Component {
-    constructor(){
-        super('Parse')
-        this.data.component = Node;
-        this.path = null;
-    }
-    builder(node){
-        if(node.data.data.type === 'FeatureCollection'){
-            const feature = node.data.data.features[0];
-            for(let key in feature.properties){
-                node.addOutput(new Rete.Output(key, key, dataSocket));
-            }
-            const geometry = feature.geometry.type;
-            const socket = geometry === 'Point' ? pointGeometrySocket : geometry === 'LineString' ? lineGeometrySocket : polygonGeometrySocket;
-
-            node.addOutput(new Rete.Output('geom', 'Geometry', socket));
-        }else{
-            for(let key in node.data.data[0]){
-                node.addOutput(new Rete.Output(key, key, dataSocket));
-            }
-        }
-    }
-    worker(node, inputs, outputs){
-        if(node.data.data.type === 'FeatureCollection'){
-            const props = node.data.data.features[0].properties;
-            for(let key in props){
-                outputs[key] = node.data.data.features.map(f=> f.properties[key]);
-            }
-            outputs.geom = node.data.data.features.map(f=> f.geometry);
-        }else{
-           for(let key in node.data.data[0]){
-                outputs[key] = node.data.data.map(d=> !isNaN(+d[key]) ? +d[key] : d[key] );
-            } 
-        }
+        // outputs.colors = {
+        //     data: inputs.values.map(d=> isNaN(d) ? colors[d] : color(d) ),
+        //     value: null,
+        // }
     }
 }
 class DatasetComponent extends Rete.Component {
@@ -141,7 +125,7 @@ class DatasetComponent extends Rete.Component {
     builder(node){
         node.data.dataset = '';
 
-        node.addControl( new SelectControl( this.editor, 'dataset', ['', 'cars', 'sea-ice','branches', 'arcs', 'nodes', 'links'], node ) )
+        node.addControl(new SelectControl( this.editor, 'dataset', ['', 'cars', 'sea-ice','branches', 'arcs', 'nodes', 'links'], node ))
             .addControl(new LoadControl(this.editor, 'url', 'Url', node))
             .addControl(new FileLoadControl(this.editor, 'data', 'name', node));
     }
@@ -182,6 +166,42 @@ class DatasetComponent extends Rete.Component {
             };
             
             this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+        }
+    }
+}
+class ParseComponent extends Rete.Component {
+    constructor(){
+        super('Parse')
+        this.data.component = Node;
+        this.path = null;
+    }
+    builder(node){
+        if(node.data.data.type === 'FeatureCollection'){
+            const feature = node.data.data.features[0];
+            for(let key in feature.properties){
+                node.addOutput(new Rete.Output(key, key, dataSocket));
+            }
+            const geometry = feature.geometry.type;
+            const socket = geometry === 'Point' ? pointGeometrySocket : geometry === 'LineString' ? lineGeometrySocket : polygonGeometrySocket;
+
+            node.addOutput(new Rete.Output('geom', 'Geometry', socket));
+        }else{
+            for(let key in node.data.data[0]){
+                node.addOutput(new Rete.Output(key, key, dataSocket));
+            }
+        }
+    }
+    worker(node, inputs, outputs){
+        if(node.data.data.type === 'FeatureCollection'){
+            const props = node.data.data.features[0].properties;
+            for(let key in props){
+                outputs[key] = node.data.data.features.map(f=> f.properties[key]);
+            }
+            outputs.geom = node.data.data.features.map(f=> f.geometry);
+        }else{
+           for(let key in node.data.data[0]){
+                outputs[key] = node.data.data.map(d=> !isNaN(+d[key]) ? +d[key] : d[key] );
+            } 
         }
     }
 }
@@ -666,11 +686,23 @@ class ScatterComponent extends Rete.Component {
             .addInput(new Rete.Input('size','Size', dataSocket));
     }
     worker(node, inputs, outputs){
+        
+        function makeScale(values){
+            if( !isNaN(values[0]) )
+                return d3.scaleLinear(d3.extent(values), [0,1]);
+            return d3.scalePoint(values, [0,1]);
+        }
+
         if( inputs.x && inputs.y ){
+            const x = makeScale( inputs.x );
+            const y = makeScale( inputs.y );
+
             node.data.type = 'point';
-            node.data.DATA = inputs.x.map((x, i)=> ({
-                x: inputs.x[i],
-                y: inputs.y[i],
+            // pass array of ticks 
+            node.data.axis = { x: d3.axisBottom(x), y: d3.axisLeft(y) };
+            node.data.DATA = inputs.x.map((d, i) => ({
+                x: x(inputs.x[i]),
+                y: y(inputs.y[i]),
                 color: inputs.color ? inputs.color.value || inputs.color.data[i] : '#e3c000',
                 size: inputs.size ? +inputs.size[i] : {},
             }));
@@ -692,17 +724,64 @@ class LineComponent extends Rete.Component {
             .addInput(new Rete.Input('color', 'Colors', colorSocket));
     }
     worker(node, inputs, outputs){
-        if( inputs.x.length && inputs.y.length ){
+
+        function makeScale(values){
+            if( !isNaN(values[0]) )
+                return d3.scaleLinear(d3.extent(values), [0,1]);
+            return d3.scalePoint(values, [0,1]);
+        }
+
+        if( inputs.x && inputs.y ){
+            const x = makeScale( inputs.x );
+            const y = makeScale( inputs.y );
+
             node.data.type = 'line';
-            console.log(inputs);
-            node.data.DATA = inputs.x.map((x, i)=> ({
-                x: inputs.x[i],
-                y: inputs.y[i],
+            node.data.axis = { x: d3.axisBottom(x), y: d3.axisLeft(y) };
+            node.data.DATA = inputs.x.map((d, i)=> ({
+                x: x(inputs.x[i]),
+                y: y(inputs.y[i]),
                 index: inputs.i ? inputs.i[i] : 0,
                 color: inputs.color ? inputs.color.value || inputs.color.data[i] : '#e3c000'
             }));
         }
         this.editor.nodes.find(n=>n.id===node.id).update();
+    }
+}
+class DateComponent extends Rete.Component {
+    constructor() {
+        super('Date')
+        this.data.component = Node;
+        this.path = [];
+    }
+    builder(node){
+        node
+            .addInput(new Rete.Input('data', 'Data', dataSocket))
+            .addOutput(new Rete.Input('date', 'Date', dateSocket));
+    }
+    worker(node, inputs, outputs){
+        outputs.date = inputs.data.map(date=> new Date( date ) );
+        console.log(outputs.date);
+    }
+}
+class MakeDateComponent extends Rete.Component {
+    constructor() {
+        super('Make a Date')
+        this.data.component = Node;
+        this.path = [];
+    }
+    builder(node){
+        node
+            .addInput(new Rete.Input('y', 'Year', dataSocket))
+            .addInput(new Rete.Input('m', 'Month', dataSocket))
+            .addInput(new Rete.Input('d', 'Day', dataSocket))
+            .addOutput(new Rete.Input('date', 'Date', dateSocket));
+    }
+    worker(node, inputs, outputs){
+        outputs.date = (inputs.y || inputs.m || inputs.d).map((d,i)=> new Date(
+            inputs.y[i],
+            inputs.m[i] - 1,
+            inputs.d[i]
+        )); 
     }
 }
 // FORCES
@@ -881,10 +960,319 @@ class GraphComponent extends Rete.Component {
     }
 }
 
+class InputComponent extends Rete.Component {
+    constructor() {
+        super('Input Data')
+        this.data.component = Node;
+        this.path = [];
+    }
+    builder(node){
+        node.addControl(new SelectControl( this.editor, 'dataset', ['', 'cars', 'sea-ice','branches', 'arcs', 'nodes', 'links'], node ))
+            // .addControl(new LoadControl(this.editor, 'url', 'Url', node))
+            // .addControl(new FileLoadControl(this.editor, 'data', 'name', node));
+    }
+    async worker(node, inputs, outputs, state){
+        let data;
+        if(node.data.dataset){
+            data = {
+                name: node.data.dataset, 
+                values: state.data[ node.data.dataset ]
+            };
+        }
+        if(node.data.data){
+            data = {
+                name: node.data.name, 
+                values: node.data.data
+            };
+        }
+        if(data){
+            const component = new DataComponent;
+            const n = await component.createNode( data );
+            n.position = node.position;
+            this.editor.addNode( n );
+            this.editor.nodeId = n.id;
+            this.editor.trigger('process');
+            
+            this.editor.removeNode( this.editor.nodes.find(n=>n.id === node.id) );
+        }
+    }
+}
+class DataComponent extends Rete.Component {
+    constructor(){
+        super('Data')
+        this.data.component = Node;
+        this.path = null;
+    }
+    builder(node){
+        node.addInput(new Rete.Input('source', 'Source', dataSocket));
+
+        const data = SPEC.data.find(d=>d.name === node.data.name);
+        if(data){
+            data.values = node.data.values;
+        }else{
+            SPEC.data.push( node.data );
+        }
+        
+        node.addOutput(new Rete.Output('data', node.data.name, dataSocket));
+        const keys = Object.keys( node.data.values[0] );
+        keys.forEach(key=>{
+            node.addOutput(new Rete.Output(key, key, fieldSocket));
+        });
+    }
+    worker(node, inputs, outputs){
+        outputs.data = node.data.name;
+        
+        Object.keys( node.data.values[0] ).forEach(key=> {
+            outputs[key] = {data: node.data.name, field: key };
+        });
+    }
+}
+class DiscretizingScaleComponent extends Rete.Component {
+    constructor(){
+        super('Discretizing Scale')
+        this.data.component = Node;
+        this.path = ['Scales'];
+    }
+    builder(node){
+        node
+            .addControl(new SelectControl( this.editor, 'type', ['quantile', 'quantize', 'threshold'], node ))
+            .addInput(new Rete.Input('domain', 'Domain', fieldSocket, true))
+            .addControl(new SelectControl( this.editor, 'range', ['width', 'height'], node ))
+            .addOutput(new Rete.Output('scale', 'Scale', scaleSocket));
+    }
+    worker(node, inputs, outputs){
+        const s = {
+            "name": 'scale' + node.id,
+            "type": node.data.type,
+            "domain": inputs.domain.length ? {fields: inputs.domain} : inputs.domain,
+            "range": node.data.range,
+        }
+
+        const scale = SPEC.scales.find(d=>d.name === s.name);
+        if(scale){
+            Object.assign(scale, s);
+        }else{
+            SPEC.scales.push( s );
+        }
+        outputs.scale = s.name;
+    }
+}
+class DiscreteScaleComponent extends Rete.Component {
+    constructor(){
+        super('Discrete Scale')
+        this.data.component = Node;
+        this.path = ['Scales'];
+    }
+    builder(node){
+        node
+            .addControl(new SelectControl( this.editor, 'type', ['ordinal', 'band', 'point'], node ))
+            .addControl(new SelectControl( this.editor, 'range', ['width', 'height'], node ))
+            .addInput(new Rete.Input('domain', 'Domain', fieldSocket, true))
+            .addOutput(new Rete.Output('scale', 'Scale', scaleSocket));
+    }
+    worker(node, inputs, outputs){
+        const s = {
+            "name": 'scale' + node.id,
+            "type": node.data.type,
+            "domain": inputs.domain.length ? {fields: inputs.domain} : inputs.domain,
+            "range": node.data.range,
+        }
+
+        const scale = SPEC.scales.find(d=>d.name === s.name);
+        if(scale){
+            Object.assign(scale, s);
+        }else{
+            SPEC.scales.push( s );
+        }
+        outputs.scale = s.name;
+    }
+}
+class QuantitativeScaleComponent extends Rete.Component {
+    constructor(){
+        super('Quantitative Scale')
+        this.data.component = Node;
+        this.path = ['Scales'];
+    }
+    builder(node){
+        node
+            .addControl(new SelectControl( this.editor, 'type', ['linear', 'log', 'pow','sqrt', 'symlog', 'time', 'utc', 'sequential'], node ))
+            .addInput(new Rete.Input('domain', 'Domain', fieldSocket, true))
+            .addControl(new SelectControl( this.editor, 'range', ['width', 'height'], node ))
+            .addControl(new CheckBoxControl(this.editor, 'nice', 'Nice', node))
+            .addControl(new CheckBoxControl(this.editor, 'clamp', 'Clamp', node))
+            .addOutput(new Rete.Output('scale', 'Scale', scaleSocket));
+            // .addInput(new Rete.Input('sort_domain', 'Sort Domain', sortSocket))
+    }
+    worker(node, inputs, outputs){
+        const s = {
+            "name": 'scale' + node.id,
+            "type": node.data.type,
+            "nice": node.data.nice,
+            "clamp": node.data.clamp,
+            "domain": inputs.domain.length ? {fields: inputs.domain} : inputs.domain,
+            "range": node.data.range,
+        }
+
+        const scale = SPEC.scales.find(d=>d.name === s.name);
+        if(scale){
+            Object.assign(scale, s);
+        }else{
+            SPEC.scales.push( s );
+        }
+        outputs.scale = s.name;
+    }
+}
+class AxisComponent extends Rete.Component {
+    constructor() {
+        super('Axis')
+        this.data.component = Node;
+        this.path = [];
+    }
+    builder(node){
+        node
+            .addControl(new SelectControl( this.editor, 'orient', ['left', 'right', 'top','bottom'], node ))
+            .addControl(new CheckBoxControl(this.editor, 'domain', 'Domain', node))
+            .addControl(new CheckBoxControl(this.editor, 'grid', 'Grid', node))
+            .addControl(new TextControl(this.editor, 'title', 'title', node))
+            .addInput(new Rete.Input('scale', 'Scale', scaleSocket))
+            .addInput(new Rete.Input('labelColor', 'label color', colorSocket))
+            .addOutput(new Rete.Output('axis', 'Axis', axisSocket));
+        
+    }
+    worker(node, inputs, outputs){
+        outputs.axis = {
+            orient: node.data.orient,
+            domain: node.data.domain,
+            scale: inputs.scale,
+            grid: node.data.grid,
+            offset: 5, 
+            format: "s",
+            labelColor: node.data.labelColor,
+            title: node.data.title
+        };
+    }
+}
+class SymbolMarkComponent extends Rete.Component {
+    constructor() {
+        super('Symbol')
+        this.data.component = Node;
+        this.path = ['Marks'];
+    }
+    builder(node){
+
+        const size = new Rete.Input('size', 'Size', fieldSocket);
+        size.addControl(new NumControl(this.editor, 'size', node))
+            
+        node.addInput( size )
+            .addInput(new Rete.Input('sscale', 'sizeScale', scaleSocket))
+            .addInput(new Rete.Input('xscale', 'xScale', scaleSocket))
+            .addInput(new Rete.Input('yscale', 'yScale', scaleSocket))
+            .addInput(new Rete.Input('x', 'X', fieldSocket))
+            .addInput(new Rete.Input('y', 'Y', fieldSocket))
+            .addInput(new Rete.Input('fill', 'Fill', colorSocket))
+            .addControl(new SelectControl( this.editor, 'shape', ['circle', 'square', 'cross','diamond', 'triangle-up', 'triangle-down', 'triangle-right', 'triangle-left', 'step-after', 'step-before'], node ))
+            .addOutput(new Rete.Output('encode', 'Encode', encodeSocket));
+        
+    }
+    worker(node, inputs, outputs){
+        outputs.encode =  {
+            type: 'symbol',
+            x: {scale: inputs.xscale, field: inputs.x.field},
+            y: {scale: inputs.yscale, field: inputs.y.field},
+            shape: node.data.shape,
+            size: inputs.sscale ? {scale: inputs.sscale, field: inputs.size.field } : node.data.size,
+            fill: { value: node.data.fill }
+        }
+        
+    }
+}
+class LineMarkComponent extends Rete.Component {
+    constructor() {
+        super('Line')
+        this.data.component = Node;
+        this.path = ['Marks'];
+    }
+    builder(node){
+        
+        node.addInput(new Rete.Input('xscale', 'xScale', scaleSocket))
+            .addInput(new Rete.Input('yscale', 'yScale', scaleSocket))
+            .addInput(new Rete.Input('x', 'X', fieldSocket))
+            .addInput(new Rete.Input('y', 'Y', fieldSocket))
+            .addControl(new SelectControl( this.editor, 'interpolate', ['linear', 'bundle', 'cardinal','catmull-rom', 'basis', 'monotone', 'natural', 'step', 'step-after', 'step-before'], node ))
+            .addOutput(new Rete.Output('encode', 'Encode', encodeSocket));
+        
+    }
+    worker(node, inputs, outputs){
+        outputs.encode =  {
+            type: 'line',
+            x: {"scale": inputs.xscale, "field": inputs.x.field},
+            y: {"scale": inputs.yscale, "field": inputs.y.field},
+            shape: {value: node.data.shape},
+            interpolate: node.data.interpolate,
+        }
+        
+    }
+}
+class MarkComponent extends Rete.Component {
+    constructor() {
+        super('Mark')
+        this.data.component = Node;
+        this.path = [];
+    }
+    builder(node){
+        
+        node.addInput(new Rete.Input('data', 'Data', dataSocket))
+            .addInput(new Rete.Input('enter', 'Enter', encodeSocket))
+            .addInput(new Rete.Input('update', 'Update', encodeSocket))
+            .addInput(new Rete.Input('exit', 'Exit', encodeSocket))
+            .addInput(new Rete.Input('hover', 'Hover', encodeSocket))
+            .addOutput(new Rete.Output('mark', 'Mark', markSocket));
+        
+    }
+    worker(node, inputs, outputs){
+        if(inputs.data && inputs.enter){
+            outputs.mark = {
+                type: inputs.enter.type,
+                from: { data: inputs.data },
+                encode: {
+                    enter: inputs.enter || {},
+                    update: inputs.update || {},
+                    exit: inputs.exit || {},
+                    hover: inputs.hover || {},
+                }
+            }
+        }
+    }
+}
+// Add components for all of the data transformation type
+// Add components for all of mark types
+class ChartComponent extends Rete.Component {
+    constructor() {
+        super('Chart')
+        this.data.component = VegaNode;
+        this.path = [];
+    }
+    builder(node){
+        node.data.spec = SPEC;
+
+        node.addInput(new Rete.Input('axes', 'Axes', axisSocket, true))
+            .addInput(new Rete.Input('marks', 'Marks', markSocket, true));
+        
+    }
+    worker(node, inputs, outputs){
+        const data = node.data;
+        data.spec = Object.assign({}, SPEC);
+
+        data.spec.axes = inputs.axes;
+        data.spec.marks = inputs.marks;
+        
+        this.editor.nodes.find(n=>n.id===node.id).update();
+    }
+}
 export {
     MultiplyComponent, RangeComponent,
     ColorComponent,
-    //ColorCategoryComponent, ColorRangeComponent,
+    DateComponent, MakeDateComponent,
     ParseComponent, DatasetComponent,
     PointLayerComponent, LineLayerComponent,
     ArcLayerComponent, PolygonLayerComponent,
@@ -894,5 +1282,10 @@ export {
     ForceManyBodyComponent,
     ForceRadialComponent, ForceXComponent,
     ForceYComponent, LinksComponent,
-    GraphComponent
+    GraphComponent,
+
+    MarkComponent, AxisComponent, 
+    DataComponent, InputComponent, ChartComponent,
+    DiscretizingScaleComponent, DiscreteScaleComponent,
+    QuantitativeScaleComponent, LineMarkComponent, SymbolMarkComponent
 }
