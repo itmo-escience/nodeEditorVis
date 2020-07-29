@@ -42,16 +42,21 @@
   import {
       MultiplyComponent, ColorComponent,
       ParseComponent, DatasetComponent,
+      DateComponent, MakeDateComponent,
       RangeComponent,
       PointLayerComponent, LineLayerComponent,
       ArcLayerComponent, PolygonLayerComponent,
       GridMapLayerComponent, HeatMapLayerComponent,
       HeatMapComponent, MapComponent,
-      ScatterComponent, LineComponent,
+      ScatterComponent,
       ForceManyBodyComponent,
       ForceRadialComponent, ForceXComponent,
-      ForceYComponent, LinksComponent,
-      GraphComponent
+      ForceYComponent, LinksComponent, GraphComponent,
+
+      MarkComponent, AxisComponent, 
+      DataComponent, InputComponent, ChartComponent,
+      DiscretizingScaleComponent, DiscreteScaleComponent,
+      QuantitativeScaleComponent, LineMarkComponent, SymbolMarkComponent
   } from '~/language/components.js';
 
   import Engine from '~/engine/engine.js';
@@ -310,24 +315,22 @@
       this.engine = new Rete.Engine('demo@0.1.0')
 
       const components = [
-          new DatasetComponent, new ParseComponent,
-          new ColorComponent, new MultiplyComponent,
+          // new DatasetComponent, new ParseComponent,
+          // new ColorComponent, new MultiplyComponent,
+          // new DateComponent, new MakeDateComponent,
+          // new MapComponent, new PointLayerComponent, new LineLayerComponent,
+          // new PolygonLayerComponent, new HeatMapLayerComponent,
+          // new GridMapLayerComponent, new ArcLayerComponent,
+          // new HeatMapComponent, new RangeComponent,
+          // new ScatterComponent,
+          // new GraphComponent, new LinksComponent,
+          // new ForceXComponent, new ForceYComponent,
+          // new ForceManyBodyComponent,new ForceRadialComponent,
 
-          new MapComponent,
-          new PointLayerComponent, new LineLayerComponent,
-          new PolygonLayerComponent, new HeatMapLayerComponent,
-          new GridMapLayerComponent, new ArcLayerComponent,
-          new HeatMapComponent,
-          
-          new RangeComponent,
-            
-          new ScatterComponent, new LineComponent,
-          
-          new GraphComponent,
-          new LinksComponent,
-          new ForceXComponent, new ForceYComponent,
-          new ForceManyBodyComponent,
-          new ForceRadialComponent
+          new MarkComponent, new AxisComponent, 
+          new DataComponent, new InputComponent, new ChartComponent,
+          new DiscretizingScaleComponent, new DiscreteScaleComponent,
+          new QuantitativeScaleComponent, new LineMarkComponent, new SymbolMarkComponent
       ];
 
         components.map(c => {
@@ -393,7 +396,7 @@
                   "id": 1,
                   "data": {},
                   "position": [500, 200],
-                  "name": "Dataset"
+                  "name": "Input Data"
               }
           }
       });
