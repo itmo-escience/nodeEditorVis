@@ -11,7 +11,16 @@ import VueLoadControl from '~/components/controls/VueLoadControl.vue'
 import VueRangeControl from '~/components/controls/VueRangeControl.vue'
 import VueCheckBoxControl from '~/components/controls/VueCheckBoxControl.vue'
 import VueColorRangeControl from '~/components/controls/VueColorRangeControl.vue'
+import VueTextControl from '~/components/controls/VueTextControl.vue'
 
+class TextControl extends Rete.Control {
+    constructor(emitter, key, placeholder, node){
+        super(key)
+        this.render = 'vue';
+        this.component = VueTextControl;
+        this.props = { emitter, ikey: key, placeholder, node }
+    }
+}
 class FileLoadControl extends Rete.Control {
     constructor(emitter, key, name, node){
         super(key)
@@ -114,5 +123,5 @@ export {
     ClosedColorControl, TwoColorControl,
     ColorRangeControl, CheckBoxControl,
     RangeControl, TwoRangeControl, NumControl,
-    LoadControl, SelectControl
+    LoadControl, SelectControl, TextControl
 }
